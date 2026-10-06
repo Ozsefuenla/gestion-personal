@@ -1,0 +1,447 @@
+openapi: 3.0.3
+info:
+  title: Peluquería — Gestión de Trabajadores
+  version: 1.0.0
+  description: API para alta de trabajadores, fichajes de jornada y solicitudes de vacaciones.
+servers:
+  - url: /api
+paths:
+  /auth/login:
+    post:
+      summary: Autenticar usuario y obtener token con su rol
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticación correcta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /workers:
+    get:
+      summary: Listar trabajadores
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de trabajadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Alta de un trabajador
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerCreateRequest'
+      responses:
+        '201':
+          description: Trabajador creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Worker'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /time-entries/start:
+    post:
+      summary: Registrar inicio de jornada
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Fichaje iniciado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /time-entries/pause:
+    post:
+      summary: Registrar pausa de jornada
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pausa registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /time-entries/end:
+    post:
+      summary: Registrar fin de jornada
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Jornada finalizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /time-entries/me:
+    get:
+      summary: Consultar fichajes propios
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Fichajes del trabajador autenticado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /time-entries:
+    get:
+      summary: Consultar fichajes de todos los trabajadores
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workerId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filtrar por trabajador (opcional)
+      responses:
+        '200':
+          description: Lista de fichajes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /vacations:
+    get:
+      summary: Listar solicitudes de vacaciones
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/VacationStatus'
+          description: Filtrar por estado (opcional)
+      responses:
+        '200':
+          description: Lista de solicitudes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vacation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Crear solicitud de vacaciones
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VacationCreateRequest'
+      responses:
+        '201':
+          description: Solicitud creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /vacations/{id}/approve:
+    patch:
+      summary: Aprobar solicitud de vacaciones
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VacationId'
+      responses:
+        '200':
+          description: Solicitud aprobada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vacations/{id}/reject:
+    patch:
+      summary: Rechazar solicitud de vacaciones
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VacationId'
+      responses:
+        '200':
+          description: Solicitud rechazada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vacation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    VacationId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Petición inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: No autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Sin permisos (rol insuficiente)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflicto con el estado actual del recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Role:
+      type: string
+      enum: [admin, worker]
+
+    VacationStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required: [token, role]
+      properties:
+        token:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+
+    WorkerCreateRequest:
+      type: object
+      required: [fullName, email, password, role]
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        role:
+          $ref: '#/components/schemas/Role'
+
+    Worker:
+      type: object
+      required: [id, fullName, email, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/Role'
+        active:
+          type: boolean
+
+    TimeEntry:
+      type: object
+      required: [id, workerId, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [in-progress, paused, finished]
+        startAt:
+          type: string
+          format: date-time
+        pausedAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+    VacationCreateRequest:
+      type: object
+      required: [startDate, endDate]
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+    Vacation:
+      type: object
+      required: [id, workerId, startDate, endDate, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workerId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/VacationStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string

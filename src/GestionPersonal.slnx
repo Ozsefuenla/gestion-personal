@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="GestionPersonal.Api/GestionPersonal.Api.csproj" />
+  <Project Path="GestionPersonal.Application/GestionPersonal.Application.csproj" />
+  <Project Path="GestionPersonal.Domain/GestionPersonal.Domain.csproj" />
+  <Project Path="GestionPersonal.Infrastructure/GestionPersonal.Infrastructure.csproj" />
+  <Project Path="GestionPersonal.Tests/GestionPersonal.Tests.csproj" />
+</Solution>
