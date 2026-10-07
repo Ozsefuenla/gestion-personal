@@ -17,6 +17,15 @@ public static class WorkersEndpoints
                 : result.ToProblemDetails();
         });
 
+        app.MapGet("/api/workers/status", async (GetWorkersStatusQueryHandler handler, CancellationToken cancellationToken) =>
+        {
+            var result = await handler.Handle(cancellationToken);
+
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : result.ToProblemDetails();
+        });
+
         app.MapPost("/api/workers", async (
             CreateWorkerCommand command,
             IValidator<CreateWorkerCommand> validator,

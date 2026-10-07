@@ -70,6 +70,26 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /workers/status:
+    get:
+      summary: Estado actual de todos los trabajadores
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de trabajadores con su estado actual
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkerStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /time-entries/start:
     post:
       summary: Registrar inicio de jornada
@@ -444,6 +464,37 @@ components:
           $ref: '#/components/schemas/Role'
         active:
           type: boolean
+
+    WorkerStatus:
+      type: object
+      required: [id, fullName, role, currentStatus]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        currentStatus:
+          type: string
+          enum: [idle, in-progress, paused, finished]
+        startedAt:
+          type: string
+          format: date-time
+        currentPausedAt:
+          type: string
+          format: date-time
+        workedTime:
+          type: string
+          description: Duración en formato hh:mm:ss
+        pausedTime:
+          type: string
+          description: Duración en formato hh:mm:ss
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineSegment'
 
     TimeEntry:
       type: object

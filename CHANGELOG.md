@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Endpoint `POST /api/time-entries/end` (fin de jornada) con validación FluentValidation y tests.
 - Endpoint `POST /api/time-entries/resume` (reanudar jornada) con validación FluentValidation y tests.
 - Endpoint `GET /api/time-entries/today` (estado actual + resumen del día con línea de tiempo) en `Europe/Madrid`.
+- Endpoint `GET /api/workers/status` (estado actual de todos los trabajadores con resumen trabajado/pausado y timeline).
+- Frontend: panel de fichaje con cards de trabajadores, estado por color, resumen del día (trabajado/pausado), timeline y acciones habilitadas según estado.
+- Documento de reglas de UI del frontend (`docs/0003-frontend-ui.md`).
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.

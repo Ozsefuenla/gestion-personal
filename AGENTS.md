@@ -3,19 +3,20 @@
 ## Proyecto
 Aplicación web de gestión de personal, control horario, turnos y vacaciones
 para peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) y
-frontend en Next.js.
+frontend en Blazor Server.
 
 ## Stack
-- Backend: ASP.NET Core 10 Web API (C#), EF Core 10, PostgreSQL.
-- Frontend: Next.js 14+ (App Router, TypeScript), Tailwind CSS, Shadcn UI,
-  TanStack Query, Lucide React.
+- Backend: ASP.NET Core 10 Web API (C#), persistencia en memoria (acceso SQL
+  directo pendiente, sin ORM).
+- Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
 - Seguridad (diferida): JWT + cookie HTTP-Only, PIN de 4 dígitos hasheado
   con BCrypt para fichaje en tablet.
 
 ## Arquitectura (Clean Architecture)
-- Cuatro proyectos: `Domain`, `Application`, `Infrastructure`, `Api`.
+- Proyectos: `Domain`, `Application`, `Infrastructure`, `Api`, `Web` (Blazor) y
+  `Tests`.
 - Las dependencias apuntan siempre hacia adentro; el núcleo (Domain) no
-  depende de EF Core ni de ASP.NET.
+  depende de infraestructura ni de ASP.NET.
 - Cada feature vive en una carpeta de `Application` con su request (record),
   handler, response (record) y validador FluentValidation.
 - Endpoints delgados: Minimal APIs en `Api/Endpoints` agrupadas por recurso.
@@ -32,7 +33,7 @@ frontend en Next.js.
 - Middleware global de excepciones que devuelve `ProblemDetails` (RFC 7807).
 
 ## Fechas y horas
-- Usar siempre `DateTimeOffset` en C# y `timestamptz` (UTC) en PostgreSQL.
+- Usar siempre `DateTimeOffset` en C# y UTC en base de datos.
 
 ## Documentación
 - Todo punto importante se documenta en `docs/` como Markdown con nombre
@@ -40,6 +41,7 @@ frontend en Next.js.
 - Los documentos de API se acompañan de su especificación OpenAPI (`.yaml`)
   cuando aplique.
 - El `README.md` se mantiene actualizado ante cualquier cambio que lo afecte.
+- Las reglas de UI del frontend están en `docs/0003-frontend-ui.md` (estados, colores, acciones, timeline).
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo
@@ -53,5 +55,4 @@ frontend en Next.js.
 
 ## Comandos útiles
 - `dotnet build` / `dotnet test` desde `src/`.
-- Migraciones: `dotnet ef migrations add <Nombre>` y `dotnet ef database update`.
-- Frontend: `npm run dev` / `npm run build` desde `web/`.
+- Frontend: `dotnet run --project src/GestionPersonal.Web`.

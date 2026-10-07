@@ -1,0 +1,153 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@using System.Globalization
+
+<MudCard Elevation="2" Class="h-100">
+    <MudCardContent>
+        <MudText Typo="Typo.h6">@Worker.FullName</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Worker.Role</MudText>
+        <div class="mt-2">
+            <MudChip T="string" Color="@StatusColor" Variant="Variant.Filled" Size="Size.Small">@StatusLabel</MudChip>
+        </div>
+
+        <div class="mt-3">
+            <MudText Typo="Typo.body2">
+                Trabajado: <b>@FormatDuration(Worker.WorkedTime)</b> &nbsp;·&nbsp; Pausado: <b>@FormatDuration(Worker.PausedTime)</b>
+            </MudText>
+        </div>
+
+        <div class="mt-2" style="display: flex; height: 10px; width: 100%; background-color: #e0e0e0; border-radius: 9999px; overflow: hidden;">
+            <div style="width: @Percent(Worker.WorkedTime); height: 100%; background-color: #43a047;"></div>
+            <div style="width: @Percent(Worker.PausedTime); height: 100%; background-color: #fb8c00;"></div>
+        </div>
+
+        @if (Worker.Timeline.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Sin actividad hoy.</MudText>
+        }
+        else
+        {
+            <div class="mt-2">
+                @foreach (var segment in Worker.Timeline)
+                {
+                    <div class="d-flex align-center" style="gap: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle"
+                                 Color="@(segment.Type == "working" ? Color.Success : Color.Warning)"
+                                 Size="Size.Small" />
+                        <MudText Typo="Typo.body2">@(segment.Type == "working" ? "Trabajando" : "Pausa")</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From) – @MadridTime.Format(segment.To)</MudText>
+                    </div>
+                }
+
+                @if (EndedAt is not null)
+                {
+                    <div class="d-flex align-center" style="gap: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Info" Size="Size.Small" />
+                        <MudText Typo="Typo.body2">Finalizado</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(EndedAt.Value)</MudText>
+                    </div>
+                }
+            </div>
+        }
+    </MudCardContent>
+
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="!CanStart" OnClick="@(() => ExecuteAsync("start"))">
+            Iniciar
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="!CanPause" OnClick="@(() => ExecuteAsync("pause"))">
+            Pausar
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Info" Disabled="!CanResume" OnClick="@(() => ExecuteAsync("resume"))">
+            Reanudar
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled="!CanEnd" OnClick="@(() => ExecuteAsync("end"))">
+            Finalizar
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public required WorkerStatus Worker { get; set; }
+
+    [Parameter]
+    public EventCallback RefreshAsync { get; set; }
+
+    private bool CanStart => Worker.CurrentStatus == "idle";
+    private bool CanPause => Worker.CurrentStatus == "in-progress";
+    private bool CanResume => Worker.CurrentStatus == "paused";
+    private bool CanEnd => Worker.CurrentStatus is "in-progress" or "paused";
+
+    private DateTimeOffset? EndedAt =>
+        Worker.CurrentStatus == "finished" && Worker.Timeline.Count > 0
+            ? Worker.Timeline[^1].To
+            : null;
+
+    private Color StatusColor => Worker.CurrentStatus switch
+    {
+        "in-progress" => Color.Success,
+        "paused" => Color.Warning,
+        "finished" => Color.Info,
+        _ => Color.Default
+    };
+
+    private string StatusLabel => Worker.CurrentStatus switch
+    {
+        "in-progress" => "En curso",
+        "paused" => "En pausa",
+        "finished" => "Finalizado",
+        _ => "Sin iniciar"
+    };
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalHours >= 1)
+        {
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
+        }
+
+        if (duration.TotalMinutes >= 1)
+        {
+            return $"{duration.Minutes}m {duration.Seconds}s";
+        }
+
+        return $"{duration.Seconds}s";
+    }
+
+    private string Percent(TimeSpan part)
+    {
+        var total = Worker.WorkedTime + Worker.PausedTime;
+        var pct = total.TotalSeconds > 0 ? part.TotalSeconds / total.TotalSeconds * 100.0 : 0;
+        return pct.ToString("F2", CultureInfo.InvariantCulture) + "%";
+    }
+
+    private async Task ExecuteAsync(string action)
+    {
+        try
+        {
+            switch (action)
+            {
+                case "start":
+                    await Api.StartAsync(Worker.Id);
+                    break;
+                case "pause":
+                    await Api.PauseAsync(Worker.Id);
+                    break;
+                case "resume":
+                    await Api.ResumeAsync(Worker.Id);
+                    break;
+                case "end":
+                    await Api.EndAsync(Worker.Id);
+                    break;
+            }
+
+            await RefreshAsync.InvokeAsync();
+            Snackbar.Add("Acción registrada correctamente", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudo realizar la acción", Severity.Error);
+        }
+    }
+}
