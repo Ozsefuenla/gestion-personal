@@ -1,0 +1,64 @@
+﻿@page "/"
+@inject ApiClient Api
+
+<PageTitle>GestionPersonal</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4">GestionPersonal</MudText>
+    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Fichaje de trabajadores</MudText>
+
+    @if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">
+            @_error
+        </MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="LoadWorkersAsync">
+            Reintentar
+        </MudButton>
+    }
+    else if (_workers is null)
+    {
+        <div class="d-flex justify-center mt-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+    else if (_workers.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">No hay trabajadores registrados.</MudAlert>
+    }
+    else
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var worker in _workers)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <WorkerCard Worker="worker" RefreshAsync="LoadWorkersAsync" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private IReadOnlyList<WorkerStatus>? _workers;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkersAsync();
+    }
+
+    private async Task LoadWorkersAsync()
+    {
+        _error = null;
+
+        try
+        {
+            _workers = await Api.GetWorkersStatusAsync();
+        }
+        catch (Exception)
+        {
+            _error = "No se pudo conectar con la API. Asegurate de que esté corriendo en http://localhost:5243.";
+        }
+    }
+}

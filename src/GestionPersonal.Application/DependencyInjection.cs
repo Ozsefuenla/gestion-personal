@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<CreateWorkerCommandHandler>();
+        services.AddScoped<GetWorkersStatusQueryHandler>();
         services.AddScoped<StartTimeEntryCommandHandler>();
         services.AddScoped<PauseTimeEntryCommandHandler>();
         services.AddScoped<EndTimeEntryCommandHandler>();

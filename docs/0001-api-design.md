@@ -24,6 +24,7 @@
 |--------|------|-----------|-----|
 | POST | `/api/workers` | Alta de un trabajador (nombre, PIN de 4 dígitos, rol) | admin |
 | GET | `/api/workers` | Listar trabajadores (necesario para filtrar fichajes y validar solicitudes) | admin |
+| GET | `/api/workers/status` | Estado actual de todos los trabajadores con resumen del día (trabajado/pausado) y timeline | admin |
 
 ### Fichajes
 

@@ -2,7 +2,7 @@
 
 Aplicación web de gestión de personal, control horario, turnos y vacaciones para
 peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) siguiendo
-Clean Architecture; frontend en Next.js (pendiente).
+Clean Architecture; frontend en Blazor Server (en desarrollo).
 
 ## Stack tecnológico
 
@@ -14,7 +14,7 @@ Clean Architecture; frontend en Next.js (pendiente).
 | Manejo de errores | Result Pattern + `ProblemDetails` (RFC 7807) |
 | Persistencia | En memoria (actual). SQL directo sin ORM (pendiente) |
 | Testing | xUnit, `Microsoft.AspNetCore.Mvc.Testing` |
-| Frontend | Next.js 14+, Tailwind CSS, Shadcn UI, TanStack Query, Lucide React (pendiente) |
+| Frontend | Blazor Web App (.NET 10, interactividad Server) + MudBlazor |
 
 ## Instalación y ejecución
 
@@ -50,11 +50,13 @@ src/
 ├─ GestionPersonal.Application/     Casos de uso, DTOs, validadores, Result
 ├─ GestionPersonal.Infrastructure/  Persistencia (en memoria) e implementaciones
 ├─ GestionPersonal.Api/             Minimal APIs, middleware, Swagger
+├─ GestionPersonal.Web/             Frontend Blazor Server + MudBlazor
 └─ GestionPersonal.Tests/           Tests de integración
 docs/
 ├─ 0001-api-design.md
 ├─ 0001-api-openapi.yaml
-└─ 0002-solution-structure.md
+├─ 0002-solution-structure.md
+└─ 0003-frontend-ui.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -65,6 +67,7 @@ CHANGELOG.md
 |---------------|--------|
 | Alta de trabajadores (`POST /api/workers`) | Implementado (sin control de rol todavía) |
 | Listado de trabajadores (`GET /api/workers`) | Implementado |
+| Estado actual de todos los trabajadores (`GET /api/workers/status`) | Implementado (con resumen trabajado/pausado y timeline) |
 | Inicio de fichaje (`POST /api/time-entries/start`) | Implementado |
 | Pausa de fichaje (`POST /api/time-entries/pause`) | Implementado |
 | Reanudar fichaje (`POST /api/time-entries/resume`) | Implementado |
@@ -85,4 +88,4 @@ se identifican por un **PIN de 4 dígitos** (no hay email).
 - Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`).
 - Flujo de verificación de PIN (seleccionar trabajador → teclear PIN → verificar).
 - Persistencia SQL real (hoy en memoria, sin ORM).
-- Frontend Next.js.
+- Frontend Blazor: verificación de PIN y resto del flujo de fichaje (hoy hay panel de workers con estado y acciones).
