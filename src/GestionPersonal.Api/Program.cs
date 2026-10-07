@@ -23,6 +23,7 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => Results.Ok(new { name = "GestionPersonal API", status = "ok" }));
 
 app.MapWorkersEndpoints();
+app.MapTimeEntriesEndpoints();
 
 app.Run();
 

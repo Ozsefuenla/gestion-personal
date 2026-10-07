@@ -76,6 +76,12 @@ paths:
       tags: [TimeEntries]
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryActionRequest'
       responses:
         '200':
           description: Fichaje iniciado
@@ -96,6 +102,12 @@ paths:
       tags: [TimeEntries]
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryActionRequest'
       responses:
         '200':
           description: Pausa registrada
@@ -116,6 +128,12 @@ paths:
       tags: [TimeEntries]
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryActionRequest'
       responses:
         '200':
           description: Jornada finalizada
@@ -129,6 +147,59 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+
+  /time-entries/resume:
+    post:
+      summary: Reanudar jornada en pausa
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryActionRequest'
+      responses:
+        '200':
+          description: Jornada reanudada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /time-entries/today:
+    get:
+      summary: Estado actual y resumen del día
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workerId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Estado actual y resumen del día
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodaySummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /time-entries/me:
     get:
@@ -350,31 +421,25 @@ components:
 
     WorkerCreateRequest:
       type: object
-      required: [fullName, email, password, role]
+      required: [fullName, pin, role]
       properties:
         fullName:
           type: string
-        email:
+        pin:
           type: string
-          format: email
-        password:
-          type: string
-          format: password
+          pattern: '^\d{4}$'
         role:
           $ref: '#/components/schemas/Role'
 
     Worker:
       type: object
-      required: [id, fullName, email, role]
+      required: [id, fullName, role]
       properties:
         id:
           type: string
           format: uuid
         fullName:
           type: string
-        email:
-          type: string
-          format: email
         role:
           $ref: '#/components/schemas/Role'
         active:
@@ -393,13 +458,75 @@ components:
         status:
           type: string
           enum: [in-progress, paused, finished]
-        startAt:
+        startedAt:
           type: string
           format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        pauses:
+          type: array
+          items:
+            $ref: '#/components/schemas/PausePeriod'
+
+    PausePeriod:
+      type: object
+      required: [pausedAt]
+      properties:
         pausedAt:
           type: string
           format: date-time
-        endAt:
+        resumedAt:
+          type: string
+          format: date-time
+
+    TimeEntryActionRequest:
+      type: object
+      required: [workerId]
+      properties:
+        workerId:
+          type: string
+          format: uuid
+
+    TodaySummary:
+      type: object
+      required: [currentStatus, workedTime, pausedTime, pauseCount, completedEntries, timeline]
+      properties:
+        currentStatus:
+          type: string
+          enum: [idle, in-progress, paused, finished]
+        startedAt:
+          type: string
+          format: date-time
+        currentPausedAt:
+          type: string
+          format: date-time
+        workedTime:
+          type: string
+          description: Duración en formato hh:mm:ss
+        pausedTime:
+          type: string
+          description: Duración en formato hh:mm:ss
+        pauseCount:
+          type: integer
+        completedEntries:
+          type: integer
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineSegment'
+
+    TimelineSegment:
+      type: object
+      required: [type, from, to]
+      properties:
+        type:
+          type: string
+          enum: [working, paused]
+        from:
+          type: string
+          format: date-time
+        to:
           type: string
           format: date-time
 

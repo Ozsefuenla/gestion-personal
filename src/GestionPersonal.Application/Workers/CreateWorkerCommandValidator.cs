@@ -12,9 +12,9 @@ public sealed class CreateWorkerCommandValidator : AbstractValidator<CreateWorke
             .NotEmpty().WithMessage("El nombre es obligatorio.")
             .MaximumLength(200).WithMessage("El nombre no puede superar los 200 caracteres.");
 
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("El email es obligatorio.")
-            .EmailAddress().WithMessage("El email no tiene un formato válido.");
+        RuleFor(x => x.Pin)
+            .NotEmpty().WithMessage("El PIN es obligatorio.")
+            .Matches(@"^\d{4}$").WithMessage("El PIN debe tener exactamente 4 dígitos.");
 
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("El rol es obligatorio.")

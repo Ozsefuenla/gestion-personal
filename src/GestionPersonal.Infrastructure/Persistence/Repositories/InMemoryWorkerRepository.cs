@@ -8,9 +8,9 @@ public sealed class InMemoryWorkerRepository : IWorkerRepository
 {
     private readonly List<Worker> _workers =
     [
-        Worker.Create("María García", "maria@example.com", Role.Worker),
-        Worker.Create("Ana López", "ana@example.com", Role.Worker),
-        Worker.Create("Carlos Ruiz", "carlos@example.com", Role.Admin)
+        Worker.Create("María García", "1234", Role.Worker),
+        Worker.Create("Ana López", "0000", Role.Worker),
+        Worker.Create("Carlos Ruiz", "9999", Role.Admin)
     ];
 
     public Task<Worker?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -22,11 +22,6 @@ public sealed class InMemoryWorkerRepository : IWorkerRepository
     {
         IReadOnlyList<Worker> result = _workers.ToList();
         return Task.FromResult(result);
-    }
-
-    public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(_workers.Any(w => w.Email == email));
     }
 
     public void Add(Worker worker)

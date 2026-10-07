@@ -8,7 +8,5 @@ public interface IWorkerRepository
 
     Task<IReadOnlyList<Worker>> GetAllAsync(CancellationToken cancellationToken = default);
 
-    Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
-
     void Add(Worker worker);
 }
