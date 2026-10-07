@@ -65,7 +65,11 @@ CHANGELOG.md
 |---------------|--------|
 | Alta de trabajadores (`POST /api/workers`) | Implementado (sin control de rol todavía) |
 | Listado de trabajadores (`GET /api/workers`) | Implementado |
-| Registro de fichajes (inicio, pausa, fin) | Pendiente |
+| Inicio de fichaje (`POST /api/time-entries/start`) | Implementado |
+| Pausa de fichaje (`POST /api/time-entries/pause`) | Implementado |
+| Reanudar fichaje (`POST /api/time-entries/resume`) | Implementado |
+| Fin de fichaje (`POST /api/time-entries/end`) | Implementado |
+| Estado actual y resumen del día (`GET /api/time-entries/today`) | Implementado |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
@@ -73,4 +77,12 @@ CHANGELOG.md
 
 ## Usuario y contraseña de prueba
 
-Pendiente — todavía no hay autenticación ni login implementados.
+Pendiente — todavía no hay autenticación ni login implementados. Los trabajadores
+se identifican por un **PIN de 4 dígitos** (no hay email).
+
+## Pendientes
+
+- Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`).
+- Flujo de verificación de PIN (seleccionar trabajador → teclear PIN → verificar).
+- Persistencia SQL real (hoy en memoria, sin ORM).
+- Frontend Next.js.

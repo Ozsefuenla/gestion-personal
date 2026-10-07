@@ -18,20 +18,13 @@ public sealed class CreateWorkerCommandHandler
         CreateWorkerCommand command,
         CancellationToken cancellationToken = default)
     {
-        var email = command.Email.Trim().ToLowerInvariant();
-
-        if (await _workerRepository.EmailExistsAsync(email, cancellationToken))
-        {
-            return Error.Conflict("Ya existe un trabajador con ese email.");
-        }
-
         var role = ParseRole(command.Role);
         if (role is null)
         {
             return Error.Validation("El rol debe ser 'admin' o 'worker'.");
         }
 
-        var worker = Worker.Create(command.FullName, command.Email, role.Value);
+        var worker = Worker.Create(command.FullName, command.Pin, role.Value);
 
         _workerRepository.Add(worker);
 

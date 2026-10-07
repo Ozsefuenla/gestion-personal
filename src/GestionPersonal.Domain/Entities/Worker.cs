@@ -6,7 +6,7 @@ public sealed class Worker
 {
     public Guid Id { get; private set; }
     public string FullName { get; private set; } = default!;
-    public string Email { get; private set; } = default!;
+    public string PinHash { get; private set; } = default!;
     public Role Role { get; private set; }
     public bool Active { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -15,13 +15,13 @@ public sealed class Worker
     {
     }
 
-    public static Worker Create(string fullName, string email, Role role)
+    public static Worker Create(string fullName, string pinHash, Role role)
     {
         return new Worker
         {
             Id = Guid.NewGuid(),
             FullName = fullName.Trim(),
-            Email = email.Trim().ToLowerInvariant(),
+            PinHash = pinHash,
             Role = role,
             Active = true,
             CreatedAt = DateTimeOffset.UtcNow

@@ -20,7 +20,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         var response = await _client.PostAsJsonAsync("/api/workers", new
         {
             fullName = "Laura Pérez",
-            email = "laura@example.com",
+            pin = "0421",
             role = "worker"
         });
 
@@ -31,21 +31,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         Assert.NotNull(worker);
         Assert.NotEqual(Guid.Empty, worker.Id);
         Assert.Equal("Laura Pérez", worker.FullName);
-        Assert.Equal("laura@example.com", worker.Email);
         Assert.Equal("worker", worker.Role);
-    }
-
-    [Fact]
-    public async Task PostWorker_WithExistingEmail_ReturnsConflict()
-    {
-        var response = await _client.PostAsJsonAsync("/api/workers", new
-        {
-            fullName = "Otra María",
-            email = "maria@example.com",
-            role = "worker"
-        });
-
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     [Fact]
@@ -54,7 +40,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         var response = await _client.PostAsJsonAsync("/api/workers", new
         {
             fullName = "",
-            email = "x@example.com",
+            pin = "0421",
             role = "worker"
         });
 
@@ -67,8 +53,21 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         var response = await _client.PostAsJsonAsync("/api/workers", new
         {
             fullName = "Laura",
-            email = "laura-rol@example.com",
+            pin = "0421",
             role = "supervisor"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostWorker_WithInvalidPin_ReturnsBadRequest()
+    {
+        var response = await _client.PostAsJsonAsync("/api/workers", new
+        {
+            fullName = "Laura",
+            pin = "12ab",
+            role = "worker"
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -77,18 +76,18 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task PostWorker_ThenGet_ReturnsWorkerInList()
     {
-        var email = "nueva@example.com";
+        var fullName = "Nueva Trabajadora";
 
         await _client.PostAsJsonAsync("/api/workers", new
         {
-            fullName = "Nueva Trabajadora",
-            email = email,
+            fullName = fullName,
+            pin = "1111",
             role = "worker"
         });
 
         var workers = await _client.GetFromJsonAsync<List<WorkerResponse>>("/api/workers");
 
         Assert.NotNull(workers);
-        Assert.Contains(workers, worker => worker.Email == email);
+        Assert.Contains(workers, worker => worker.FullName == fullName);
     }
 }
