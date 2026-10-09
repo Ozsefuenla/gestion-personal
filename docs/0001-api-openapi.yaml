@@ -15,7 +15,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: '#/components/schemas/AuthLoginRequest'
       responses:
         '200':
           description: Autenticación correcta
@@ -89,6 +89,90 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /workers/login:
+    post:
+      summary: Iniciar sesión por PIN
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Estado del trabajador autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /workers/{id}/status:
+    get:
+      summary: Estado actual de un trabajador por id
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Estado del trabajador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workers/{id}/change-pin:
+    post:
+      summary: Cambiar el PIN de un trabajador
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePinRequest'
+      responses:
+        '204':
+          description: PIN actualizado
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /time-entries/start:
     post:
@@ -214,6 +298,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TodaySummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /time-entries/quick-clock:
+    post:
+      summary: Fichaje rápido por PIN
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuickClockRequest'
+      responses:
+        '200':
+          description: Resultado del fichaje
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuickClockResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -419,7 +529,7 @@ components:
       type: string
       enum: [pending, approved, rejected]
 
-    LoginRequest:
+    AuthLoginRequest:
       type: object
       required: [email, password]
       properties:
@@ -450,6 +560,25 @@ components:
           pattern: '^\d{4}$'
         role:
           $ref: '#/components/schemas/Role'
+
+    LoginRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          type: string
+          pattern: '^\d{4}$'
+
+    ChangePinRequest:
+      type: object
+      required: [currentPin, newPin]
+      properties:
+        currentPin:
+          type: string
+          pattern: '^\d{4}$'
+        newPin:
+          type: string
+          pattern: '^\d{4}$'
 
     Worker:
       type: object
@@ -538,6 +667,34 @@ components:
         workerId:
           type: string
           format: uuid
+
+    QuickClockRequest:
+      type: object
+      required: [pin, action]
+      properties:
+        pin:
+          type: string
+          pattern: '^\d{4}$'
+        action:
+          type: string
+          enum: [start, pause, end]
+
+    QuickClockResponse:
+      type: object
+      required: [success, message, availableActions]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        currentStatus:
+          type: string
+          enum: [idle, in-progress, paused, finished]
+        availableActions:
+          type: array
+          items:
+            type: string
+            enum: [start, pause, end]
 
     TodaySummary:
       type: object

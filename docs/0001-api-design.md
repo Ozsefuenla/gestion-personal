@@ -25,6 +25,9 @@
 | POST | `/api/workers` | Alta de un trabajador (nombre, PIN de 4 dígitos, rol) | admin |
 | GET | `/api/workers` | Listar trabajadores (necesario para filtrar fichajes y validar solicitudes) | admin |
 | GET | `/api/workers/status` | Estado actual de todos los trabajadores con resumen del día (trabajado/pausado) y timeline | admin |
+| POST | `/api/workers/login` | Iniciar sesión por PIN de 4 dígitos (devuelve el estado del trabajador) | Público |
+| GET | `/api/workers/{id}/status` | Estado actual de un trabajador por id | admin |
+| POST | `/api/workers/{id}/change-pin` | Cambiar el PIN de un trabajador (verifica el PIN actual) | trabajador |
 
 ### Fichajes
 
@@ -34,6 +37,7 @@
 | POST | `/api/time-entries/pause` | Registrar pausa de jornada (409 si no está en curso) | trabajador |
 | POST | `/api/time-entries/resume` | Reanudar jornada en pausa (409 si no está en pausa) | trabajador |
 | POST | `/api/time-entries/end` | Registrar fin de jornada (409 si no está iniciada; válido en curso o en pausa) | trabajador |
+| POST | `/api/time-entries/quick-clock` | Fichaje rápido por PIN de 4 dígitos (`{ pin, action }`) | trabajador |
 | GET | `/api/time-entries/today` | Estado actual y resumen del día (con línea de tiempo de tramos) | trabajador |
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
@@ -62,3 +66,6 @@
 - Por ahora se permiten trabajadores duplicados (sin unicidad por PIN).
 - Pendiente: flujo de verificación de PIN (el frontend selecciona un trabajador, teclea el PIN y el backend verifica que coincide).
 - Pendiente: al implementar seguridad, el login (`/api/auth/login`) dejará de usar `email`/`password` y pasará a basarse en el PIN.
+- `POST /api/time-entries/quick-clock` recibe `{ "pin": "1234", "action": "start" }` con 3 acciones (`start` = iniciar/reanudar, `pause`, `end`). Devuelve `400` si el PIN está mal formado ("Formato de PIN incorrecto") o no existe ("El PIN introducido no es correcto"); `200` con `success=false` + `currentStatus` + `availableActions` si la acción no corresponde al estado; y `200` con `success=true` si se ejecutó.
+- `POST /api/workers/login` recibe `{ "pin": "1234" }` y devuelve el `WorkerStatus` del trabajador (identidad + resumen del día); `400` si el PIN no corresponde a ningún trabajador. `GET /api/workers/{id}/status` devuelve lo mismo por id (para refrescar la card).
+- `POST /api/workers/{id}/change-pin` recibe `{ "currentPin", "newPin" }`: valida que el PIN actual sea correcto, que el nuevo sea de 4 dígitos y distinto al actual; devuelve `204 NoContent` o `400` con el error.

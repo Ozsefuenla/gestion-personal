@@ -12,11 +12,15 @@ public static class DependencyInjection
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<CreateWorkerCommandHandler>();
         services.AddScoped<GetWorkersStatusQueryHandler>();
+        services.AddScoped<GetWorkerStatusQueryHandler>();
+        services.AddScoped<LoginCommandHandler>();
+        services.AddScoped<ChangePinCommandHandler>();
         services.AddScoped<StartTimeEntryCommandHandler>();
         services.AddScoped<PauseTimeEntryCommandHandler>();
         services.AddScoped<EndTimeEntryCommandHandler>();
         services.AddScoped<ResumeTimeEntryCommandHandler>();
         services.AddScoped<TodaySummaryQueryHandler>();
+        services.AddScoped<QuickClockCommandHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

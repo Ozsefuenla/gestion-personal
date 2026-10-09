@@ -73,19 +73,25 @@ CHANGELOG.md
 | Reanudar fichaje (`POST /api/time-entries/resume`) | Implementado |
 | Fin de fichaje (`POST /api/time-entries/end`) | Implementado |
 | Estado actual y resumen del día (`GET /api/time-entries/today`) | Implementado |
+| Fichaje rápido por PIN (`POST /api/time-entries/quick-clock`) | Implementado |
+| Inicio de sesión por PIN (`POST /api/workers/login`) | Implementado |
+| Estado de un trabajador por id (`GET /api/workers/{id}/status`) | Implementado |
+| Cambiar PIN (`POST /api/workers/{id}/change-pin`) | Implementado |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
-| Autenticación / login | Pendiente |
+| Autenticación / login (JWT) | Pendiente |
 
 ## Usuario y contraseña de prueba
 
 Pendiente — todavía no hay autenticación ni login implementados. Los trabajadores
 se identifican por un **PIN de 4 dígitos** (no hay email).
 
+PINs de prueba (en memoria): `1111` (María García), `2222` (Ana López), `3333` (Carlos Ruiz).
+
 ## Pendientes
 
 - Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`).
-- Flujo de verificación de PIN (seleccionar trabajador → teclear PIN → verificar).
 - Persistencia SQL real (hoy en memoria, sin ORM).
-- Frontend Blazor: verificación de PIN y resto del flujo de fichaje (hoy hay panel de workers con estado y acciones).
+- Seguridad (JWT + cookie).
+- Botones de perfil: Control Horario y Ausencias (solo visuales por ahora).

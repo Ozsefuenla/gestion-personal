@@ -27,4 +27,9 @@ public sealed class Worker
             CreatedAt = DateTimeOffset.UtcNow
         };
     }
+
+    public void ChangePin(string newPinHash)
+    {
+        PinHash = newPinHash;
+    }
 }

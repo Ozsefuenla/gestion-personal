@@ -1,0 +1,170 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(string.IsNullOrEmpty(_action) ? "Logarse" : "Fichaje rápido")</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.body1">Introduce tu PIN de trabajador</MudText>
+
+        @if (_availableActions.Count > 0)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mt-4">@_message</MudAlert>
+            <div class="d-flex flex-column gap-2 mt-4">
+                @foreach (var action in _availableActions)
+                {
+                    <MudButton Variant="Variant.Filled" Color="@ActionColor(action)" FullWidth="true" OnClick="@(() => SubmitAsync(action))">
+                        <MudIcon Icon="@ActionIcon(action)" Class="mr-2" />
+                        @ActionLabel(action)
+                    </MudButton>
+                }
+            </div>
+        }
+        else
+        {
+            @if (_error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+            }
+
+            <MudTextField @ref="_pinField"
+                          T="string"
+                          Value="_pin"
+                          ValueChanged="OnPinChanged"
+                          Immediate="true"
+                          InputType="InputType.Password"
+                          InputMode="InputMode.numeric"
+                          MaxLength="4"
+                          Label="PIN"
+                          Placeholder="••••"
+                          Variant="Variant.Outlined"
+                          Class="mt-4" />
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter]
+    public string? Action { get; set; }
+
+    private MudTextField<string> _pinField = default!;
+    private string _pin = "";
+    private string _action = "";
+    private string? _error;
+    private string? _message;
+    private IReadOnlyList<string> _availableActions = [];
+
+    protected override void OnInitialized()
+    {
+        _action = Action ?? "";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(200);
+            await _pinField.FocusAsync();
+        }
+    }
+
+    private async Task OnPinChanged(string value)
+    {
+        _pin = new string(value.Where(char.IsDigit).Take(4).ToArray());
+        _error = null;
+
+        if (_pin.Length != 4)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_action))
+        {
+            await LoginAsync();
+            return;
+        }
+
+        await SubmitAsync(_action);
+    }
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            var worker = await Api.LoginAsync(_pin);
+            DialogInstance.Close(DialogResult.Ok(worker));
+        }
+        catch (Exception ex)
+        {
+            _availableActions = [];
+            _message = null;
+            _error = ex.Message;
+            _pin = "";
+            await _pinField.FocusAsync();
+        }
+    }
+
+    private async Task SubmitAsync(string action)
+    {
+        _action = action;
+
+        try
+        {
+            var result = await Api.QuickClockAsync(_pin, action);
+
+            if (result.Success)
+            {
+                Snackbar.Add("Fichaje realizado correctamente", Severity.Success);
+                DialogInstance.Close(DialogResult.Ok(true));
+                return;
+            }
+
+            _message = result.Message;
+            _availableActions = result.AvailableActions;
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _availableActions = [];
+            _message = null;
+            _error = ex.Message;
+            _pin = "";
+            await _pinField.FocusAsync();
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private static string ActionLabel(string action) => action switch
+    {
+        "start" => "Iniciar",
+        "pause" => "Pausar",
+        "end" => "Finalizar",
+        _ => action
+    };
+
+    private static string ActionIcon(string action) => action switch
+    {
+        "start" => Icons.Material.Filled.PlayArrow,
+        "pause" => Icons.Material.Filled.Pause,
+        "end" => Icons.Material.Filled.Stop,
+        _ => Icons.Material.Filled.Check
+    };
+
+    private static Color ActionColor(string action) => action switch
+    {
+        "start" => Color.Success,
+        "pause" => Color.Warning,
+        "end" => Color.Secondary,
+        _ => Color.Primary
+    };
+}

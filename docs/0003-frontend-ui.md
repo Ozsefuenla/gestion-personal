@@ -8,9 +8,10 @@ en el frontend y que el asistente las encuentre rápido.
 - Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
 - Proyecto `GestionPersonal.Web` en `src/`.
 - Carpetas:
-  - `Models/` → DTOs del cliente (`WorkerStatus`, `TimelineSegment`).
+  - `Models/` → DTOs del cliente (`WorkerStatus`, `TimelineSegment`, `QuickClockResult`).
   - `Services/` → `ApiClient` (cliente HTTP tipado).
-  - `Components/` → `Pages/Home.razor` (página), `WorkerCard.razor` (card).
+  - `Components/` → `Pages/Home.razor` (página), `WorkerCard.razor` (card),
+    `QuickClockPanel.razor` (panel de fichaje rápido), `QuickClockDialog.razor` (modal de PIN).
 
 ## Conexión con la API
 
@@ -18,6 +19,7 @@ en el frontend y que el asistente las encuentre rápido.
 - `Program.cs` → `AddHttpClient<ApiClient>(...)` con la base de `Api:BaseUrl`.
 - Las llamadas son server-to-server (Blazor Server), **sin CORS**.
 - Endpoint del panel: `GET /api/workers/status` (devuelve workers + estado + resumen + timeline).
+- Endpoint de fichaje rápido: `POST /api/time-entries/quick-clock` (`{ pin, action }`).
 
 ## Máquina de estados → acciones habilitadas
 
@@ -25,7 +27,7 @@ en el frontend y que el asistente las encuentre rápido.
 |--------------------------|----------------------|
 | `idle` | Iniciar |
 | `in-progress` | Pausar, Finalizar |
-| `paused` | Reanudar, Finalizar |
+| `paused` | Iniciar (reanuda), Finalizar |
 | `finished` | ninguna (terminal) |
 
 ## Estado → color y etiqueta (chip de estado)
@@ -41,20 +43,20 @@ en el frontend y que el asistente las encuentre rápido.
 
 | Botón | Color | Habilitado cuando |
 |-------|-------|-------------------|
-| Iniciar | `Color.Success` | `idle` |
+| Iniciar | `Color.Success` | `idle` (inicia) o `paused` (reanuda) |
 | Pausar | `Color.Warning` | `in-progress` |
-| Reanudar | `Color.Info` | `paused` |
 | Finalizar | `Color.Secondary` | `in-progress` o `paused` |
+
+> "Iniciar" unifica `start` y `resume`: si el estado es `idle` ejecuta `start`; si es
+> `paused` ejecuta `resume`.
 
 ## Card (`WorkerCard.razor`)
 
 Todo visible por defecto (sin click-para-expandir):
 
-1. Nombre, rol y chip de estado (color según tabla).
-2. Resumen: `Trabajado: <b>…</b> · Pausado: <b>…</b>`.
-3. Mini progressbar (si hay timeline).
-4. Lista de timeline (o "Sin actividad hoy.").
-5. Los 4 botones de acción (siempre visibles, deshabilitados según estado).
+1. Nombre y chip de estado (color según tabla).
+2. Lista de timeline (o "Sin actividad hoy.").
+3. Los 3 botones de acción (siempre visibles, deshabilitados según estado).
 
 ## Formato de duraciones (`FormatDuration`)
 
@@ -76,16 +78,59 @@ Todo visible por defecto (sin click-para-expandir):
 - Si `currentStatus == "finished"`: se agrega una línea "Finalizado" (círculo azul) con la hora de fin (último `to` del timeline).
 - Si el timeline está vacío: "Sin actividad hoy.".
 
-## Mini progressbar
+## Donut (`DonutProgress.razor`)
 
-- Barra de **ratio agregado** (bloques contiguos): verde = % trabajado, ámbar = % pausado.
-  - `verde% = WorkedTime / (WorkedTime + PausedTime)`, `ámbar% = PausedTime / (…)`.
-- Colores hardcodeados: verde `#43a047`, ámbar `#fb8c00` (los `--mud-palette-*` no están en el CSS y se inyectan vía tema; hardcodear evita que quede transparente).
-- Siempre visible; si no hay actividad (`WorkedTime + PausedTime = 0`), muestra una barra gris vacía (`#e0e0e0`).
-- Se actualiza automáticamente al cambiar de estado (refresh de la card).
-- Los porcentajes se formatean con `CultureInfo.InvariantCulture` (la cultura es-ES usa coma decimal y eso rompe el `width` de CSS).
+- Anillo circular (SVG) con 2 segmentos por ratio: verde = % trabajado, ámbar = % pausado.
+- Centro: estado actual ("En curso" / "En pausa" / "Finalizado" / "Sin iniciar").
+- Sin actividad (`WorkedTime + PausedTime = 0`): anillo gris completo + centro "Sin iniciar".
+- Debajo del donut: `Trabajado: … · Pausado: …`.
+- Colores hardcodeados: verde `#43a047`, ámbar `#fb8c00`, gris `#e0e0e0`.
+- Los valores SVG (`stroke-dasharray`/`stroke-dashoffset`) se formatean con `CultureInfo.InvariantCulture` (la coma decimal de es-ES rompe el SVG).
+- Se muestra en el hueco de la izquierda cuando el trabajador está logueado (reemplaza al panel de Fichaje rápido).
+
+## Fichaje rápido (`QuickClockPanel` + `QuickClockDialog`)
+
+- Panel con 3 botones grandes (todos habilitados): Iniciar (Play), Pausar (Pause), Finalizar (Stop).
+- Al pulsar un botón se abre un **`MudDialog`** "Introduce tu PIN de trabajador" con un input numérico
+  (`maxlength=4`, `AutoFocus`, auto-submit al 4º dígito).
+- El dialog tiene **2 modos** (según el parámetro `Action`):
+  - **Fichaje** (`Action` = `start`/`pause`/`end`): título "Fichaje rápido"; ejecuta `quick-clock`.
+  - **Login** (`Action` = `null`): título "Logarse"; llama `POST /api/workers/login` y devuelve el `WorkerStatus`.
+- Flujo del PIN:
+  - **PIN mal formado / no encontrado** (400): muestra el mensaje, **borra el input y reenfoca**.
+  - **Acción inválida** (200 `success=false`): muestra el estado actual y **botones con las acciones correctas**
+    (pulsar uno reenvía `quick-clock` con el mismo PIN + esa acción).
+  - **Éxito** (200 `success=true`): cierra el modal + snackbar "Fichaje realizado correctamente".
+- Vocabulario de 3 acciones: `start` (= iniciar/reanudar), `pause`, `end`.
+
+## Acceso / Login y card personal
+
+- Botón "Login" (tarjeta "Acceso") abre el `QuickClockDialog` en modo login ("Logarse").
+- Al loguear, se **oculta el panel de Fichaje rápido** y en su hueco se muestra el **donut**; la tarjeta "Acceso" se reemplaza por la card personal.
+- La card se refresca tras cada acción con `GET /api/workers/{id}/status`.
+- Botones de perfil (grid **2x2**, debajo de las acciones de fichaje):
+
+| Botón | Icono | Comportamiento |
+|-------|-------|----------------|
+| Cambiar PIN | `Password` | abre `ChangePinDialog` |
+| Control Horario | `Schedule` | visual (sin lógica) |
+| Ausencias | `EventBusy` | visual (sin lógica) |
+| Cerrar sesión | `Logout` | vuelve a la tarjeta de Login |
+
+## Cambiar PIN (`ChangePinDialog`)
+
+- Dialog con 3 inputs: PIN actual, nuevo PIN y repetir nuevo PIN (numéricos, `maxlength=4`).
+- Valida en el front: formato de 4 dígitos y que `nuevo == repetir`.
+- Llama `POST /api/workers/{id}/change-pin` con `{ currentPin, newPin }`:
+  - PIN actual incorrecto → 400 "El PIN actual no es correcto".
+  - nuevo == actual → 400 "El nuevo PIN debe ser distinto".
+  - Éxito → `204` + snackbar "PIN actualizado correctamente".
+
+## PINs de prueba (en memoria)
+
+- `1111` → María García · `2222` → Ana López · `3333` → Carlos Ruiz.
 
 ## Pendientes
 
-- Verificación de PIN antes de fichar.
-- Seguridad (JWT + cookie, hash del PIN con BCrypt).
+- Hash del PIN con BCrypt (hoy el PIN viaja y se guarda en claro).
+- Seguridad (JWT + cookie).
