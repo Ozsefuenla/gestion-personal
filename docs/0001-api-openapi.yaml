@@ -221,6 +221,32 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /time-entries/quick-clock:
+    post:
+      summary: Fichaje rápido por PIN
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuickClockRequest'
+      responses:
+        '200':
+          description: Resultado del fichaje
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuickClockResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /time-entries/me:
     get:
       summary: Consultar fichajes propios
@@ -538,6 +564,34 @@ components:
         workerId:
           type: string
           format: uuid
+
+    QuickClockRequest:
+      type: object
+      required: [pin, action]
+      properties:
+        pin:
+          type: string
+          pattern: '^\d{4}$'
+        action:
+          type: string
+          enum: [start, pause, end]
+
+    QuickClockResponse:
+      type: object
+      required: [success, message, availableActions]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        currentStatus:
+          type: string
+          enum: [idle, in-progress, paused, finished]
+        availableActions:
+          type: array
+          items:
+            type: string
+            enum: [start, pause, end]
 
     TodaySummary:
       type: object

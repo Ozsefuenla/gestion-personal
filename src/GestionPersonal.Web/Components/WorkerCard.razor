@@ -52,14 +52,11 @@
     </MudCardContent>
 
     <MudCardActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="!CanStart" OnClick="@(() => ExecuteAsync("start"))">
+        <MudButton Variant="Variant.Filled" Color="Color.Success" Disabled="!CanIniciar" OnClick="@(() => ExecuteAsync("start"))">
             Iniciar
         </MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="!CanPause" OnClick="@(() => ExecuteAsync("pause"))">
             Pausar
-        </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Info" Disabled="!CanResume" OnClick="@(() => ExecuteAsync("resume"))">
-            Reanudar
         </MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled="!CanEnd" OnClick="@(() => ExecuteAsync("end"))">
             Finalizar
@@ -74,9 +71,8 @@
     [Parameter]
     public EventCallback RefreshAsync { get; set; }
 
-    private bool CanStart => Worker.CurrentStatus == "idle";
+    private bool CanIniciar => Worker.CurrentStatus is "idle" or "paused";
     private bool CanPause => Worker.CurrentStatus == "in-progress";
-    private bool CanResume => Worker.CurrentStatus == "paused";
     private bool CanEnd => Worker.CurrentStatus is "in-progress" or "paused";
 
     private DateTimeOffset? EndedAt =>
@@ -129,13 +125,17 @@
             switch (action)
             {
                 case "start":
-                    await Api.StartAsync(Worker.Id);
+                    if (Worker.CurrentStatus == "paused")
+                    {
+                        await Api.ResumeAsync(Worker.Id);
+                    }
+                    else
+                    {
+                        await Api.StartAsync(Worker.Id);
+                    }
                     break;
                 case "pause":
                     await Api.PauseAsync(Worker.Id);
-                    break;
-                case "resume":
-                    await Api.ResumeAsync(Worker.Id);
                     break;
                 case "end":
                     await Api.EndAsync(Worker.Id);

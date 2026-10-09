@@ -1,64 +1,36 @@
 ﻿@page "/"
-@inject ApiClient Api
+@inject IDialogService DialogService
 
 <PageTitle>GestionPersonal</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudText Typo="Typo.h4">GestionPersonal</MudText>
-    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Fichaje de trabajadores</MudText>
+    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Control de fichaje</MudText>
 
-    @if (_error is not null)
-    {
-        <MudAlert Severity="Severity.Error" Class="mt-4">
-            @_error
-        </MudAlert>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="LoadWorkersAsync">
-            Reintentar
-        </MudButton>
-    }
-    else if (_workers is null)
-    {
-        <div class="d-flex justify-center mt-8">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        </div>
-    }
-    else if (_workers.Count == 0)
-    {
-        <MudAlert Severity="Severity.Info" Class="mt-4">No hay trabajadores registrados.</MudAlert>
-    }
-    else
-    {
-        <MudGrid Class="mt-4">
-            @foreach (var worker in _workers)
-            {
-                <MudItem xs="12" sm="6" md="4">
-                    <WorkerCard Worker="worker" RefreshAsync="LoadWorkersAsync" />
-                </MudItem>
-            }
-        </MudGrid>
-    }
+    <MudGrid Class="mt-4" Spacing="4">
+        <MudItem xs="12" md="6">
+            <QuickClockPanel />
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Class="h-100">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Acceso</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Identifícate para gestionar</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenLoginAsync">
+                        <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
+                        Login
+                    </MudButton>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 </MudContainer>
 
 @code {
-    private IReadOnlyList<WorkerStatus>? _workers;
-    private string? _error;
-
-    protected override async Task OnInitializedAsync()
+    private async Task OpenLoginAsync()
     {
-        await LoadWorkersAsync();
-    }
-
-    private async Task LoadWorkersAsync()
-    {
-        _error = null;
-
-        try
-        {
-            _workers = await Api.GetWorkersStatusAsync();
-        }
-        catch (Exception)
-        {
-            _error = "No se pudo conectar con la API. Asegurate de que esté corriendo en http://localhost:5243.";
-        }
+        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse");
+        await dialog.Result;
     }
 }

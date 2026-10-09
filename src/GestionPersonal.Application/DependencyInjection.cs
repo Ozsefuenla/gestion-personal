@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<EndTimeEntryCommandHandler>();
         services.AddScoped<ResumeTimeEntryCommandHandler>();
         services.AddScoped<TodaySummaryQueryHandler>();
+        services.AddScoped<QuickClockCommandHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

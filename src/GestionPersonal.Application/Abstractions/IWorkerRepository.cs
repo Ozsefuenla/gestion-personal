@@ -6,6 +6,8 @@ public interface IWorkerRepository
 {
     Task<Worker?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<Worker?> GetByPinAsync(string pin, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Worker>> GetAllAsync(CancellationToken cancellationToken = default);
 
     void Add(Worker worker);

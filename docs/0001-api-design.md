@@ -34,6 +34,7 @@
 | POST | `/api/time-entries/pause` | Registrar pausa de jornada (409 si no está en curso) | trabajador |
 | POST | `/api/time-entries/resume` | Reanudar jornada en pausa (409 si no está en pausa) | trabajador |
 | POST | `/api/time-entries/end` | Registrar fin de jornada (409 si no está iniciada; válido en curso o en pausa) | trabajador |
+| POST | `/api/time-entries/quick-clock` | Fichaje rápido por PIN de 4 dígitos (`{ pin, action }`) | trabajador |
 | GET | `/api/time-entries/today` | Estado actual y resumen del día (con línea de tiempo de tramos) | trabajador |
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
@@ -62,3 +63,4 @@
 - Por ahora se permiten trabajadores duplicados (sin unicidad por PIN).
 - Pendiente: flujo de verificación de PIN (el frontend selecciona un trabajador, teclea el PIN y el backend verifica que coincide).
 - Pendiente: al implementar seguridad, el login (`/api/auth/login`) dejará de usar `email`/`password` y pasará a basarse en el PIN.
+- `POST /api/time-entries/quick-clock` recibe `{ "pin": "1234", "action": "start" }` con 3 acciones (`start` = iniciar/reanudar, `pause`, `end`). Devuelve `400` si el PIN está mal formado ("Formato de PIN incorrecto") o no existe ("El PIN introducido no es correcto"); `200` con `success=false` + `currentStatus` + `availableActions` si la acción no corresponde al estado; y `200` con `success=true` si se ejecutó.
