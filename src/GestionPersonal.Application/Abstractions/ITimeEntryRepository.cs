@@ -13,4 +13,6 @@ public interface ITimeEntryRepository
         CancellationToken cancellationToken = default);
 
     void Add(TimeEntry timeEntry);
+
+    void Remove(TimeEntry timeEntry);
 }

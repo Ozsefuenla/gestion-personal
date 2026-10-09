@@ -148,6 +148,42 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
+        app.MapPatch("/api/time-entries/active/{workerId:guid}", async (
+            Guid workerId,
+            EditActiveTimeEntryCommand command,
+            IValidator<EditActiveTimeEntryCommand> validator,
+            EditActiveTimeEntryCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(workerId, command, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        });
+
+        app.MapDelete("/api/time-entries/active/{workerId:guid}", async (
+            Guid workerId,
+            DeleteActiveTimeEntryCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await handler.Handle(workerId, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        });
+
         return app;
     }
 }

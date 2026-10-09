@@ -1,0 +1,88 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Editar marcaje</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudTimePicker @bind-Time="_time" Label="Hora de inicio" TimeEditMode="TimeEditMode.Normal" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">Guardar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required Guid WorkerId { get; set; }
+
+    [Parameter, EditorRequired]
+    public required DateTimeOffset CurrentStart { get; set; }
+
+    private TimeSpan? _time;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        _time = MadridTime.TimeOfDay(CurrentStart);
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        if (_time is null)
+        {
+            _error = "Selecciona una hora de inicio.";
+            return;
+        }
+
+        var newStart = MadridTime.Combine(CurrentStart, _time.Value);
+
+        var originalTime = MadridTime.TimeOfDay(CurrentStart);
+        var changed = Math.Abs((_time.Value - originalTime).TotalSeconds) >= 1;
+
+        if (!changed)
+        {
+            DialogInstance.Close(DialogResult.Ok(true));
+            return;
+        }
+
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Ajustar horario",
+            "¿Quieres ajustar el anterior evento al nuevo horario cambiado?",
+            "Confirmar",
+            "Cancelar");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Api.EditActiveAsync(WorkerId, newStart);
+            Snackbar.Add("Marcaje actualizado correctamente", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+}

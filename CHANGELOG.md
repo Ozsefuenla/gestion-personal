@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend: card personal post-login (datos del día + acciones) con botones de perfil 2x2 (Cambiar PIN, Control Horario, Ausencias, Cerrar sesión).
 - Endpoint `POST /api/workers/{id}/change-pin` (cambio de PIN verificando el actual).
 - Frontend: donut circular de progreso (reemplaza a la mini progressbar) y diálogo de cambio de PIN.
+- Endpoints `PATCH`/`DELETE /api/time-entries/active/{workerId}` (editar inicio / eliminar último fichaje activo).
+- Frontend: edición/borrado del último fichaje activo y botón "+ Añadir marcaje" (visual).
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.

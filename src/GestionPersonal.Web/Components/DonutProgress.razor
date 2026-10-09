@@ -1,4 +1,7 @@
 @using System.Globalization
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudCard Elevation="2" Class="h-100">
     <MudCardContent>
@@ -27,14 +30,23 @@
         else
         {
             <div class="mt-2">
-                @foreach (var segment in Worker.Timeline)
+                @for (var i = 0; i < Worker.Timeline.Count; i++)
                 {
+                    var segment = Worker.Timeline[i];
+                    var isLastActive = IsActive && i == Worker.Timeline.Count - 1;
+
                     <div class="d-flex align-center" style="gap: 8px;">
                         <MudIcon Icon="@Icons.Material.Filled.Circle"
                                  Color="@(segment.Type == "working" ? Color.Success : Color.Warning)"
                                  Size="Size.Small" />
                         <MudText Typo="Typo.body2">@(segment.Type == "working" ? "Trabajando" : "Pausa")</MudText>
-                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From) – @MadridTime.Format(segment.To)</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From)</MudText>
+
+                        @if (isLastActive)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => OpenEditAsync(segment))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => OpenDeleteAsync(segment))" />
+                        }
                     </div>
                 }
 
@@ -48,12 +60,22 @@
                 }
             </div>
         }
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" Class="mt-2">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+            Añadir marcaje
+        </MudButton>
     </MudCardContent>
 </MudCard>
 
 @code {
     [Parameter, EditorRequired]
     public required WorkerStatus Worker { get; set; }
+
+    [Parameter]
+    public EventCallback RefreshAsync { get; set; }
+
+    private bool IsActive => Worker.CurrentStatus is "in-progress" or "paused";
 
     private double Circumference => 2 * Math.PI * 40;
     private double TotalSeconds => (Worker.WorkedTime + Worker.PausedTime).TotalSeconds;
@@ -90,5 +112,48 @@
         }
 
         return $"{duration.Seconds}s";
+    }
+
+    private async Task OpenEditAsync(TimelineSegment segment)
+    {
+        var parameters = new DialogParameters
+        {
+            ["WorkerId"] = Worker.Id,
+            ["CurrentStart"] = segment.From
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<EditActiveDialog>("Editar marcaje", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await RefreshAsync.InvokeAsync();
+        }
+    }
+
+    private async Task OpenDeleteAsync(TimelineSegment segment)
+    {
+        var type = segment.Type == "working" ? "Trabajando" : "Pausa";
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Eliminar marcaje",
+            $"¿Seguro de querer eliminar el marcaje {type} iniciado a las {MadridTime.Format(segment.From)}?",
+            "Aceptar",
+            "Cancelar");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Api.DeleteActiveAsync(Worker.Id);
+            await RefreshAsync.InvokeAsync();
+            Snackbar.Add("Marcaje eliminado correctamente", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudo eliminar el marcaje", Severity.Error);
+        }
     }
 }

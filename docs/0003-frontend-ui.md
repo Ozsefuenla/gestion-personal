@@ -74,9 +74,11 @@ Todo visible por defecto (sin click-para-expandir):
 - Cada segmento:
   - `working` → círculo verde, etiqueta "Trabajando".
   - `paused` → círculo ámbar, etiqueta "Pausa".
-- Rango: `HH:mm:ss – HH:mm:ss`.
-- Si `currentStatus == "finished"`: se agrega una línea "Finalizado" (círculo azul) con la hora de fin (último `to` del timeline).
+- Se muestra solo la **hora de inicio** de cada tramo (la de fin se omite; coincide con el inicio del siguiente).
+- Si `currentStatus == "finished"`: se agrega una línea "Finalizado" (círculo azul) con la hora de fin.
 - Si el timeline está vacío: "Sin actividad hoy.".
+- **Editar/borrar** solo el último tramo **activo** (jornada en curso o en pausa): iconos de pincel (editar) y papelera (borrar).
+- Debajo del listado: botón **"+ Añadir marcaje"** (solo visual por ahora).
 
 ## Donut (`DonutProgress.razor`)
 
@@ -125,6 +127,13 @@ Todo visible por defecto (sin click-para-expandir):
   - PIN actual incorrecto → 400 "El PIN actual no es correcto".
   - nuevo == actual → 400 "El nuevo PIN debe ser distinto".
   - Éxito → `204` + snackbar "PIN actualizado correctamente".
+
+## Editar / Eliminar marcaje activo
+
+- Solo se puede editar/borrar el **último tramo activo** (jornada en curso o en pausa).
+- **Borrar** (papelera) → confirmación "¿Seguro de querer eliminar el marcaje {tipo} iniciado a las {hora}?" + Aceptar/Cancelar. Llama `DELETE /api/time-entries/active/{workerId}`.
+- **Editar** (pincel) → `EditActiveDialog` con un `MudTimePicker` de hora de inicio. Si se cambia la hora → aviso "¿Quieres ajustar el anterior evento al nuevo horario cambiado?" + Confirmar/Cancelar. Llama `PATCH /api/time-entries/active/{workerId}` con `{ start }`.
+- Tras cada cambio se refresca el estado del worker.
 
 ## PINs de prueba (en memoria)
 

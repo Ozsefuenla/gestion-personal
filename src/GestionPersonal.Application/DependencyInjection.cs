@@ -21,6 +21,8 @@ public static class DependencyInjection
         services.AddScoped<ResumeTimeEntryCommandHandler>();
         services.AddScoped<TodaySummaryQueryHandler>();
         services.AddScoped<QuickClockCommandHandler>();
+        services.AddScoped<EditActiveTimeEntryCommandHandler>();
+        services.AddScoped<DeleteActiveTimeEntryCommandHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

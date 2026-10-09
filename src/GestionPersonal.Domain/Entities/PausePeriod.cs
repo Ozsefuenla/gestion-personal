@@ -2,7 +2,7 @@ namespace GestionPersonal.Domain.Entities;
 
 public sealed class PausePeriod
 {
-    public DateTimeOffset PausedAt { get; }
+    public DateTimeOffset PausedAt { get; private set; }
 
     public DateTimeOffset? ResumedAt { get; private set; }
 
@@ -14,5 +14,20 @@ public sealed class PausePeriod
     internal void Close(DateTimeOffset now)
     {
         ResumedAt = now;
+    }
+
+    internal void Reopen()
+    {
+        ResumedAt = null;
+    }
+
+    internal void EditPausedAt(DateTimeOffset pausedAt)
+    {
+        PausedAt = pausedAt;
+    }
+
+    internal void EditResumedAt(DateTimeOffset resumedAt)
+    {
+        ResumedAt = resumedAt;
     }
 }

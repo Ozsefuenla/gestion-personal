@@ -69,6 +69,70 @@ public sealed class TimeEntry
     public DateTimeOffset? CurrentPausedAt =>
         Status == TimeEntryStatus.Paused ? OpenPause.PausedAt : null;
 
+    public void EditLastActiveStart(DateTimeOffset newStart, DateTimeOffset now)
+    {
+        if (Status == TimeEntryStatus.Paused)
+        {
+            var previousBoundary = _pauses.Count >= 2
+                ? _pauses[^2].ResumedAt!.Value
+                : StartedAt;
+
+            ValidateNewStart(newStart, previousBoundary, now);
+            OpenPause.EditPausedAt(newStart);
+            return;
+        }
+
+        if (Status == TimeEntryStatus.InProgress)
+        {
+            if (_pauses.Count > 0)
+            {
+                var lastPause = _pauses[^1];
+
+                ValidateNewStart(newStart, lastPause.PausedAt, now);
+                lastPause.EditResumedAt(newStart);
+                return;
+            }
+
+            ValidateNewStart(newStart, DateTimeOffset.MinValue, now);
+            StartedAt = newStart;
+            return;
+        }
+
+        throw new InvalidOperationException("No hay un fichaje en curso que editar.");
+    }
+
+    public void DeleteLastActive()
+    {
+        if (Status == TimeEntryStatus.Paused)
+        {
+            _pauses.Remove(OpenPause);
+            Status = TimeEntryStatus.InProgress;
+            return;
+        }
+
+        if (Status == TimeEntryStatus.InProgress && _pauses.Count > 0)
+        {
+            _pauses[^1].Reopen();
+            Status = TimeEntryStatus.Paused;
+            return;
+        }
+
+        throw new InvalidOperationException("No hay un fichaje en curso que eliminar.");
+    }
+
+    private static void ValidateNewStart(DateTimeOffset newStart, DateTimeOffset previousBoundary, DateTimeOffset now)
+    {
+        if (newStart <= previousBoundary)
+        {
+            throw new ArgumentException("La nueva hora de inicio solapa con el tramo anterior.");
+        }
+
+        if (newStart >= now)
+        {
+            throw new ArgumentException("La nueva hora de inicio no puede ser posterior a la hora actual.");
+        }
+    }
+
     public TimeSpan GetPausedDuration(DateTimeOffset? now = null)
     {
         var endReference = EndedAt ?? now ?? DateTimeOffset.UtcNow;
