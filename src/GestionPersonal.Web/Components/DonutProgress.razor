@@ -1,0 +1,94 @@
+@using System.Globalization
+
+<MudCard Elevation="2" Class="h-100">
+    <MudCardContent>
+        <MudText Typo="Typo.h6">Resumen</MudText>
+
+        <svg viewBox="0 0 100 100" style="width: 180px; height: 180px; display: block; margin: 16px auto 0;">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e0e0" stroke-width="12" />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#43a047" stroke-width="12"
+                    stroke-dasharray="@WorkedDashArray"
+                    transform="rotate(-90 50 50)" />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#fb8c00" stroke-width="12"
+                    stroke-dasharray="@PausedDashArray"
+                    stroke-dashoffset="@PausedDashOffset"
+                    transform="rotate(-90 50 50)" />
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#616161">@StatusLabel</text>
+        </svg>
+
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">
+            Trabajado: <b>@FormatDuration(Worker.WorkedTime)</b> &nbsp;·&nbsp; Pausado: <b>@FormatDuration(Worker.PausedTime)</b>
+        </MudText>
+
+        @if (Worker.Timeline.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2">Sin actividad hoy.</MudText>
+        }
+        else
+        {
+            <div class="mt-2">
+                @foreach (var segment in Worker.Timeline)
+                {
+                    <div class="d-flex align-center" style="gap: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle"
+                                 Color="@(segment.Type == "working" ? Color.Success : Color.Warning)"
+                                 Size="Size.Small" />
+                        <MudText Typo="Typo.body2">@(segment.Type == "working" ? "Trabajando" : "Pausa")</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From) – @MadridTime.Format(segment.To)</MudText>
+                    </div>
+                }
+
+                @if (EndedAt is not null)
+                {
+                    <div class="d-flex align-center" style="gap: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Info" Size="Size.Small" />
+                        <MudText Typo="Typo.body2">Finalizado</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(EndedAt.Value)</MudText>
+                    </div>
+                }
+            </div>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public required WorkerStatus Worker { get; set; }
+
+    private double Circumference => 2 * Math.PI * 40;
+    private double TotalSeconds => (Worker.WorkedTime + Worker.PausedTime).TotalSeconds;
+    private double WorkedLength => TotalSeconds > 0 ? Worker.WorkedTime.TotalSeconds / TotalSeconds * Circumference : 0;
+    private double PausedLength => TotalSeconds > 0 ? Worker.PausedTime.TotalSeconds / TotalSeconds * Circumference : 0;
+
+    private string WorkedDashArray => $"{WorkedLength.ToString("F2", CultureInfo.InvariantCulture)} {Circumference.ToString("F2", CultureInfo.InvariantCulture)}";
+    private string PausedDashArray => $"{PausedLength.ToString("F2", CultureInfo.InvariantCulture)} {Circumference.ToString("F2", CultureInfo.InvariantCulture)}";
+    private string PausedDashOffset => (-WorkedLength).ToString("F2", CultureInfo.InvariantCulture);
+
+    private DateTimeOffset? EndedAt =>
+        Worker.CurrentStatus == "finished" && Worker.Timeline.Count > 0
+            ? Worker.Timeline[^1].To
+            : null;
+
+    private string StatusLabel => Worker.CurrentStatus switch
+    {
+        "in-progress" => "En curso",
+        "paused" => "En pausa",
+        "finished" => "Finalizado",
+        _ => "Sin iniciar"
+    };
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalHours >= 1)
+        {
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
+        }
+
+        if (duration.TotalMinutes >= 1)
+        {
+            return $"{duration.Minutes}m {duration.Seconds}s";
+        }
+
+        return $"{duration.Seconds}s";
+    }
+}

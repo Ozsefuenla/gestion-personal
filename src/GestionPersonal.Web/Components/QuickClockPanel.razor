@@ -29,7 +29,8 @@
     private async Task OpenAsync(string action)
     {
         var parameters = new DialogParameters { ["Action"] = action };
-        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Fichaje rápido", parameters);
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Fichaje rápido", parameters, options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)

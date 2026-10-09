@@ -1,0 +1,105 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Cambiar PIN</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudTextField @ref="_currentPinField" T="string" Value="_currentPin" ValueChanged="OnCurrentPinChanged"
+                      Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
+                      Label="PIN actual" Placeholder="••••" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField T="string" Value="_newPin" ValueChanged="OnNewPinChanged"
+                      Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
+                      Label="Nuevo PIN" Placeholder="••••" Variant="Variant.Outlined" Class="mb-4" />
+        <MudTextField T="string" Value="_repeatPin" ValueChanged="OnRepeatPinChanged"
+                      Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
+                      Label="Repetir nuevo PIN" Placeholder="••••" Variant="Variant.Outlined" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmAsync">Confirmar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required Guid WorkerId { get; set; }
+
+    private MudTextField<string> _currentPinField = default!;
+    private string _currentPin = "";
+    private string _newPin = "";
+    private string _repeatPin = "";
+    private string? _error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(200);
+            await _currentPinField.FocusAsync();
+        }
+    }
+
+    private Task OnCurrentPinChanged(string value)
+    {
+        _currentPin = SanitizePin(value);
+        return Task.CompletedTask;
+    }
+
+    private Task OnNewPinChanged(string value)
+    {
+        _newPin = SanitizePin(value);
+        return Task.CompletedTask;
+    }
+
+    private Task OnRepeatPinChanged(string value)
+    {
+        _repeatPin = SanitizePin(value);
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        _error = null;
+
+        if (!IsValidPin(_currentPin) || !IsValidPin(_newPin) || !IsValidPin(_repeatPin))
+        {
+            _error = "Formato de PIN incorrecto.";
+            return;
+        }
+
+        if (_newPin != _repeatPin)
+        {
+            _error = "Los PIN nuevos no coinciden.";
+            return;
+        }
+
+        try
+        {
+            await Api.ChangePinAsync(WorkerId, _currentPin, _newPin);
+            Snackbar.Add("PIN actualizado correctamente", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private static bool IsValidPin(string? pin) => pin is not null && pin.Length == 4 && pin.All(char.IsDigit);
+
+    private static string SanitizePin(string? value) => new string((value ?? "").Where(char.IsDigit).Take(4).ToArray());
+}

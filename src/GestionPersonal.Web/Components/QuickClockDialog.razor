@@ -34,7 +34,9 @@
                           Value="_pin"
                           ValueChanged="OnPinChanged"
                           Immediate="true"
+                          InputType="InputType.Password"
                           InputMode="InputMode.numeric"
+                          MaxLength="4"
                           Label="PIN"
                           Placeholder="••••"
                           Variant="Variant.Outlined"
@@ -87,11 +89,28 @@
 
         if (string.IsNullOrEmpty(_action))
         {
-            DialogInstance.Close(DialogResult.Ok(true));
+            await LoginAsync();
             return;
         }
 
         await SubmitAsync(_action);
+    }
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            var worker = await Api.LoginAsync(_pin);
+            DialogInstance.Close(DialogResult.Ok(worker));
+        }
+        catch (Exception ex)
+        {
+            _availableActions = [];
+            _message = null;
+            _error = ex.Message;
+            _pin = "";
+            await _pinField.FocusAsync();
+        }
     }
 
     private async Task SubmitAsync(string action)

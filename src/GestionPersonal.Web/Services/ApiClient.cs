@@ -17,6 +17,35 @@ public sealed class ApiClient
         return await _http.GetFromJsonAsync<List<WorkerStatus>>("/api/workers/status", cancellationToken) ?? [];
     }
 
+    public async Task<WorkerStatus> GetWorkerStatusAsync(Guid workerId, CancellationToken cancellationToken = default)
+    {
+        return await _http.GetFromJsonAsync<WorkerStatus>($"/api/workers/{workerId}/status", cancellationToken)
+            ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
+    }
+
+    public async Task<WorkerStatus> LoginAsync(string pin, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync("/api/workers/login", new { pin }, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<WorkerStatus>(cancellationToken)
+                ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
+        }
+
+        throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+    }
+
+    public async Task ChangePinAsync(Guid workerId, string currentPin, string newPin, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin, newPin }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
     public Task StartAsync(Guid workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/start", workerId, cancellationToken);
 

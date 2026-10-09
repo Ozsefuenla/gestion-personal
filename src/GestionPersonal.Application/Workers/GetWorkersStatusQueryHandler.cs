@@ -29,19 +29,7 @@ public sealed class GetWorkersStatusQueryHandler
 
         foreach (var worker in workers)
         {
-            var openEntry = await _timeEntryRepository.GetOpenEntryByWorkerAsync(worker.Id, cancellationToken);
-            var entries = await _timeEntryRepository.GetByWorkerBetweenAsync(worker.Id, from, to, cancellationToken);
-
-            result.Add(new WorkerStatusResponse(
-                worker.Id,
-                worker.FullName,
-                worker.Role.ToString().ToLowerInvariant(),
-                TodayStatusHelper.GetCurrentStatus(openEntry, entries),
-                openEntry?.StartedAt,
-                openEntry?.CurrentPausedAt,
-                entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetWorkedDuration(now)),
-                entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetPausedDuration(now)),
-                TodayStatusHelper.BuildTimeline(entries, now)));
+            result.Add(await WorkerStatusBuilder.BuildAsync(worker, now, from, to, _timeEntryRepository, cancellationToken));
         }
 
         return Result<IReadOnlyList<WorkerStatusResponse>>.Success(result);

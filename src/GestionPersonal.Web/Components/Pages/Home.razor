@@ -1,36 +1,78 @@
 ﻿@page "/"
 @inject IDialogService DialogService
+@inject ApiClient Api
 
 <PageTitle>GestionPersonal</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudText Typo="Typo.h4">GestionPersonal</MudText>
     <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Control de fichaje</MudText>
 
     <MudGrid Class="mt-4" Spacing="4">
-        <MudItem xs="12" md="6">
-            <QuickClockPanel />
+        <MudItem xs="12" md="4">
+            @if (_loggedInWorker is null)
+            {
+                <QuickClockPanel />
+            }
+            else
+            {
+                <DonutProgress Worker="_loggedInWorker" />
+            }
         </MudItem>
 
-        <MudItem xs="12" md="6">
-            <MudCard Elevation="2" Class="h-100">
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Acceso</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Identifícate para gestionar</MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenLoginAsync">
-                        <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
-                        Login
-                    </MudButton>
-                </MudCardContent>
-            </MudCard>
+        <MudItem xs="12" md="8">
+            @if (_loggedInWorker is null)
+            {
+                <MudCard Elevation="2" Class="h-100">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">Acceso</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Identifícate para gestionar</MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenLoginAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
+                            Login
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            }
+            else
+            {
+                <WorkerCard Worker="_loggedInWorker"
+                            ShowProfileButtons="true"
+                            RefreshAsync="RefreshWorkerAsync"
+                            LogoutAsync="LogoutAsync" />
+            }
         </MudItem>
     </MudGrid>
 </MudContainer>
 
 @code {
+    private WorkerStatus? _loggedInWorker;
+
     private async Task OpenLoginAsync()
     {
-        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse");
-        await dialog.Result;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", options);
+        var result = await dialog.Result;
+
+        if (result?.Data is WorkerStatus worker)
+        {
+            _loggedInWorker = worker;
+        }
+    }
+
+    private async Task RefreshWorkerAsync()
+    {
+        if (_loggedInWorker is null)
+        {
+            return;
+        }
+
+        _loggedInWorker = await Api.GetWorkerStatusAsync(_loggedInWorker.Id);
+    }
+
+    private Task LogoutAsync()
+    {
+        _loggedInWorker = null;
+        return Task.CompletedTask;
     }
 }

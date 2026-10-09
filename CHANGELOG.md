@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Endpoint `POST /api/time-entries/quick-clock` (fichaje rápido por PIN de 4 dígitos).
 - Frontend: panel de fichaje rápido (Iniciar/Pausar/Finalizar) con modal de PIN (MudDialog).
 - Frontend: botón "Login" (modal de PIN en modo login) y cards de trabajadores ocultas temporalmente.
+- Endpoint `POST /api/workers/login` (inicio de sesión por PIN) y `GET /api/workers/{id}/status`.
+- Frontend: card personal post-login (datos del día + acciones) con botones de perfil 2x2 (Cambiar PIN, Control Horario, Ausencias, Cerrar sesión).
+- Endpoint `POST /api/workers/{id}/change-pin` (cambio de PIN verificando el actual).
+- Frontend: donut circular de progreso (reemplaza a la mini progressbar) y diálogo de cambio de PIN.
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
