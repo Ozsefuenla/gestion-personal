@@ -57,7 +57,7 @@ public sealed class ChangePinTests : IClassFixture<WebApplicationFactory<Program
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private async Task<Guid> GetWorkerIdAsync(string pin)
+    private async Task<int> GetWorkerIdAsync(string pin)
     {
         var login = await _client.PostAsJsonAsync("/api/workers/login", new { pin });
         var worker = await login.Content.ReadFromJsonAsync<WorkerStatusResponse>();

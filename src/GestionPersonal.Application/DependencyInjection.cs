@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<EndTimeEntryCommandHandler>();
         services.AddScoped<ResumeTimeEntryCommandHandler>();
         services.AddScoped<TodaySummaryQueryHandler>();
+        services.AddScoped<MonthlySummaryQueryHandler>();
         services.AddScoped<QuickClockCommandHandler>();
         services.AddScoped<EditActiveTimeEntryCommandHandler>();
         services.AddScoped<DeleteActiveTimeEntryCommandHandler>();

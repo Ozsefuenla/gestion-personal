@@ -33,7 +33,9 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_StartWhenIdle_Succeeds()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "1111", action = "start" });
+        var pin = await CreateWorkerAsync("7001");
+
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -45,8 +47,10 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_StartWhenInProgress_ReturnsAvailableActions()
     {
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "2222", action = "start" });
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "2222", action = "start" });
+        var pin = await CreateWorkerAsync("7002");
+
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -60,15 +64,24 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_StartActsAsResume_WhenPaused()
     {
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "3333", action = "start" });
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "3333", action = "pause" });
+        var pin = await CreateWorkerAsync("7003");
 
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "3333", action = "start" });
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "pause" });
+
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var result = await response.Content.ReadFromJsonAsync<QuickClockResponse>();
         Assert.NotNull(result);
         Assert.True(result.Success);
+    }
+
+    private async Task<string> CreateWorkerAsync(string pin)
+    {
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = $"Worker {pin}", pin, role = "worker" });
+        response.EnsureSuccessStatusCode();
+        return pin;
     }
 }

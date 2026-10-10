@@ -1,3 +1,3 @@
 namespace GestionPersonal.Application.TimeEntries;
 
-public sealed record TodaySummaryQuery(Guid WorkerId);
+public sealed record TodaySummaryQuery(int WorkerId);

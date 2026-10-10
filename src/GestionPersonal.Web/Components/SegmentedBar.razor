@@ -1,0 +1,48 @@
+@using System.Globalization
+
+<div class="d-flex" style="height: 12px; width: 100%; border-radius: 6px; overflow: hidden; background: #e0e0e0;">
+    <div style="background: #43a047; width: @WorkedPercent%;"></div>
+    <div style="background: #fb8c00; width: @PausedPercent%;"></div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required TimeSpan Worked { get; set; }
+
+    [Parameter, EditorRequired]
+    public required TimeSpan Paused { get; set; }
+
+    [Parameter, EditorRequired]
+    public required TimeSpan Target { get; set; }
+
+    private string WorkedPercent
+    {
+        get
+        {
+            var target = Target.TotalMinutes;
+            if (target <= 0)
+            {
+                return "0";
+            }
+
+            var percent = Math.Min(Worked.TotalMinutes, target) / target * 100;
+            return percent.ToString("F2", CultureInfo.InvariantCulture);
+        }
+    }
+
+    private string PausedPercent
+    {
+        get
+        {
+            var target = Target.TotalMinutes;
+            if (target <= 0)
+            {
+                return "0";
+            }
+
+            var remaining = Math.Max(0, target - Worked.TotalMinutes);
+            var percent = Math.Min(Paused.TotalMinutes, remaining) / target * 100;
+            return percent.ToString("F2", CultureInfo.InvariantCulture);
+        }
+    }
+}

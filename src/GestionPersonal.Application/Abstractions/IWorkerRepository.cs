@@ -4,7 +4,7 @@ namespace GestionPersonal.Application.Abstractions;
 
 public interface IWorkerRepository
 {
-    Task<Worker?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Worker?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     Task<Worker?> GetByPinAsync(string pin, CancellationToken cancellationToken = default);
 

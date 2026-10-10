@@ -5,7 +5,7 @@ namespace GestionPersonal.Application.TimeEntries;
 
 public sealed record TimeEntryResponse(
     Guid Id,
-    Guid WorkerId,
+    int WorkerId,
     string Status,
     DateTimeOffset StartedAt,
     DateTimeOffset? EndedAt,

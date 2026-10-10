@@ -17,7 +17,7 @@ public sealed class EndTimeEntryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task PostEnd_WhenInProgress_ReturnsOk()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         var response = await _client.PostAsJsonAsync("/api/time-entries/end", new { workerId });
@@ -34,7 +34,7 @@ public sealed class EndTimeEntryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task PostEnd_WhenNotStarted_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         var response = await _client.PostAsJsonAsync("/api/time-entries/end", new { workerId });
 
@@ -44,7 +44,7 @@ public sealed class EndTimeEntryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task PostEnd_WhenPaused_ReturnsOk()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -65,7 +65,7 @@ public sealed class EndTimeEntryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task PostEnd_WithEmptyWorkerId_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/end", new { workerId = Guid.Empty });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/end", new { workerId = 0 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

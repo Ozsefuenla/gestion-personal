@@ -1,0 +1,195 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudCard Elevation="2">
+    <MudCardContent>
+        <MudText Typo="Typo.h6">Control Horario</MudText>
+
+        <div class="d-flex align-center flex-wrap mt-4" style="gap: 16px;">
+            <div style="min-width: 180px;">
+                <MudSelect T="int" Label="Mes" Value="_month" ValueChanged="OnMonthChanged">
+                    @for (var i = 1; i <= 12; i++)
+                    {
+                        var month = i;
+                        <MudSelectItem T="int" Value="@month">@MonthName(month)</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            <div style="min-width: 140px;">
+                <MudSelect T="int" Label="Año" Value="_year" ValueChanged="OnYearChanged">
+                    @foreach (var year in Years)
+                    {
+                        <MudSelectItem T="int" Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="true">
+                <MudIcon Icon="@Icons.Material.Filled.FileDownload" Class="mr-2" />
+                Exportar
+            </MudButton>
+
+            @if (_summary is not null)
+            {
+                <div class="d-flex align-center" style="gap: 16px; padding-left: 16px; border-left: 1px solid #e0e0e0;">
+                    <MudText Typo="Typo.body2"><b>Previstas:</b> @FormatHours(Previstas)</MudText>
+                    <MudText Typo="Typo.body2"><b>Trabajadas:</b> @FormatHours(Trabajadas)</MudText>
+                    <MudText Typo="Typo.body2" Color="@SummaryDeltaColor"><b>Diferencia:</b> @FormatSummaryDelta()</MudText>
+                </div>
+            }
+        </div>
+
+        @if (_summary is null)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Cargando…</MudText>
+        }
+        else
+        {
+            <div class="mt-4">
+                @foreach (var day in _summary.Days)
+                {
+                    var date = new DateTime(_year, _month, day.Day);
+                    var isWorkingDay = date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
+
+                    <div class="d-flex align-center" style="gap: 12px; padding: 6px 0;">
+                        <MudText Typo="Typo.body2" Style="min-width: 90px;">@date.ToString("dd/MM/yyyy")</MudText>
+
+                        @if (!isWorkingDay)
+                        {
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">Día no laborable</MudText>
+                        }
+                        else if (!day.HasEntries)
+                        {
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">Día sin datos registrados</MudText>
+                        }
+                        else
+                        {
+                            <div class="flex-grow-1">
+                                <SegmentedBar Worked="day.WorkedTime" Paused="day.PausedTime" Target="Worker.DailyHours" />
+                            </div>
+                            <MudText Typo="Typo.body2" Style="min-width: 90px;">Previstas: @FormatHours(Worker.DailyHours)</MudText>
+                            <MudText Typo="Typo.body2" Style="min-width: 110px;">Trabajadas: @FormatHours(day.WorkedTime)</MudText>
+                            <MudText Typo="Typo.body2" Color="@DeltaColor(day)" Style="min-width: 110px; font-weight: 600;">Diferencia: @FormatDelta(day)</MudText>
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
+                                           OnClick="@(() => OpenDetailAsync(date, day))" />
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public required WorkerStatus Worker { get; set; }
+
+    private static readonly string[] MonthNames =
+    [
+        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+    private MonthlySummary? _summary;
+    private int _year;
+    private int _month;
+
+    private IReadOnlyList<int> Years =>
+        Enumerable.Range(DateTime.Now.Year - 5, 6).Reverse().ToList();
+
+    private TimeSpan Previstas
+    {
+        get
+        {
+            var first = new DateTime(_year, _month, 1);
+            var today = DateTime.Today;
+
+            if (today < first)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var last = first.AddMonths(1).AddDays(-1);
+            var end = today > last ? last : today;
+            var workingDays = Enumerable.Range(0, (end - first).Days + 1)
+                .Select(d => first.AddDays(d))
+                .Count(d => d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday);
+
+            return Worker.DailyHours * workingDays;
+        }
+    }
+
+    private TimeSpan Trabajadas =>
+        _summary?.Days.Aggregate(TimeSpan.Zero, (total, day) => total + day.WorkedTime) ?? TimeSpan.Zero;
+
+    private Color SummaryDeltaColor =>
+        Trabajadas.TotalMinutes >= Previstas.TotalMinutes ? Color.Success : Color.Error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _year = DateTime.Now.Year;
+        _month = DateTime.Now.Month;
+        await LoadAsync();
+    }
+
+    private async Task OnMonthChanged(int value)
+    {
+        _month = value;
+        await LoadAsync();
+    }
+
+    private async Task OnYearChanged(int value)
+    {
+        _year = value;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _summary = null;
+
+        try
+        {
+            _summary = await Api.GetMonthlySummaryAsync(Worker.Id, _year, _month);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudo cargar el resumen mensual", Severity.Error);
+        }
+    }
+
+    private async Task OpenDetailAsync(DateTime date, DailySummary day)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Day"] = day,
+            ["DailyHours"] = Worker.DailyHours
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        await DialogService.ShowAsync<DayDetailDialog>($"Detalle — {date:dd/MM/yyyy}", parameters, options);
+    }
+
+    private static string MonthName(int month) => MonthNames[month];
+
+    private static string FormatHours(TimeSpan value) =>
+        value.Minutes == 0 ? $"{(int)value.TotalHours} h" : $"{(int)value.TotalHours} h {value.Minutes} m";
+
+    private string FormatDelta(DailySummary day)
+    {
+        var delta = (int)Math.Round(day.WorkedTime.TotalMinutes - Worker.DailyHours.TotalMinutes);
+        return delta == 0 ? "0 min" : delta > 0 ? $"+{delta} min" : $"{delta} min";
+    }
+
+    private Color DeltaColor(DailySummary day) =>
+        day.WorkedTime.TotalMinutes >= Worker.DailyHours.TotalMinutes ? Color.Success : Color.Error;
+
+    private string FormatSummaryDelta()
+    {
+        var delta = (int)Math.Round(Trabajadas.TotalMinutes - Previstas.TotalMinutes);
+        return delta == 0 ? "0 min" : delta > 0 ? $"+{delta} min" : $"{delta} min";
+    }
+}

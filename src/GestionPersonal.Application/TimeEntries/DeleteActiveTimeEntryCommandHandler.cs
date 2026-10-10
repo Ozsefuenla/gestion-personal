@@ -13,7 +13,7 @@ public sealed class DeleteActiveTimeEntryCommandHandler
         _timeEntryRepository = timeEntryRepository;
     }
 
-    public async Task<Result> Handle(Guid workerId, CancellationToken cancellationToken = default)
+    public async Task<Result> Handle(int workerId, CancellationToken cancellationToken = default)
     {
         var entry = await _timeEntryRepository.GetOpenEntryByWorkerAsync(workerId, cancellationToken);
 

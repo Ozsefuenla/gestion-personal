@@ -1,0 +1,62 @@
+<MudDialog>
+    <DialogContent>
+        <div class="mb-4">
+            <SegmentedBar Worked="Day.WorkedTime" Paused="Day.PausedTime" Target="DailyHours" />
+        </div>
+
+        @if (Day.Timeline.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Sin actividad.</MudText>
+        }
+        else
+        {
+            @foreach (var segment in Day.Timeline)
+            {
+                <div class="d-flex align-center" style="gap: 8px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Circle"
+                             Color="@(segment.Type == "working" ? Color.Success : Color.Warning)"
+                             Size="Size.Small" />
+                    <MudText Typo="Typo.body2">@(segment.Type == "working" ? "Trabajando" : "Pausa")</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From)</MudText>
+                </div>
+            }
+        }
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex align-center" style="gap: 16px;">
+            <MudText Typo="Typo.body2"><b>Previstas:</b> @FormatHours(DailyHours)</MudText>
+            <MudText Typo="Typo.body2"><b>Trabajadas:</b> @FormatHours(Day.WorkedTime)</MudText>
+            <MudText Typo="Typo.body2" Color="@DeltaColor"><b>Diferencia:</b> @FormatDelta()</MudText>
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required DailySummary Day { get; set; }
+
+    [Parameter, EditorRequired]
+    public required TimeSpan DailyHours { get; set; }
+
+    private Color DeltaColor =>
+        Day.WorkedTime.TotalMinutes >= DailyHours.TotalMinutes ? Color.Success : Color.Error;
+
+    private string FormatDelta()
+    {
+        var delta = (int)Math.Round(Day.WorkedTime.TotalMinutes - DailyHours.TotalMinutes);
+        return delta == 0 ? "0 min" : delta > 0 ? $"+{delta} min" : $"{delta} min";
+    }
+
+    private static string FormatHours(TimeSpan value) =>
+        value.Minutes == 0 ? $"{(int)value.TotalHours} h" : $"{(int)value.TotalHours} h {value.Minutes} m";
+
+    private void Cancel() => DialogInstance.Cancel();
+}

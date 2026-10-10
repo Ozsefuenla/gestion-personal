@@ -26,6 +26,7 @@ internal static class WorkerStatusBuilder
             openEntry?.CurrentPausedAt,
             entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetWorkedDuration(now)),
             entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetPausedDuration(now)),
+            worker.DailyHours,
             TodayStatusHelper.BuildTimeline(entries, now));
     }
 }

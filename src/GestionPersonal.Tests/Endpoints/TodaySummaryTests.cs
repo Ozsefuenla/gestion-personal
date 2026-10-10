@@ -17,7 +17,7 @@ public sealed class TodaySummaryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task GetToday_WhenIdle_ReturnsEmptySummary()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         var summary = await _client.GetFromJsonAsync<TodaySummaryResponse>($"/api/time-entries/today?workerId={workerId}");
 
@@ -35,7 +35,7 @@ public sealed class TodaySummaryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task GetToday_WhenInProgress_ReturnsWorkingStatus()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         var summary = await _client.GetFromJsonAsync<TodaySummaryResponse>($"/api/time-entries/today?workerId={workerId}");
@@ -51,7 +51,7 @@ public sealed class TodaySummaryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task GetToday_WhenPaused_ReturnsPausedStatus()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -67,7 +67,7 @@ public sealed class TodaySummaryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task GetToday_FullCycle_ReturnsTimelineWithMultiplePauses()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -88,7 +88,7 @@ public sealed class TodaySummaryTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async Task GetToday_WithEmptyWorkerId_ReturnsBadRequest()
     {
-        var response = await _client.GetAsync("/api/time-entries/today?workerId=00000000-0000-0000-0000-000000000000");
+        var response = await _client.GetAsync("/api/time-entries/today?workerId=0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

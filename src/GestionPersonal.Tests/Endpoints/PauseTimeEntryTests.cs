@@ -17,7 +17,7 @@ public sealed class PauseTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostPause_WhenInProgress_ReturnsOk()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         var response = await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -37,7 +37,7 @@ public sealed class PauseTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostPause_WhenNotStarted_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         var response = await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
 
@@ -47,7 +47,7 @@ public sealed class PauseTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostPause_WhenAlreadyPaused_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -59,7 +59,7 @@ public sealed class PauseTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostPause_WithEmptyWorkerId_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId = Guid.Empty });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId = 0 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

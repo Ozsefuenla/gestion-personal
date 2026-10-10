@@ -35,7 +35,7 @@ public sealed class WorkersEndpointsTests : IClassFixture<WebApplicationFactory<
         Assert.NotNull(workers);
         Assert.All(workers, worker =>
         {
-            Assert.NotEqual(Guid.Empty, worker.Id);
+            Assert.True(worker.Id > 0);
             Assert.False(string.IsNullOrWhiteSpace(worker.FullName));
             Assert.False(string.IsNullOrWhiteSpace(worker.Role));
         });

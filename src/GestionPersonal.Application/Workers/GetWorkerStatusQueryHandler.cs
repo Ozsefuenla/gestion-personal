@@ -18,7 +18,7 @@ public sealed class GetWorkerStatusQueryHandler
     }
 
     public async Task<Result<WorkerStatusResponse>> Handle(
-        Guid workerId,
+        int workerId,
         CancellationToken cancellationToken = default)
     {
         var worker = await _workerRepository.GetByIdAsync(workerId, cancellationToken);

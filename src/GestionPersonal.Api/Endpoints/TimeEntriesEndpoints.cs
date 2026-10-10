@@ -101,12 +101,39 @@ public static class TimeEntriesEndpoints
         });
 
         app.MapGet("/api/time-entries/today", async (
-            Guid workerId,
+            int workerId,
             IValidator<TodaySummaryQuery> validator,
             TodaySummaryQueryHandler handler,
             CancellationToken cancellationToken) =>
         {
             var query = new TodaySummaryQuery(workerId);
+
+            var validationResult = await validator.ValidateAsync(query, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(query, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : result.ToProblemDetails();
+        });
+
+        app.MapGet("/api/time-entries/monthly", async (
+            int workerId,
+            int year,
+            int month,
+            IValidator<MonthlySummaryQuery> validator,
+            MonthlySummaryQueryHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var query = new MonthlySummaryQuery(workerId, year, month);
 
             var validationResult = await validator.ValidateAsync(query, cancellationToken);
 
@@ -148,8 +175,8 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapPatch("/api/time-entries/active/{workerId:guid}", async (
-            Guid workerId,
+        app.MapPatch("/api/time-entries/active/{workerId:int}", async (
+            int workerId,
             EditActiveTimeEntryCommand command,
             IValidator<EditActiveTimeEntryCommand> validator,
             EditActiveTimeEntryCommandHandler handler,
@@ -172,8 +199,8 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapDelete("/api/time-entries/active/{workerId:guid}", async (
-            Guid workerId,
+        app.MapDelete("/api/time-entries/active/{workerId:int}", async (
+            int workerId,
             DeleteActiveTimeEntryCommandHandler handler,
             CancellationToken cancellationToken) =>
         {

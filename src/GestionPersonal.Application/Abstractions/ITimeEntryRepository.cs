@@ -4,10 +4,16 @@ namespace GestionPersonal.Application.Abstractions;
 
 public interface ITimeEntryRepository
 {
-    Task<TimeEntry?> GetOpenEntryByWorkerAsync(Guid workerId, CancellationToken cancellationToken = default);
+    Task<TimeEntry?> GetOpenEntryByWorkerAsync(int workerId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<TimeEntry>> GetByWorkerBetweenAsync(
-        Guid workerId,
+        int workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TimeEntry>> GetByWorkerOverlappingAsync(
+        int workerId,
         DateTimeOffset from,
         DateTimeOffset to,
         CancellationToken cancellationToken = default);

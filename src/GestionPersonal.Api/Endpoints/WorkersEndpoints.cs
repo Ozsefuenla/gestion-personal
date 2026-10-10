@@ -26,7 +26,7 @@ public static class WorkersEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapGet("/api/workers/{id:guid}/status", async (Guid id, GetWorkerStatusQueryHandler handler, CancellationToken cancellationToken) =>
+        app.MapGet("/api/workers/{id:int}/status", async (int id, GetWorkerStatusQueryHandler handler, CancellationToken cancellationToken) =>
         {
             var result = await handler.Handle(id, cancellationToken);
 
@@ -81,8 +81,8 @@ public static class WorkersEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapPost("/api/workers/{id:guid}/change-pin", async (
-            Guid id,
+        app.MapPost("/api/workers/{id:int}/change-pin", async (
+            int id,
             ChangePinCommand command,
             IValidator<ChangePinCommand> validator,
             ChangePinCommandHandler handler,

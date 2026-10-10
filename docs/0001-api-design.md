@@ -41,6 +41,7 @@
 | PATCH | `/api/time-entries/active/{workerId}` | Editar la hora de inicio del fichaje activo | trabajador |
 | DELETE | `/api/time-entries/active/{workerId}` | Eliminar el último fichaje activo (deshacer) | trabajador |
 | GET | `/api/time-entries/today` | Estado actual y resumen del día (con línea de tiempo de tramos) | trabajador |
+| GET | `/api/time-entries/monthly` | Resumen mensual por día (tiempo trabajado por día + objetivo diario) | trabajador |
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
 
@@ -56,6 +57,7 @@
 ## Notas
 
 - Rutas en inglés por convención REST; los recursos son `workers`, `time-entries` y `vacations`.
+- Los `workerId`/`id` de trabajador son **enteros** (autoincremental); los seed son `1`, `2` y `3`. `TimeEntry.id` y `Vacation.id` siguen siendo `Guid`.
 - La autenticación se limita a emitir un token con el rol; no incluye recuperación de contraseña, registro self-service ni refresh tokens.
 - El `GET /api/workers` se incluye únicamente porque `admin` lo necesita para filtrar fichajes y validar solicitudes; no implica CRUD completo de trabajadores.
 - Hasta implementar autenticación, `start`, `pause`, `resume` y `end` reciben `workerId` en el cuerpo de la petición.
@@ -72,3 +74,4 @@
 - `POST /api/workers/login` recibe `{ "pin": "1234" }` y devuelve el `WorkerStatus` del trabajador (identidad + resumen del día); `400` si el PIN no corresponde a ningún trabajador. `GET /api/workers/{id}/status` devuelve lo mismo por id (para refrescar la card).
 - `POST /api/workers/{id}/change-pin` recibe `{ "currentPin", "newPin" }`: valida que el PIN actual sea correcto, que el nuevo sea de 4 dígitos y distinto al actual; devuelve `204 NoContent` o `400` con el error.
 - `PATCH /api/time-entries/active/{workerId}` recibe `{ "start" }` y edita la hora de inicio del fichaje activo (ajustando el tramo anterior); `DELETE /api/time-entries/active/{workerId}` elimina el último fichaje activo (deshacer). Ambos devuelven `204` o `400`.
+- `GET /api/time-entries/monthly` recibe `{ workerId, year, month }` y devuelve el resumen mensual del trabajador: el objetivo diario (`dailyTarget`, horas por día de cada worker, seed inicial 8h) y una lista de días (`1..N` del mes) con `workedTime`, `pausedTime`, `hasEntries` y el `timeline` de tramos (`working`/`paused`) de cada día. El frontend calcula las horas "Previstas" (`8h × días laborables L-V hasta hoy`), muestra los días sin datos/no laborables y pinta la barra segmentada verde/ámbar/gris.

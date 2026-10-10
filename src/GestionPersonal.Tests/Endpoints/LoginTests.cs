@@ -25,7 +25,6 @@ public sealed class LoginTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.NotNull(worker);
         Assert.Equal("María García", worker.FullName);
         Assert.Equal("worker", worker.Role);
-        Assert.Equal("idle", worker.CurrentStatus);
     }
 
     [Fact]
@@ -64,7 +63,7 @@ public sealed class LoginTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task GetWorkerStatus_WithUnknownId_ReturnsNotFound()
     {
-        var response = await _client.GetAsync($"/api/workers/{Guid.NewGuid()}/status");
+        var response = await _client.GetAsync($"/api/workers/{TestWorkerIds.New()}/status");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

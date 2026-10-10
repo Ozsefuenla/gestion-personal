@@ -19,19 +19,18 @@ public sealed class WorkersStatusTests : IClassFixture<WebApplicationFactory<Pro
         var statuses = await _client.GetFromJsonAsync<List<WorkerStatusResponse>>("/api/workers/status");
 
         Assert.NotNull(statuses);
-        Assert.Equal(3, statuses.Count);
-        Assert.All(statuses, s => Assert.False(string.IsNullOrWhiteSpace(s.CurrentStatus)));
+        Assert.True(statuses.Count >= 3);
+        Assert.All(statuses, s =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(s.CurrentStatus));
+            Assert.Equal(TimeSpan.FromHours(8), s.DailyHours);
+        });
     }
 
     [Fact]
     public async Task GetWorkersStatus_ReflectsStatusTransitions()
     {
-        var workers = await _client.GetFromJsonAsync<List<WorkerResponse>>("/api/workers");
-
-        Assert.NotNull(workers);
-        Assert.NotEmpty(workers);
-
-        var workerId = workers[0].Id;
+        var workerId = await CreateWorkerAsync();
 
         var status = await GetStatusAsync(workerId);
         Assert.Equal("idle", status.CurrentStatus);
@@ -57,7 +56,18 @@ public sealed class WorkersStatusTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Equal(new[] { "working", "paused" }, status.Timeline.Select(t => t.Type));
     }
 
-    private async Task<WorkerStatusResponse> GetStatusAsync(Guid workerId)
+    private async Task<int> CreateWorkerAsync()
+    {
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Transition Worker", pin = "6001", role = "worker" });
+        response.EnsureSuccessStatusCode();
+
+        var worker = await response.Content.ReadFromJsonAsync<WorkerResponse>()
+            ?? throw new InvalidOperationException("No se pudo crear el trabajador.");
+
+        return worker.Id;
+    }
+
+    private async Task<WorkerStatusResponse> GetStatusAsync(int workerId)
     {
         var statuses = await _client.GetFromJsonAsync<List<WorkerStatusResponse>>("/api/workers/status")
             ?? throw new InvalidOperationException("No se pudo obtener el estado de los trabajadores.");

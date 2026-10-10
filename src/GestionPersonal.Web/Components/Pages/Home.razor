@@ -39,7 +39,15 @@
                 <WorkerCard Worker="_loggedInWorker"
                             ShowProfileButtons="true"
                             RefreshAsync="RefreshWorkerAsync"
-                            LogoutAsync="LogoutAsync" />
+                            LogoutAsync="LogoutAsync"
+                            ToggleTimeControl="ToggleTimeControlAsync" />
+
+                @if (_showTimeControl)
+                {
+                    <div class="mt-4">
+                        <TimeControlPanel Worker="_loggedInWorker" />
+                    </div>
+                }
             }
         </MudItem>
     </MudGrid>
@@ -47,6 +55,7 @@
 
 @code {
     private WorkerStatus? _loggedInWorker;
+    private bool _showTimeControl;
 
     private async Task OpenLoginAsync()
     {
@@ -70,9 +79,16 @@
         _loggedInWorker = await Api.GetWorkerStatusAsync(_loggedInWorker.Id);
     }
 
+    private Task ToggleTimeControlAsync()
+    {
+        _showTimeControl = !_showTimeControl;
+        return Task.CompletedTask;
+    }
+
     private Task LogoutAsync()
     {
         _loggedInWorker = null;
+        _showTimeControl = false;
         return Task.CompletedTask;
     }
 }
