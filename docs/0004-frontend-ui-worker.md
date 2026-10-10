@@ -57,29 +57,47 @@ Todo visible por defecto (sin click-para-expandir):
 
 Panel que se muestra **debajo de la card personal** al pulsar "Control Horario" (toggle).
 
-### Filtro de mes/año
+### Filtro de mes/año y resumen
 
 - Arriba del listado: `MudSelect` de **mes** (12 meses, en español) y `MudSelect` de **año**
   (desde el año actual hasta `actual - 5`).
 - Al cambiar cualquiera de los dos se recarga el resumen (`GET /api/time-entries/monthly`).
-- A la derecha de los selects, botón **"Exportar"** (icono `FileDownload`), solo visual por ahora
-  (`Disabled`).
+- Botón **"Exportar"** (icono `FileDownload`), solo visual por ahora (`Disabled`).
+- A la derecha de Exportar, recuadro de **resumen mensual**:
+  - **Previstas**: `8h × días laborables (L-V)` desde el día 1 del mes **hasta hoy** (0 si el mes es futuro).
+  - **Trabajadas**: suma de lo trabajado del mes.
+  - **Diferencia**: `trabajadas − previstas`, en **minutos** con signo (`0 min` / `+15 min` / `-15 min`).
 
 ### Listado diario
 
 - Una fila por cada día del mes (siempre el total de días del mes: 28–31).
-- Cada fila, de izquierda a derecha:
-  1. **Número de día** (peso semibold).
-  2. **Contenido del día**:
-     - **Sin datos** (`HasEntries == false`): texto "Día sin datos registrados", sin barra ni delta.
-     - **Con datos**: `MudProgressLinear` (verde) cuyo llenado es `trabajado / horasDiarias` (cap 100%),
-       el texto "Tiempo total trabajado: `Xh Ym`" y el **delta** en minutos.
-  3. **Botón de detalle**: icono de **ojo** (`Visibility`), sin lógica (se implementa más adelante).
+- Fecha en formato completo `dd/MM/yyyy`.
+- Según el tipo de día:
+  - **No laborable (S/D)**: texto "Día no laborable" (sin barra).
+  - **Laborable sin datos** (`HasEntries == false`): texto "Día sin datos registrados" (sin barra).
+    Aun así, cuenta como `0` trabajadas en el resumen (refleja el faltante en la Diferencia).
+  - **Laborable con datos**, de izquierda a derecha: fecha → `SegmentedBar` (ver `0003`) →
+    `Previstas: 8 h` → `Trabajadas: 8 h / 7 h 45 m` → `Diferencia: ±N min` → **ojo** (`Visibility`).
+
+### Barra segmentada (`SegmentedBar.razor`)
+
+- Barra horizontal sobre las **8 horas** asignadas (`DailyHours`), con 3 colores:
+  - **Verde** `#43a047` = trabajado.
+  - **Ámbar** `#fb8c00` = pausado.
+  - **Gris** `#e0e0e0` = tiempo no consumido (`max(0, 8h − trabajado − pausado)`).
+- Si trabajado + pausado supera las 8h se recorta (sin gris).
+
+### Detalle del día (`DayDetailDialog.razor`)
+
+- El **ojo** abre un `MudDialog` con el título "Detalle — dd/MM/yyyy" y:
+  - La `SegmentedBar` del día.
+  - La **lista de tramos** (como debajo del donut): "Trabajando HH:mm" / "Pausa HH:mm".
+  - `Previstas`, `Trabajadas` y `Diferencia`.
 
 ### Horas diarias y delta
 
 - Cada worker tiene un campo `DailyHours` (objetivo diario; seed inicial 8h) expuesto en `WorkerStatus`.
-- El **delta** a la derecha de la barra es la diferencia entre lo trabajado y el objetivo, en **minutos**:
-  - 8h30 trabajadas → `+30` (verde).
-  - 7h45 trabajadas → `-15` (rojo).
-- El texto "Tiempo total trabajado" usa **horas y minutos** (sin segundos): `8h 30m`.
+- La **diferencia** (por día y en el resumen) es `trabajadas − previstas`, en **minutos** con signo:
+  - 8h30 trabajadas → `+30 min` (verde).
+  - 7h45 trabajadas → `-15 min` (rojo).
+- El texto "Trabajadas" usa **horas y minutos** (`8 h` o `7 h 45 m`); "Previstas" solo horas (`8 h`).

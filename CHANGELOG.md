@@ -34,9 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Endpoints `PATCH`/`DELETE /api/time-entries/active/{workerId}` (editar inicio / eliminar último fichaje activo).
 - Frontend: edición/borrado del último fichaje activo y botón "+ Añadir marcaje" (visual).
 - Campo `DailyHours` en `Worker` (horas diarias objetivo, seed inicial 8h) expuesto en `WorkerStatus`.
-- Endpoint `GET /api/time-entries/monthly` (resumen mensual por día: trabajado por día + objetivo diario).
+- Endpoint `GET /api/time-entries/monthly` (resumen mensual por día: trabajado/pausado por día + tramos + objetivo diario).
 - Frontend: panel "Control Horario" (`TimeControlPanel`) con select de mes/año, listado diario con progressbar
   vs horas diarias, delta en minutos, días sin datos y botón "Exportar" (visual).
+- Frontend: resumen mensual (Previstas/Trabajadas/Diferencia), barra segmentada (`SegmentedBar` verde/ámbar/gris
+  sobre las 8h) y detalle del día por icono de ojo (`DayDetailDialog`) con tramos del día.
 - Documento de reglas de UI del trabajador logueado (`docs/0004-frontend-ui-worker.md`).
 
 ### Changed

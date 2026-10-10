@@ -858,15 +858,22 @@ components:
 
     DailySummary:
       type: object
-      required: [day, workedTime, hasEntries]
+      required: [day, workedTime, pausedTime, hasEntries, timeline]
       properties:
         day:
           type: integer
         workedTime:
           type: string
           description: Duración trabajada en formato hh:mm:ss
+        pausedTime:
+          type: string
+          description: Duración en pausa en formato hh:mm:ss
         hasEntries:
           type: boolean
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineSegment'
 
     VacationCreateRequest:
       type: object

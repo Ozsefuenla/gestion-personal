@@ -81,7 +81,7 @@ CHANGELOG.md
 | Editar inicio del fichaje activo (`PATCH /api/time-entries/active/{workerId}`) | Implementado |
 | Eliminar el último fichaje activo (`DELETE /api/time-entries/active/{workerId}`) | Implementado |
 | Resumen mensual por día (`GET /api/time-entries/monthly`) | Implementado |
-| Control Horario (panel mensual con progressbar vs horas diarias) | Implementado (sin exportar ni detalle) |
+| Control Horario (panel mensual con barra segmentada vs horas diarias) | Implementado (sin exportar) |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
@@ -100,5 +100,5 @@ PINs de prueba (en memoria): `1111` (María García), `2222` (Ana López), `3333
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Seguridad (JWT + cookie).
 - Botón "Ausencias" (solo visual por ahora).
-- Botones "Exportar" y detalle (ojo) del panel de Control Horario (pendientes).
+- Botón "Exportar" del panel de Control Horario (pendiente).
 - Botón "+ Añadir marcaje" (solo visual por ahora).
