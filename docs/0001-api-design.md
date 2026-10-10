@@ -57,6 +57,7 @@
 ## Notas
 
 - Rutas en inglés por convención REST; los recursos son `workers`, `time-entries` y `vacations`.
+- Los `workerId`/`id` de trabajador son **enteros** (autoincremental); los seed son `1`, `2` y `3`. `TimeEntry.id` y `Vacation.id` siguen siendo `Guid`.
 - La autenticación se limita a emitir un token con el rol; no incluye recuperación de contraseña, registro self-service ni refresh tokens.
 - El `GET /api/workers` se incluye únicamente porque `admin` lo necesita para filtrar fichajes y validar solicitudes; no implica CRUD completo de trabajadores.
 - Hasta implementar autenticación, `start`, `pause`, `resume` y `end` reciben `workerId` en el cuerpo de la petición.

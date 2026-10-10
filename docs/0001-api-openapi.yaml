@@ -127,8 +127,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       responses:
         '200':
           description: Estado del trabajador
@@ -154,8 +153,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       requestBody:
         required: true
         content:
@@ -289,8 +287,7 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       responses:
         '200':
           description: Estado actual y resumen del día
@@ -316,8 +313,7 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
         - name: year
           in: query
           required: true
@@ -383,8 +379,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       requestBody:
         required: true
         content:
@@ -410,8 +405,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            type: integer
       responses:
         '204':
           description: Marcaje eliminado
@@ -452,8 +446,7 @@ paths:
         - name: workerId
           in: query
           schema:
-            type: string
-            format: uuid
+            type: integer
           description: Filtrar por trabajador (opcional)
       responses:
         '200':
@@ -676,8 +669,7 @@ components:
       required: [id, fullName, role]
       properties:
         id:
-          type: string
-          format: uuid
+          type: integer
         fullName:
           type: string
         role:
@@ -690,8 +682,7 @@ components:
       required: [id, fullName, role, currentStatus]
       properties:
         id:
-          type: string
-          format: uuid
+          type: integer
         fullName:
           type: string
         role:
@@ -727,8 +718,7 @@ components:
           type: string
           format: uuid
         workerId:
-          type: string
-          format: uuid
+          type: integer
         status:
           type: string
           enum: [in-progress, paused, finished]
@@ -759,8 +749,7 @@ components:
       required: [workerId]
       properties:
         workerId:
-          type: string
-          format: uuid
+          type: integer
 
     QuickClockRequest:
       type: object
@@ -894,8 +883,7 @@ components:
           type: string
           format: uuid
         workerId:
-          type: string
-          format: uuid
+          type: integer
         startDate:
           type: string
           format: date
