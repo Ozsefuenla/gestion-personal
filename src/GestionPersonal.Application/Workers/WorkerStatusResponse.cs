@@ -11,4 +11,5 @@ public sealed record WorkerStatusResponse(
     DateTimeOffset? CurrentPausedAt,
     TimeSpan WorkedTime,
     TimeSpan PausedTime,
+    TimeSpan DailyHours,
     IReadOnlyList<TimelineSegmentResponse> Timeline);

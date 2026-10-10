@@ -20,7 +20,11 @@ public sealed class WorkersStatusTests : IClassFixture<WebApplicationFactory<Pro
 
         Assert.NotNull(statuses);
         Assert.Equal(3, statuses.Count);
-        Assert.All(statuses, s => Assert.False(string.IsNullOrWhiteSpace(s.CurrentStatus)));
+        Assert.All(statuses, s =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(s.CurrentStatus));
+            Assert.Equal(TimeSpan.FromHours(8), s.DailyHours);
+        });
     }
 
     [Fact]
