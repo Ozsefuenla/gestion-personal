@@ -12,6 +12,12 @@ public interface ITimeEntryRepository
         DateTimeOffset to,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<TimeEntry>> GetByWorkerOverlappingAsync(
+        Guid workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default);
+
     void Add(TimeEntry timeEntry);
 
     void Remove(TimeEntry timeEntry);

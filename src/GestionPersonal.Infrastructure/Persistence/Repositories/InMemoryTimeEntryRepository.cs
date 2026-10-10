@@ -29,6 +29,22 @@ public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<TimeEntry>> GetByWorkerOverlappingAsync(
+        Guid workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<TimeEntry> result = _entries
+            .Where(e => e.WorkerId == workerId &&
+                        e.StartedAt < to &&
+                        (e.EndedAt is null || e.EndedAt >= from))
+            .OrderBy(e => e.StartedAt)
+            .ToList();
+
+        return Task.FromResult(result);
+    }
+
     public void Add(TimeEntry timeEntry)
     {
         _entries.Add(timeEntry);

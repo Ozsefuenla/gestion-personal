@@ -125,6 +125,33 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
+        app.MapGet("/api/time-entries/monthly", async (
+            Guid workerId,
+            int year,
+            int month,
+            IValidator<MonthlySummaryQuery> validator,
+            MonthlySummaryQueryHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var query = new MonthlySummaryQuery(workerId, year, month);
+
+            var validationResult = await validator.ValidateAsync(query, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(query, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : result.ToProblemDetails();
+        });
+
         app.MapPost("/api/time-entries/quick-clock", async (
             QuickClockCommand command,
             IValidator<QuickClockCommand> validator,
