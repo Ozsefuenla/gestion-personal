@@ -32,7 +32,9 @@ public sealed class MonthlySummaryTests : IClassFixture<WebApplicationFactory<Pr
         Assert.All(summary.Days, d =>
         {
             Assert.Equal(TimeSpan.Zero, d.WorkedTime);
+            Assert.Equal(TimeSpan.Zero, d.PausedTime);
             Assert.False(d.HasEntries);
+            Assert.Empty(d.Timeline);
         });
     }
 
@@ -51,6 +53,28 @@ public sealed class MonthlySummaryTests : IClassFixture<WebApplicationFactory<Pr
         Assert.NotNull(summary);
         var activeDay = summary.Days.Single(d => d.HasEntries);
         Assert.True(activeDay.WorkedTime > TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task GetMonthly_AfterFullCycle_TodayHasPausedTimeAndTimeline()
+    {
+        var workerId = await CreateWorkerAsync();
+        var (year, month) = MadridNow();
+
+        await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
+        await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
+        await _client.PostAsJsonAsync("/api/time-entries/resume", new { workerId });
+        await _client.PostAsJsonAsync("/api/time-entries/end", new { workerId });
+
+        var summary = await _client.GetFromJsonAsync<MonthlySummaryResponse>(
+            $"/api/time-entries/monthly?workerId={workerId}&year={year}&month={month}");
+
+        Assert.NotNull(summary);
+        var activeDay = summary.Days.Single(d => d.HasEntries);
+        Assert.True(activeDay.WorkedTime > TimeSpan.Zero);
+        Assert.True(activeDay.PausedTime > TimeSpan.Zero);
+        Assert.Contains(activeDay.Timeline, s => s.Type == "working");
+        Assert.Contains(activeDay.Timeline, s => s.Type == "paused");
     }
 
     [Fact]

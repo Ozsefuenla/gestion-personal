@@ -38,6 +38,8 @@ public sealed class MonthlySummaryQueryHandler
         {
             var (dayFrom, dayTo) = MonthlySummaryHelper.GetDayRange(query.Year, query.Month, day);
             var worked = TimeSpan.Zero;
+            var paused = TimeSpan.Zero;
+            var timeline = new List<TimelineSegmentResponse>();
             var hasEntries = false;
 
             foreach (var entry in entries)
@@ -49,19 +51,22 @@ public sealed class MonthlySummaryQueryHandler
                     hasEntries = true;
                 }
 
-                foreach (var segment in MonthlySummaryHelper.GetWorkingSegments(entry, now))
+                foreach (var segment in MonthlySummaryHelper.GetDayTimeline(entry, dayFrom, dayTo, now))
                 {
-                    var start = segment.From > dayFrom ? segment.From : dayFrom;
-                    var end = segment.To < dayTo ? segment.To : dayTo;
+                    timeline.Add(new TimelineSegmentResponse(segment.Type, segment.From, segment.To));
 
-                    if (end > start)
+                    if (segment.Type == "working")
                     {
-                        worked += end - start;
+                        worked += segment.To - segment.From;
+                    }
+                    else
+                    {
+                        paused += segment.To - segment.From;
                     }
                 }
             }
 
-            days.Add(new DailySummaryResponse(day, worked, hasEntries));
+            days.Add(new DailySummaryResponse(day, worked, paused, hasEntries, timeline));
         }
 
         return new MonthlySummaryResponse(query.Year, query.Month, worker.DailyHours, days);

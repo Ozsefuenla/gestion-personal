@@ -9,4 +9,6 @@ public sealed record MonthlySummaryResponse(
 public sealed record DailySummaryResponse(
     int Day,
     TimeSpan WorkedTime,
-    bool HasEntries);
+    TimeSpan PausedTime,
+    bool HasEntries,
+    IReadOnlyList<TimelineSegmentResponse> Timeline);
