@@ -32,6 +32,9 @@
     [Parameter, EditorRequired]
     public required DateTimeOffset CurrentStart { get; set; }
 
+    [Parameter]
+    public bool HasPrevious { get; set; }
+
     private TimeSpan? _time;
     private string? _error;
 
@@ -61,15 +64,18 @@
             return;
         }
 
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Ajustar horario",
-            "¿Quieres ajustar el anterior evento al nuevo horario cambiado?",
-            "Confirmar",
-            "Cancelar");
-
-        if (confirmed != true)
+        if (HasPrevious)
         {
-            return;
+            var confirmed = await DialogService.ShowMessageBoxAsync(
+                "Ajustar horario",
+                "¿Quieres ajustar el anterior evento al nuevo horario cambiado?",
+                "Confirmar",
+                "Cancelar");
+
+            if (confirmed != true)
+            {
+                return;
+            }
         }
 
         try
