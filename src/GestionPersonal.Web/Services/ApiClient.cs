@@ -23,6 +23,13 @@ public sealed class ApiClient
             ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
     }
 
+    public async Task<MonthlySummary> GetMonthlySummaryAsync(Guid workerId, int year, int month, CancellationToken cancellationToken = default)
+    {
+        return await _http.GetFromJsonAsync<MonthlySummary>(
+                $"/api/time-entries/monthly?workerId={workerId}&year={year}&month={month}", cancellationToken)
+            ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
+    }
+
     public async Task<WorkerStatus> LoginAsync(string pin, CancellationToken cancellationToken = default)
     {
         var response = await _http.PostAsJsonAsync("/api/workers/login", new { pin }, cancellationToken);

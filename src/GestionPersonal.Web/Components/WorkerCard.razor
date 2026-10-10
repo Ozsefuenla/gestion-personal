@@ -34,7 +34,7 @@
                     </MudButton>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" OnClick="@(() => ToggleTimeControl.InvokeAsync())">
                         <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-2" />
                         Control Horario
                     </MudButton>
@@ -68,6 +68,9 @@
 
     [Parameter]
     public EventCallback LogoutAsync { get; set; }
+
+    [Parameter]
+    public EventCallback ToggleTimeControl { get; set; }
 
     private bool CanIniciar => Worker.CurrentStatus is "idle" or "paused";
     private bool CanPause => Worker.CurrentStatus == "in-progress";
