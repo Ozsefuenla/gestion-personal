@@ -331,6 +331,56 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /time-entries/active/{workerId}:
+    patch:
+      summary: Editar la hora de inicio del fichaje activo
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditActiveRequest'
+      responses:
+        '204':
+          description: Marcaje actualizado
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Eliminar el último fichaje activo
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Marcaje eliminado
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /time-entries/me:
     get:
       summary: Consultar fichajes propios
@@ -678,6 +728,14 @@ components:
         action:
           type: string
           enum: [start, pause, end]
+
+    EditActiveRequest:
+      type: object
+      required: [start]
+      properties:
+        start:
+          type: string
+          format: date-time
 
     QuickClockResponse:
       type: object

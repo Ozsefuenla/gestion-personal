@@ -46,6 +46,26 @@ public sealed class ApiClient
         }
     }
 
+    public async Task EditActiveAsync(Guid workerId, DateTimeOffset start, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PatchAsJsonAsync($"/api/time-entries/active/{workerId}", new { start }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task DeleteActiveAsync(Guid workerId, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.DeleteAsync($"/api/time-entries/active/{workerId}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
     public Task StartAsync(Guid workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/start", workerId, cancellationToken);
 

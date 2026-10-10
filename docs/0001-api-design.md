@@ -38,6 +38,8 @@
 | POST | `/api/time-entries/resume` | Reanudar jornada en pausa (409 si no está en pausa) | trabajador |
 | POST | `/api/time-entries/end` | Registrar fin de jornada (409 si no está iniciada; válido en curso o en pausa) | trabajador |
 | POST | `/api/time-entries/quick-clock` | Fichaje rápido por PIN de 4 dígitos (`{ pin, action }`) | trabajador |
+| PATCH | `/api/time-entries/active/{workerId}` | Editar la hora de inicio del fichaje activo | trabajador |
+| DELETE | `/api/time-entries/active/{workerId}` | Eliminar el último fichaje activo (deshacer) | trabajador |
 | GET | `/api/time-entries/today` | Estado actual y resumen del día (con línea de tiempo de tramos) | trabajador |
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
@@ -69,3 +71,4 @@
 - `POST /api/time-entries/quick-clock` recibe `{ "pin": "1234", "action": "start" }` con 3 acciones (`start` = iniciar/reanudar, `pause`, `end`). Devuelve `400` si el PIN está mal formado ("Formato de PIN incorrecto") o no existe ("El PIN introducido no es correcto"); `200` con `success=false` + `currentStatus` + `availableActions` si la acción no corresponde al estado; y `200` con `success=true` si se ejecutó.
 - `POST /api/workers/login` recibe `{ "pin": "1234" }` y devuelve el `WorkerStatus` del trabajador (identidad + resumen del día); `400` si el PIN no corresponde a ningún trabajador. `GET /api/workers/{id}/status` devuelve lo mismo por id (para refrescar la card).
 - `POST /api/workers/{id}/change-pin` recibe `{ "currentPin", "newPin" }`: valida que el PIN actual sea correcto, que el nuevo sea de 4 dígitos y distinto al actual; devuelve `204 NoContent` o `400` con el error.
+- `PATCH /api/time-entries/active/{workerId}` recibe `{ "start" }` y edita la hora de inicio del fichaje activo (ajustando el tramo anterior); `DELETE /api/time-entries/active/{workerId}` elimina el último fichaje activo (deshacer). Ambos devuelven `204` o `400`.

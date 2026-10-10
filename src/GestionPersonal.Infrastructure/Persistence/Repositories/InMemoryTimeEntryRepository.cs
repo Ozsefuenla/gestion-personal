@@ -33,4 +33,9 @@ public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
     {
         _entries.Add(timeEntry);
     }
+
+    public void Remove(TimeEntry timeEntry)
+    {
+        _entries.Remove(timeEntry);
+    }
 }

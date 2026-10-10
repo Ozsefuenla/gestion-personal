@@ -77,6 +77,8 @@ CHANGELOG.md
 | Inicio de sesión por PIN (`POST /api/workers/login`) | Implementado |
 | Estado de un trabajador por id (`GET /api/workers/{id}/status`) | Implementado |
 | Cambiar PIN (`POST /api/workers/{id}/change-pin`) | Implementado |
+| Editar inicio del fichaje activo (`PATCH /api/time-entries/active/{workerId}`) | Implementado |
+| Eliminar el último fichaje activo (`DELETE /api/time-entries/active/{workerId}`) | Implementado |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
@@ -95,3 +97,4 @@ PINs de prueba (en memoria): `1111` (María García), `2222` (Ana López), `3333
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Seguridad (JWT + cookie).
 - Botones de perfil: Control Horario y Ausencias (solo visuales por ahora).
+- Botón "+ Añadir marcaje" (solo visual por ahora).
