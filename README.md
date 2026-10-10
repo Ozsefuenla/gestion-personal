@@ -56,7 +56,8 @@ docs/
 ├─ 0001-api-design.md
 ├─ 0001-api-openapi.yaml
 ├─ 0002-solution-structure.md
-└─ 0003-frontend-ui.md
+├─ 0003-frontend-ui.md
+└─ 0004-frontend-ui-worker.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -79,6 +80,8 @@ CHANGELOG.md
 | Cambiar PIN (`POST /api/workers/{id}/change-pin`) | Implementado |
 | Editar inicio del fichaje activo (`PATCH /api/time-entries/active/{workerId}`) | Implementado |
 | Eliminar el último fichaje activo (`DELETE /api/time-entries/active/{workerId}`) | Implementado |
+| Resumen mensual por día (`GET /api/time-entries/monthly`) | Implementado |
+| Control Horario (panel mensual con progressbar vs horas diarias) | Implementado (sin exportar ni detalle) |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
@@ -96,5 +99,6 @@ PINs de prueba (en memoria): `1111` (María García), `2222` (Ana López), `3333
 - Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`).
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Seguridad (JWT + cookie).
-- Botones de perfil: Control Horario y Ausencias (solo visuales por ahora).
+- Botón "Ausencias" (solo visual por ahora).
+- Botones "Exportar" y detalle (ojo) del panel de Control Horario (pendientes).
 - Botón "+ Añadir marcaje" (solo visual por ahora).

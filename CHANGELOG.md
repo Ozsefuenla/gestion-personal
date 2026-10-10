@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend: donut circular de progreso (reemplaza a la mini progressbar) y diálogo de cambio de PIN.
 - Endpoints `PATCH`/`DELETE /api/time-entries/active/{workerId}` (editar inicio / eliminar último fichaje activo).
 - Frontend: edición/borrado del último fichaje activo y botón "+ Añadir marcaje" (visual).
+- Campo `DailyHours` en `Worker` (horas diarias objetivo, seed inicial 8h) expuesto en `WorkerStatus`.
+- Endpoint `GET /api/time-entries/monthly` (resumen mensual por día: trabajado por día + objetivo diario).
+- Frontend: panel "Control Horario" (`TimeControlPanel`) con select de mes/año, listado diario con progressbar
+  vs horas diarias, delta en minutos, días sin datos y botón "Exportar" (visual).
+- Documento de reglas de UI del trabajador logueado (`docs/0004-frontend-ui-worker.md`).
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
@@ -41,3 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trabajadores: eliminado el campo `email`; añadido `pin` de 4 dígitos (guardado en `PinHash`, en claro temporalmente).
 - `/api/time-entries/today`: `currentStatus` distingue `finished` (fichajes cerrados hoy) de `idle` (sin iniciar).
 - Acción "Iniciar" unificada con "Reanudar" (iniciar jornada o reanudar según estado) en card y fichaje rápido.
+- `docs/0003-frontend-ui.md` se reestructura como base común; el contenido del trabajador logueado pasa a `docs/0004-frontend-ui-worker.md`.

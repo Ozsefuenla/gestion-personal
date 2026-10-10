@@ -305,6 +305,47 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /time-entries/monthly:
+    get:
+      summary: Resumen mensual por día
+      tags: [TimeEntries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workerId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        '200':
+          description: Resumen mensual del trabajador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlySummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /time-entries/quick-clock:
     post:
       summary: Fichaje rápido por PIN
@@ -670,6 +711,9 @@ components:
         pausedTime:
           type: string
           description: Duración en formato hh:mm:ss
+        dailyHours:
+          type: string
+          description: Horas diarias objetivo en formato hh:mm:ss
         timeline:
           type: array
           items:
@@ -795,6 +839,34 @@ components:
         to:
           type: string
           format: date-time
+
+    MonthlySummary:
+      type: object
+      required: [year, month, dailyTarget, days]
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        dailyTarget:
+          type: string
+          description: Objetivo diario en formato hh:mm:ss
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailySummary'
+
+    DailySummary:
+      type: object
+      required: [day, workedTime, hasEntries]
+      properties:
+        day:
+          type: integer
+        workedTime:
+          type: string
+          description: Duración trabajada en formato hh:mm:ss
+        hasEntries:
+          type: boolean
 
     VacationCreateRequest:
       type: object

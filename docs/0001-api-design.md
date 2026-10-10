@@ -41,6 +41,7 @@
 | PATCH | `/api/time-entries/active/{workerId}` | Editar la hora de inicio del fichaje activo | trabajador |
 | DELETE | `/api/time-entries/active/{workerId}` | Eliminar el último fichaje activo (deshacer) | trabajador |
 | GET | `/api/time-entries/today` | Estado actual y resumen del día (con línea de tiempo de tramos) | trabajador |
+| GET | `/api/time-entries/monthly` | Resumen mensual por día (tiempo trabajado por día + objetivo diario) | trabajador |
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
 
@@ -72,3 +73,4 @@
 - `POST /api/workers/login` recibe `{ "pin": "1234" }` y devuelve el `WorkerStatus` del trabajador (identidad + resumen del día); `400` si el PIN no corresponde a ningún trabajador. `GET /api/workers/{id}/status` devuelve lo mismo por id (para refrescar la card).
 - `POST /api/workers/{id}/change-pin` recibe `{ "currentPin", "newPin" }`: valida que el PIN actual sea correcto, que el nuevo sea de 4 dígitos y distinto al actual; devuelve `204 NoContent` o `400` con el error.
 - `PATCH /api/time-entries/active/{workerId}` recibe `{ "start" }` y edita la hora de inicio del fichaje activo (ajustando el tramo anterior); `DELETE /api/time-entries/active/{workerId}` elimina el último fichaje activo (deshacer). Ambos devuelven `204` o `400`.
+- `GET /api/time-entries/monthly` recibe `{ workerId, year, month }` y devuelve el resumen mensual del trabajador: el objetivo diario (`dailyTarget`, horas por día de cada worker, seed inicial 8h) y una lista de días (`1..N` del mes) con el `workedTime` de cada día y `hasEntries` (si hubo fichajes ese día). El frontend muestra los días sin datos con "Día sin datos registrados".

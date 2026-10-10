@@ -41,7 +41,10 @@ frontend en Blazor Server.
 - Los documentos de API se acompañan de su especificación OpenAPI (`.yaml`)
   cuando aplique.
 - El `README.md` se mantiene actualizado ante cualquier cambio que lo afecte.
-- Las reglas de UI del frontend están en `docs/0003-frontend-ui.md` (estados, colores, acciones, timeline).
+- Las reglas de UI del frontend están en `docs/0003-frontend-ui.md` (base común:
+  estados, colores, acciones, timeline) y en `docs/0004-frontend-ui-worker.md`
+  (trabajador logueado: card personal, donut, cambio de PIN, edición de marcajes,
+  control horario).
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo
