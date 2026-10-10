@@ -3,7 +3,7 @@ using GestionPersonal.Application.TimeEntries;
 namespace GestionPersonal.Application.Workers;
 
 public sealed record WorkerStatusResponse(
-    Guid Id,
+    int Id,
     string FullName,
     string Role,
     string CurrentStatus,

@@ -34,7 +34,7 @@
     private IMudDialogInstance DialogInstance { get; set; } = default!;
 
     [Parameter, EditorRequired]
-    public required Guid WorkerId { get; set; }
+    public required int WorkerId { get; set; }
 
     private MudTextField<string> _currentPinField = default!;
     private string _currentPin = "";

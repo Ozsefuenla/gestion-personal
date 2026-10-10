@@ -17,7 +17,7 @@ public sealed class StartTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostStart_WithNoOpenEntry_ReturnsOk()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         var response = await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
 
@@ -35,7 +35,7 @@ public sealed class StartTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostStart_WhenAlreadyStarted_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         var response = await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
@@ -46,7 +46,7 @@ public sealed class StartTimeEntryTests : IClassFixture<WebApplicationFactory<Pr
     [Fact]
     public async Task PostStart_WithEmptyWorkerId_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId = Guid.Empty });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId = 0 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

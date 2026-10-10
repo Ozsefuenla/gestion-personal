@@ -29,7 +29,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         var worker = await response.Content.ReadFromJsonAsync<WorkerResponse>();
 
         Assert.NotNull(worker);
-        Assert.NotEqual(Guid.Empty, worker.Id);
+        Assert.True(worker.Id > 0);
         Assert.Equal("Laura Pérez", worker.FullName);
         Assert.Equal("worker", worker.Role);
     }

@@ -5,7 +5,7 @@ namespace GestionPersonal.Domain.Entities;
 public sealed class Vacation
 {
     public Guid Id { get; private set; }
-    public Guid WorkerId { get; private set; }
+    public int WorkerId { get; private set; }
     public DateOnly StartDate { get; private set; }
     public DateOnly EndDate { get; private set; }
     public VacationStatus Status { get; private set; }
@@ -16,7 +16,7 @@ public sealed class Vacation
     {
     }
 
-    public static Vacation Request(Guid workerId, DateOnly startDate, DateOnly endDate, DateTimeOffset now)
+    public static Vacation Request(int workerId, DateOnly startDate, DateOnly endDate, DateTimeOffset now)
     {
         if (endDate < startDate)
         {

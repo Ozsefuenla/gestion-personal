@@ -7,7 +7,7 @@ public sealed class TimeEntry
     private readonly List<PausePeriod> _pauses = [];
 
     public Guid Id { get; private set; }
-    public Guid WorkerId { get; private set; }
+    public int WorkerId { get; private set; }
     public TimeEntryStatus Status { get; private set; }
     public DateTimeOffset StartedAt { get; private set; }
     public DateTimeOffset? EndedAt { get; private set; }
@@ -17,7 +17,7 @@ public sealed class TimeEntry
     {
     }
 
-    public static TimeEntry Start(Guid workerId, DateTimeOffset now)
+    public static TimeEntry Start(int workerId, DateTimeOffset now)
     {
         return new TimeEntry
         {

@@ -17,7 +17,7 @@ public sealed class ResumeTimeEntryTests : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task PostResume_WhenPaused_ReturnsOk()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });
@@ -38,7 +38,7 @@ public sealed class ResumeTimeEntryTests : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task PostResume_WhenNotStarted_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         var response = await _client.PostAsJsonAsync("/api/time-entries/resume", new { workerId });
 
@@ -48,7 +48,7 @@ public sealed class ResumeTimeEntryTests : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task PostResume_WhenInProgress_ReturnsConflict()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         var response = await _client.PostAsJsonAsync("/api/time-entries/resume", new { workerId });
@@ -59,7 +59,7 @@ public sealed class ResumeTimeEntryTests : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task PostResume_WithEmptyWorkerId_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/resume", new { workerId = Guid.Empty });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/resume", new { workerId = 0 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -67,7 +67,7 @@ public sealed class ResumeTimeEntryTests : IClassFixture<WebApplicationFactory<P
     [Fact]
     public async Task FullCycle_TracksMultiplePausesWithDates()
     {
-        var workerId = Guid.NewGuid();
+        var workerId = TestWorkerIds.New();
 
         await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
         await _client.PostAsJsonAsync("/api/time-entries/pause", new { workerId });

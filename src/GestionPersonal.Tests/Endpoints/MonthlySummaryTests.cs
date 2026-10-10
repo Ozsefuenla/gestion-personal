@@ -95,12 +95,12 @@ public sealed class MonthlySummaryTests : IClassFixture<WebApplicationFactory<Pr
         var (year, month) = MadridNow();
 
         var response = await _client.GetAsync(
-            $"/api/time-entries/monthly?workerId={Guid.NewGuid()}&year={year}&month={month}");
+            $"/api/time-entries/monthly?workerId={TestWorkerIds.New()}&year={year}&month={month}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private async Task<Guid> CreateWorkerAsync()
+    private async Task<int> CreateWorkerAsync()
     {
         var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Test Worker", pin = "9999", role = "worker" });
 

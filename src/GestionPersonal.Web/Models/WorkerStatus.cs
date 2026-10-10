@@ -1,7 +1,7 @@
 namespace GestionPersonal.Web.Models;
 
 public sealed record WorkerStatus(
-    Guid Id,
+    int Id,
     string FullName,
     string Role,
     string CurrentStatus,

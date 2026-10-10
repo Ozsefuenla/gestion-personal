@@ -1,3 +1,3 @@
 namespace GestionPersonal.Application.TimeEntries;
 
-public sealed record EndTimeEntryCommand(Guid WorkerId);
+public sealed record EndTimeEntryCommand(int WorkerId);

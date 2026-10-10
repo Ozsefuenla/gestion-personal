@@ -13,7 +13,7 @@ public sealed class EditActiveTimeEntryCommandHandler
     }
 
     public async Task<Result> Handle(
-        Guid workerId,
+        int workerId,
         EditActiveTimeEntryCommand command,
         CancellationToken cancellationToken = default)
     {

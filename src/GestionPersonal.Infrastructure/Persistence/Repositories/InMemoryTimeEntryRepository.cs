@@ -1,14 +1,15 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
 using GestionPersonal.Domain.Enums;
+using GestionPersonal.Infrastructure.Persistence;
 
 namespace GestionPersonal.Infrastructure.Persistence.Repositories;
 
 public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
 {
-    private readonly List<TimeEntry> _entries = [];
+    private readonly List<TimeEntry> _entries = [.. SeedData.BuildTimeEntries()];
 
-    public Task<TimeEntry?> GetOpenEntryByWorkerAsync(Guid workerId, CancellationToken cancellationToken = default)
+    public Task<TimeEntry?> GetOpenEntryByWorkerAsync(int workerId, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_entries.FirstOrDefault(e =>
             e.WorkerId == workerId &&
@@ -16,7 +17,7 @@ public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
     }
 
     public Task<IReadOnlyList<TimeEntry>> GetByWorkerBetweenAsync(
-        Guid workerId,
+        int workerId,
         DateTimeOffset from,
         DateTimeOffset to,
         CancellationToken cancellationToken = default)
@@ -30,7 +31,7 @@ public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
     }
 
     public Task<IReadOnlyList<TimeEntry>> GetByWorkerOverlappingAsync(
-        Guid workerId,
+        int workerId,
         DateTimeOffset from,
         DateTimeOffset to,
         CancellationToken cancellationToken = default)

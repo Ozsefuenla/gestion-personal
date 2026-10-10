@@ -17,13 +17,13 @@ public sealed class ApiClient
         return await _http.GetFromJsonAsync<List<WorkerStatus>>("/api/workers/status", cancellationToken) ?? [];
     }
 
-    public async Task<WorkerStatus> GetWorkerStatusAsync(Guid workerId, CancellationToken cancellationToken = default)
+    public async Task<WorkerStatus> GetWorkerStatusAsync(int workerId, CancellationToken cancellationToken = default)
     {
         return await _http.GetFromJsonAsync<WorkerStatus>($"/api/workers/{workerId}/status", cancellationToken)
             ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
     }
 
-    public async Task<MonthlySummary> GetMonthlySummaryAsync(Guid workerId, int year, int month, CancellationToken cancellationToken = default)
+    public async Task<MonthlySummary> GetMonthlySummaryAsync(int workerId, int year, int month, CancellationToken cancellationToken = default)
     {
         return await _http.GetFromJsonAsync<MonthlySummary>(
                 $"/api/time-entries/monthly?workerId={workerId}&year={year}&month={month}", cancellationToken)
@@ -43,7 +43,7 @@ public sealed class ApiClient
         throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
     }
 
-    public async Task ChangePinAsync(Guid workerId, string currentPin, string newPin, CancellationToken cancellationToken = default)
+    public async Task ChangePinAsync(int workerId, string currentPin, string newPin, CancellationToken cancellationToken = default)
     {
         var response = await _http.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin, newPin }, cancellationToken);
 
@@ -53,7 +53,7 @@ public sealed class ApiClient
         }
     }
 
-    public async Task EditActiveAsync(Guid workerId, DateTimeOffset start, CancellationToken cancellationToken = default)
+    public async Task EditActiveAsync(int workerId, DateTimeOffset start, CancellationToken cancellationToken = default)
     {
         var response = await _http.PatchAsJsonAsync($"/api/time-entries/active/{workerId}", new { start }, cancellationToken);
 
@@ -63,7 +63,7 @@ public sealed class ApiClient
         }
     }
 
-    public async Task DeleteActiveAsync(Guid workerId, CancellationToken cancellationToken = default)
+    public async Task DeleteActiveAsync(int workerId, CancellationToken cancellationToken = default)
     {
         var response = await _http.DeleteAsync($"/api/time-entries/active/{workerId}", cancellationToken);
 
@@ -73,16 +73,16 @@ public sealed class ApiClient
         }
     }
 
-    public Task StartAsync(Guid workerId, CancellationToken cancellationToken = default) =>
+    public Task StartAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/start", workerId, cancellationToken);
 
-    public Task PauseAsync(Guid workerId, CancellationToken cancellationToken = default) =>
+    public Task PauseAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/pause", workerId, cancellationToken);
 
-    public Task ResumeAsync(Guid workerId, CancellationToken cancellationToken = default) =>
+    public Task ResumeAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/resume", workerId, cancellationToken);
 
-    public Task EndAsync(Guid workerId, CancellationToken cancellationToken = default) =>
+    public Task EndAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/end", workerId, cancellationToken);
 
     public async Task<QuickClockResult> QuickClockAsync(string pin, string action, CancellationToken cancellationToken = default)
@@ -98,7 +98,7 @@ public sealed class ApiClient
         throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
     }
 
-    private async Task PostAsync(string path, Guid workerId, CancellationToken cancellationToken)
+    private async Task PostAsync(string path, int workerId, CancellationToken cancellationToken)
     {
         var response = await _http.PostAsJsonAsync(path, new { workerId }, cancellationToken);
         response.EnsureSuccessStatusCode();

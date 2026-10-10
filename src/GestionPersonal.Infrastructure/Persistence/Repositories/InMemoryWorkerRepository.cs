@@ -8,12 +8,12 @@ public sealed class InMemoryWorkerRepository : IWorkerRepository
 {
     private readonly List<Worker> _workers =
     [
-        Worker.Create("María García", "1111", Role.Worker),
-        Worker.Create("Ana López", "2222", Role.Worker),
-        Worker.Create("Carlos Ruiz", "3333", Role.Admin)
+        Worker.Create(1, "María García", "1111", Role.Worker),
+        Worker.Create(2, "Ana López", "2222", Role.Worker),
+        Worker.Create(3, "Carlos Ruiz", "3333", Role.Admin)
     ];
 
-    public Task<Worker?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Worker?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_workers.FirstOrDefault(w => w.Id == id));
     }

@@ -13,7 +13,7 @@ public sealed class ChangePinCommandHandler
     }
 
     public async Task<Result> Handle(
-        Guid workerId,
+        int workerId,
         ChangePinCommand command,
         CancellationToken cancellationToken = default)
     {

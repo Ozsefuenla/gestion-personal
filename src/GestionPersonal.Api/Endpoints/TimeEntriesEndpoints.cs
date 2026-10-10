@@ -101,7 +101,7 @@ public static class TimeEntriesEndpoints
         });
 
         app.MapGet("/api/time-entries/today", async (
-            Guid workerId,
+            int workerId,
             IValidator<TodaySummaryQuery> validator,
             TodaySummaryQueryHandler handler,
             CancellationToken cancellationToken) =>
@@ -126,7 +126,7 @@ public static class TimeEntriesEndpoints
         });
 
         app.MapGet("/api/time-entries/monthly", async (
-            Guid workerId,
+            int workerId,
             int year,
             int month,
             IValidator<MonthlySummaryQuery> validator,
@@ -175,8 +175,8 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapPatch("/api/time-entries/active/{workerId:guid}", async (
-            Guid workerId,
+        app.MapPatch("/api/time-entries/active/{workerId:int}", async (
+            int workerId,
             EditActiveTimeEntryCommand command,
             IValidator<EditActiveTimeEntryCommand> validator,
             EditActiveTimeEntryCommandHandler handler,
@@ -199,8 +199,8 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         });
 
-        app.MapDelete("/api/time-entries/active/{workerId:guid}", async (
-            Guid workerId,
+        app.MapDelete("/api/time-entries/active/{workerId:int}", async (
+            int workerId,
             DeleteActiveTimeEntryCommandHandler handler,
             CancellationToken cancellationToken) =>
         {
