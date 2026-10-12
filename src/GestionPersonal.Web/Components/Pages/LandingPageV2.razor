@@ -1,0 +1,845 @@
+@page "/v2"
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+    @@layer base {
+        html, body { margin: 0; padding: 0; }
+        body { overscroll-behavior: none; }
+        main > :first-child { margin-top: 0 !important; }
+        main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+</style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/landing-v2.js"></script>
+
+<div class="bg-background font-body-md text-on-surface antialiased">
+
+    <header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,95,80,0.05)] transition-all duration-200">
+        <div class="h-20 max-w-[1600px] mx-auto px-margin flex items-center justify-between gap-space-md">
+            <div class="flex items-center gap-space-md">
+                <a class="flex items-center gap-space-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg" href="/">
+                    <div class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">G</div>
+                    <div class="flex flex-col">
+                        <span class="font-headline-sm text-headline-sm text-primary tracking-tight">Gestion<span class="text-secondary font-bold">Personal</span></span>
+                        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Control Horario</span>
+                    </div>
+                </a>
+            </div>
+            <nav class="hidden xl:flex items-center gap-space-xs">
+                <a class="px-space-md py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#caracteristicas">Características</a>
+                <a class="px-space-md py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#ventajas">Ventajas Clínicas</a>
+                <a class="px-space-md py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#modulos">Módulos Exclusivos</a>
+                <a class="px-space-md py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#precios">Precios</a>
+                <a class="px-space-md py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#faq">Preguntas Frecuentes</a>
+            </nav>
+            <div class="flex items-center gap-space-sm sm:gap-space-md">
+                <a class="hidden sm:inline-flex items-center justify-center px-space-md py-2.5 rounded-lg font-title-md text-title-md bg-surface-container-lowest text-on-surface hover:bg-surface-container hover:text-on-surface transition-all shadow-[0_1px_3px_0_rgba(13,122,104,0.04)]" href="#" @onclick="OpenAccessAsync" @onclick:preventDefault>Acceso Clínicas</a>
+                <a class="inline-flex items-center justify-center px-space-lg py-2.5 rounded-lg font-title-md text-title-md bg-primary-container text-on-primary hover:bg-primary transition-all shadow-sm" href="#precios">Probar 14 días gratis</a>
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full pt-20 bg-background min-h-screen">
+        <div class="flex flex-col w-full">
+
+            <section class="w-full bg-secondary-container/40 py-2.5 px-margin">
+                <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3 text-on-secondary-container">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-on-primary">
+                            <span class="material-symbols-outlined text-[14px]">verified</span>
+                        </span>
+                        <span class="font-label-md text-label-md font-semibold">Adaptado a la Directiva Europea 2019/1152 &amp; RDL 8/2019:</span>
+                        <span class="font-body-sm text-body-sm hidden md:inline">Auditoría digital con sellado temporal para medicina estética y cosmética.</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs font-semibold tracking-wide">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Modo Kiosco v4.2 Activo</span>
+                        <button type="button" class="hover:underline font-label-md text-label-md text-primary font-bold" @onclick="OpenAccessAsync">Acceso Rápido Kiosco Mostrador →</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="relative w-full bg-surface-bright pt-12 pb-20 px-margin overflow-hidden">
+                <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
+                <div class="absolute bottom-10 -left-20 w-80 h-80 rounded-full bg-secondary-container/30 blur-2xl pointer-events-none"></div>
+                <div class="max-w-[1600px] mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        <div class="lg:col-span-6 flex flex-col gap-6 z-10">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">touch_app</span> Registro PIN 1-Segundo
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+                                    <span class="material-symbols-outlined text-[16px]">verified_user</span> 100% Blindaje Laboral
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">
+                                    <span class="material-symbols-outlined text-[16px]">tablet_mac</span> Kiosco iPad &amp; Android
+                                </span>
+                            </div>
+                            <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight">
+                                El control horario y gestión de equipo diseñado para la <span class="text-primary underline decoration-secondary decoration-4 underline-offset-8">excelencia médica</span>
+                            </h1>
+                            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                                Sustituya las hojas de papel y excels caóticos por un mostrador digital ultra-rápido. Registro en 1 segundo por PIN táctil, cuadrantes automáticos por cabina y expedientes médicos blindados ante la Inspección de Trabajo.
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 pt-2">
+                                <a class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-title-md text-title-md bg-primary-container text-on-primary hover:bg-primary transition-all shadow-md hover:shadow-lg" href="#precios">
+                                    <span class="material-symbols-outlined text-[20px]">play_circle</span> Probar 14 días gratis
+                                </a>
+                                <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg font-title-md text-title-md bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-all shadow-sm" @onclick="OpenAccessAsync">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">login</span> Ver Demo / Acceso Clínicas
+                                </button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-6 pt-4 text-on-surface-variant font-body-sm text-body-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Sin permanencia ni tarjeta
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px]">lock</span> Cifrado sanitario AES-256
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px]">support_agent</span> Puesta en marcha en 24h
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-6 relative">
+                            <div class="relative rounded-2xl overflow-hidden shadow-xl bg-surface-container-highest">
+                                <div class="w-full h-[320px] lg:h-[440px] bg-gradient-to-br from-primary/15 via-surface-container-low to-secondary-container/40 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary/60 text-[72px]">tablet_mac</span>
+                                </div>
+                                <div class="absolute top-6 left-6 bg-surface-container-lowest/95 backdrop-blur-md p-4 rounded-xl shadow-lg max-w-[270px]">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">SV</div>
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-title-md text-title-md text-on-surface text-xs font-semibold">Dra. Sofía Valdés</span>
+                                                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                                            </div>
+                                            <p class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">Medicina Estética &amp; Láser</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2.5 pt-2 flex items-center justify-between text-xs bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+                                        <span class="text-primary font-medium flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">check_circle</span> Entrada 09:02h
+                                        </span>
+                                        <span class="text-on-surface-variant font-data-tabular text-data-tabular">PIN: •••• ✓</span>
+                                    </div>
+                                </div>
+                                <div class="absolute bottom-6 left-6 bg-surface-container-lowest/95 backdrop-blur-md p-3.5 rounded-xl shadow-lg flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-[18px]">event_available</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-title-md text-title-md text-on-surface text-xs font-bold">Vacaciones validadas</p>
+                                        <p class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">Enfermera Belén C. • 4 días (Cabina 3)</p>
+                                    </div>
+                                    <span class="ml-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">1-Clic</span>
+                                </div>
+                                <div class="absolute bottom-6 right-6 hidden sm:flex items-center gap-2 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-xl shadow-xl">
+                                    <span class="material-symbols-outlined text-primary-fixed text-[18px]">gavel</span>
+                                    <div class="flex flex-col">
+                                        <span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-primary-fixed">100% Legal</span>
+                                        <span class="font-body-sm text-body-sm text-xs">Registro Laboral RDL 8/2019</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-container-low py-8 px-margin">
+                <div class="max-w-[1600px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
+                    <div class="flex flex-col items-center text-center p-3">
+                        <span class="font-headline-lg text-headline-lg text-primary font-bold">+450</span>
+                        <span class="font-title-md text-title-md text-on-surface text-sm">Clínicas de Medicina Estética</span>
+                        <span class="font-body-sm text-body-sm text-on-surface-variant text-xs">en España y Portugal</span>
+                    </div>
+                    <div class="flex flex-col items-center text-center p-3">
+                        <span class="font-headline-lg text-headline-lg text-primary font-bold">0 Seg</span>
+                        <span class="font-title-md text-title-md text-on-surface text-sm">Papeles o Hojas Físicas</span>
+                        <span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Digitalización integral e inmediata</span>
+                    </div>
+                    <div class="flex flex-col items-center text-center p-3">
+                        <span class="font-headline-lg text-headline-lg text-primary font-bold">99.8%</span>
+                        <span class="font-title-md text-title-md text-on-surface text-sm">Reducción Desajustes Nómina</span>
+                        <span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Control de horas extras y guardias</span>
+                    </div>
+                    <div class="flex flex-col items-center text-center p-3">
+                        <span class="font-headline-lg text-headline-lg text-secondary font-bold">0 Multas</span>
+                        <span class="font-title-md text-title-md text-on-surface text-sm">Inspección de Trabajo Superada</span>
+                        <span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Exportación oficial PDF en 30s</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface py-16 px-margin">
+                <div class="max-w-[1600px] mx-auto">
+                    <div class="bg-surface-container-lowest rounded-2xl shadow-md p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div class="lg:col-span-5 flex flex-col gap-4">
+                            <span class="px-3 py-1 w-max rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-semibold uppercase tracking-wider">
+                                Simulador Interactivo Kiosco
+                            </span>
+                            <h2 class="font-headline-lg text-headline-lg text-on-surface">Pruébelo ahora: Fichaje en recepción en 1 segundo</h2>
+                            <p class="font-body-md text-body-md text-on-surface-variant">
+                                Sin tarjetas NFC que se pierden, sin huellas biométricas con problemas de crema o guantes de nitrilo. Cada facultativo y auxiliar introduce su PIN táctil de 4 dígitos en la tablet de recepción y la jornada queda sellada con hora legal.
+                            </p>
+                            <div class="flex flex-col gap-2.5 pt-2">
+                                <div class="flex items-center gap-3 text-sm">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">verified</span>
+                                    <span><strong>PIN de prueba:</strong> Pruebe marcando cualquier 4 números (ej. <code class="bg-surface-container px-2 py-0.5 rounded text-primary font-bold">1 2 3 4</code>)</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">security</span>
+                                    <span>Soporte opcional para foto facial disuasoria en el fichaje</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 flex justify-center">
+                            <div class="w-full max-w-sm bg-surface-container-low rounded-2xl p-6 shadow-md flex flex-col items-center">
+                                <div class="flex items-center justify-between w-full mb-3">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                                        <span class="font-label-sm text-label-sm text-on-surface-variant font-bold uppercase">Clínica Estética Aura Madrid</span>
+                                    </div>
+                                    <span class="font-data-tabular text-data-tabular text-primary font-bold" id="liveClock">09:14:22</span>
+                                </div>
+                                <div class="w-full bg-surface-container-lowest h-16 rounded-xl flex items-center justify-center gap-3 mb-4 shadow-sm">
+                                    <div class="w-3.5 h-3.5 rounded-full bg-outline-variant transition-colors" id="dot-1"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-outline-variant transition-colors" id="dot-2"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-outline-variant transition-colors" id="dot-3"></div>
+                                    <div class="w-3.5 h-3.5 rounded-full bg-outline-variant transition-colors" id="dot-4"></div>
+                                </div>
+                                <div class="h-6 text-center text-xs font-semibold text-on-surface-variant mb-2" id="kioskFeedback">
+                                    Introduzca su PIN personal de 4 dígitos
+                                </div>
+                                <div class="grid grid-cols-3 gap-2.5 w-full">
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('1')">1</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('2')">2</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('3')">3</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('4')">4</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('5')">5</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('6')">6</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('7')">7</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('8')">8</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('9')">9</button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container hover:bg-surface-container-high text-error font-title-md text-sm font-semibold shadow-sm transition-all flex items-center justify-center" onclick="clearPin()">
+                                        <span class="material-symbols-outlined text-[18px]">backspace</span>
+                                    </button>
+                                    <button type="button" class="h-12 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-title-md text-lg font-bold shadow-sm transition-all active:scale-95" onclick="pressPin('0')">0</button>
+                                    <button type="button" class="h-12 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-title-md text-sm font-bold shadow-sm transition-all flex items-center justify-center" onclick="validatePinDirect()">
+                                        <span class="material-symbols-outlined text-[18px]">done</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-bright py-20 px-margin" id="caracteristicas">
+                <div class="max-w-[1600px] mx-auto flex flex-col gap-12">
+                    <div class="flex flex-col items-center text-center max-w-3xl mx-auto gap-4">
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold uppercase tracking-wider">
+                            Características Principales
+                        </span>
+                        <h2 class="font-headline-xl text-headline-xl text-on-surface">Diseñado exclusivamente para el ritmo de la clínica estética</h2>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant">
+                            Cada detalle ha sido concebido para doctores, dermatólogos, enfermeras dermoestéticas y recepcionistas. Eliminamos la fricción administrativa para que su foco sea el paciente.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">pin</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Control de Fichajes Ultra-Rápido</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Registro en 1 segundo con PIN personal e intransferible. Los sanitarios no necesitan desinfectar llaves ni tocar lectores de huella con restos de aceite cosmético o antisépticos.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Tablet en mostrador o móvil propio</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">date_range</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Gestión Integral de Vacaciones</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Solicitud desde el smartphone por el trabajador y aprobación en 1 clic por gerencia. El calendario visual avisa si se solapa la ausencia de la responsable de láser o de quirófano ambulatorio.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Control de solapamiento por cabina</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">badge</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Altas, Bajas y Expediente Digital</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Historial del profesional en la nube sanitaria: contratos, número de colegiado médico, seguro de responsabilidad civil, certificados de formación en aparatología y avisos de renovación.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Expediente clínico laboral completo</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">password</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">PIN Cifrado y Regeneración Segura</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Cada empleado cuenta con un código PIN de alta entropía. La dirección médica o el propio profesional pueden regenerar su PIN al instante ante cualquier sospecha con envío directo a su teléfono.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Tokens dinámicos de seguridad</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">account_circle</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Portal del Empleado con Histórico</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Máxima transparencia: cada doctor o enfermera puede consultar desde su app sus horas efectivas, pausas de descanso computadas, saldo de vacaciones disfrutadas y descarga de nóminas en PDF.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Acceso 24/7 sin interrumpir a RRHH</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">devices</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Multiplataforma 100% Sincronizada</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Modo Kiosco de recepción en iPad/Android para la entrada principal, App Móvil iOS/Android para doctores colaboradores y Panel Web ejecutivo para la gerencia médica.
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-2 text-primary font-title-md text-sm">
+                                <span>Sincronización en tiempo real</span>
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-container-low py-20 px-margin" id="modulos">
+                <div class="max-w-[1600px] mx-auto flex flex-col gap-12">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
+                                Ventajas Competitivas Exclusivas
+                            </span>
+                            <h2 class="font-headline-xl text-headline-xl text-on-surface mt-3">Módulos médicos diseñados para vender más y auditar mejor</h2>
+                        </div>
+                        <p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+                            Funcionalidades que los softwares genéricos de oficinas no pueden ofrecer porque desconocen la operativa de una clínica médico-estética.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">Exclusivo Clínicas</span>
+                                    <span class="material-symbols-outlined text-primary text-[28px]">photo_camera</span>
+                                </div>
+                                <h3 class="font-headline-md text-headline-md text-on-surface">Modo Kiosco con Foto de Seguridad Disuasoria</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Evite el habitual "fíchale a mi compañera que llega tarde". Al introducir el PIN de 4 dígitos, la cámara frontal del iPad captura opcionalmente una fotografía instantánea del empleado fichando en recepción. Cumple con la normativa RGPD de proporcionalidad laboral.
+                                </p>
+                            </div>
+                            <div class="mt-6 bg-surface-container-low p-4 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined text-[24px]">face</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-title-md text-title-md text-xs font-bold text-on-surface">Captura verificada a las 08:59:12</p>
+                                        <p class="font-body-sm text-body-sm text-xs text-on-surface-variant">Recepcionista Sandra G. • Sede Serrano</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-bold">100% Seguro</span>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5 bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Legal Tech</span>
+                                    <span class="material-symbols-outlined text-secondary text-[28px]">description</span>
+                                </div>
+                                <h3 class="font-headline-md text-headline-md text-on-surface">Reportes para Inspección de Trabajo a 1 Clic</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Si un inspector de trabajo se persona en su clínica estética, genere en menos de 30 segundos el PDF oficial con todos los registros sellados, firmas digitales y acumulados de horas ordinarias y complementarias.
+                                </p>
+                            </div>
+                            <div class="mt-6 flex items-center gap-3 pt-3">
+                                <button type="button" class="w-full py-2.5 bg-primary-container text-on-primary rounded-lg font-title-md text-xs font-semibold flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-[16px]">download</span> Descargar Modelo Auditoría Laboral
+                                </button>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-4 bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[22px]">payments</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Horas &amp; Comisiones por Tratamiento</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Vincule el horario con los tratamientos realizados por doctor (bótox, rellenos dérmicos, láser de diodo) para calcular automáticamente pluses de producción para nómina.
+                                </p>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-primary font-bold mt-4">Integrable con su software de citas</span>
+                        </div>
+                        <div class="lg:col-span-4 bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[22px]">location_on</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Geofencing para Cirujanos y Doctores</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Para médicos estéticos que operan en diferentes sedes o clínicas asociadas. El fichaje móvil solo se activa cuando el facultativo se encuentra en el radio geográfico de la clínica asignada.
+                                </p>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-primary font-bold mt-4">Radio de precisión de 20 metros</span>
+                        </div>
+                        <div class="lg:col-span-4 bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[22px]">meeting_room</span>
+                                </div>
+                                <h3 class="font-headline-sm text-headline-sm text-on-surface">Alertas de Cabina y Aparatología</h3>
+                                <p class="font-body-md text-body-md text-on-surface-variant">
+                                    Evite boxes vacíos por imprevistos. Si un doctor no ha fichado a su hora de inicio de consulta, el sistema alerta a recepción para reorganizar la agenda de pacientes de aparatología crítica.
+                                </p>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-primary font-bold mt-4">Cero minutos de box desaprovechado</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-primary text-on-primary py-20 px-margin relative overflow-hidden" id="ventajas">
+                <div class="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 flex flex-col gap-6">
+                        <span class="px-3.5 py-1 rounded-full bg-on-primary/10 text-primary-fixed font-label-sm text-label-sm font-bold tracking-wider uppercase w-max">
+                            Flujo de Trabajo Sin Errores
+                        </span>
+                        <h2 class="font-headline-xl text-headline-xl text-on-primary">
+                            De la llegada del facultativo a la nómina mensual sin una sola llamada
+                        </h2>
+                        <p class="font-body-lg text-body-lg text-on-primary/80 max-w-xl">
+                            El 87% de los directores médicos confiesan que gestionar ausencias de última hora y recopilar las horas trabajadas les roba más de 12 horas al mes. Con GestionPersonal el proceso es 100% automático.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                            <div class="bg-surface-container-lowest/10 backdrop-blur-md p-4 rounded-xl flex flex-col gap-2">
+                                <div class="text-primary-fixed font-bold font-headline-sm">01</div>
+                                <div class="font-title-md text-title-md text-sm text-on-primary">PIN en Recepción</div>
+                                <p class="font-body-sm text-body-sm text-on-primary/70 text-xs">El equipo ficha en el iPad al llegar en 1 segundo.</p>
+                            </div>
+                            <div class="bg-surface-container-lowest/10 backdrop-blur-md p-4 rounded-xl flex flex-col gap-2">
+                                <div class="text-primary-fixed font-bold font-headline-sm">02</div>
+                                <div class="font-title-md text-title-md text-sm text-on-primary">Sincronización</div>
+                                <p class="font-body-sm text-body-sm text-on-primary/70 text-xs">Cuadrante en vivo de cabinas ocupadas y personal activo.</p>
+                            </div>
+                            <div class="bg-surface-container-lowest/10 backdrop-blur-md p-4 rounded-xl flex flex-col gap-2">
+                                <div class="text-primary-fixed font-bold font-headline-sm">03</div>
+                                <div class="font-title-md text-title-md text-sm text-on-primary">Nómina &amp; Inspección</div>
+                                <p class="font-body-sm text-body-sm text-on-primary/70 text-xs">Exportación lista para su gestoría laboral a fin de mes.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-5 bg-surface-container-lowest text-on-surface p-6 rounded-2xl shadow-xl flex flex-col gap-4">
+                        <div class="flex items-center justify-between pb-3 bg-surface-container-low -mx-6 -mt-6 p-4 rounded-t-2xl">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-primary"></span>
+                                <span class="font-title-md text-title-md text-xs font-bold">Panel Dirección Médica</span>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-on-surface-variant font-data-tabular">Hoy: 8 de 8 presentes</span>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">DR</div>
+                                    <div>
+                                        <p class="font-title-md text-title-md text-xs font-semibold">Dr. Rodrigo M. (Cirugía Facial)</p>
+                                        <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Cabina Quirúrgica A • Fichaje 08:30</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-[11px]">En cabina</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">LC</div>
+                                    <div>
+                                        <p class="font-title-md text-title-md text-xs font-semibold">Laura C. (Dermoestética)</p>
+                                        <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Box Láser 2 • Fichaje 09:00</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-[11px]">En cabina</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-xs">CP</div>
+                                    <div>
+                                        <p class="font-title-md text-title-md text-xs font-semibold">Clara P. (Recepción VIP)</p>
+                                        <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Mostrador Central • Pausa Café</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-[11px]">En descanso</span>
+                            </div>
+                        </div>
+                        <button type="button" class="w-full mt-2 py-3 bg-primary-container text-on-primary hover:bg-primary transition-all rounded-lg font-title-md text-title-md text-xs text-center font-bold" @onclick="OpenAccessAsync">
+                            Abrir Gestor de Jornadas Completo
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-bright py-20 px-margin">
+                <div class="max-w-[1600px] mx-auto flex flex-col gap-12">
+                    <div class="flex flex-col items-center text-center max-w-2xl mx-auto gap-4">
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold uppercase tracking-wider">
+                            Testimonios Reales
+                        </span>
+                        <h2 class="font-headline-xl text-headline-xl text-on-surface">La voz de los directores médicos y gestores de clínicas</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex text-secondary gap-1">
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant italic">
+                                    "En medicina estética los doctores colaboran en días específicos y las auxiliares rotan constantemente. GestionPersonal resolvió el control horario sin entorpecer el glamour y la elegancia de nuestro mostrador."
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">DR</div>
+                                <div>
+                                    <p class="font-title-md text-title-md text-xs font-bold text-on-surface">Dr. Manuel Aranda</p>
+                                    <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Director Médico • Aranda Aesthetic Clinic</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex text-secondary gap-1">
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant italic">
+                                    "Tuvimos una inspección de trabajo laboral el pasado mes de octubre. En 20 segundos pulsé 'Exportar Informe Certificado' y el inspector quedó impresionado por el nivel de trazabilidad por PIN y minutos."
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container font-bold flex items-center justify-center text-sm">EC</div>
+                                <div>
+                                    <p class="font-title-md text-title-md text-xs font-bold text-on-surface">Elena Campuzano</p>
+                                    <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Gerente General • DermoLuxe Boutiques (3 sedes)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-4">
+                                <div class="flex text-secondary gap-1">
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                    <span class="material-symbols-outlined text-[18px]">star</span>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant italic">
+                                    "El modo Kiosco con el iPad integrado en el mostrador de mármol luce impecable. El equipo aprendió en 2 minutos: ponen su PIN de 4 cifras y se dirigen directamente a atender al paciente."
+                                </p>
+                            </div>
+                            <div class="mt-6 pt-4 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">MV</div>
+                                <div>
+                                    <p class="font-title-md text-title-md text-xs font-bold text-on-surface">Marta Vila</p>
+                                    <p class="font-body-sm text-body-sm text-[11px] text-on-surface-variant">Directora de Operaciones • Clínica BellaSkin</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-container-low py-20 px-margin" id="precios">
+                <div class="max-w-[1600px] mx-auto flex flex-col gap-12">
+                    <div class="flex flex-col items-center text-center max-w-2xl mx-auto gap-4">
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold uppercase tracking-wider">
+                            Planes Transparentes
+                        </span>
+                        <h2 class="font-headline-xl text-headline-xl text-on-surface">Inversión calculada para su rentabilidad médica</h2>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant">
+                            Sin costes ocultos por usuario adicional en planes clínicas. Activación inmediata con 14 días de prueba completa.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-6">
+                                <div>
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Plan Essential</h3>
+                                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para consultas estéticas independientes o centros boutique de hasta 5 trabajadores.</p>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-headline-xl text-headline-xl text-primary font-bold">29€</span>
+                                    <span class="font-body-md text-body-md text-on-surface-variant">/ mes</span>
+                                </div>
+                                <div class="flex flex-col gap-3 font-body-sm text-body-sm text-on-surface">
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Hasta 5 trabajadores incluidos</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Kiosco iPad / Tablet con PIN</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Gestión de ausencias y vacaciones</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Reporte Inspección de Trabajo</div>
+                                </div>
+                            </div>
+                            <a class="mt-8 w-full py-3 text-center rounded-lg bg-surface-container text-on-surface font-title-md text-sm hover:bg-surface-container-high transition-colors" href="#">Comenzar con Essential</a>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-xl flex flex-col justify-between relative">
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary-container text-on-primary px-4 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider font-bold shadow-md">
+                                El Más Elegido por Clínicas
+                            </div>
+                            <div class="flex flex-col gap-6 mt-2">
+                                <div>
+                                    <h3 class="font-headline-sm text-headline-sm text-primary font-bold">Plan Pro Clínicas</h3>
+                                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para policlínicas de medicina estética, dermatología láser y spas médicos de hasta 20 facultativos.</p>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-headline-xl text-headline-xl text-primary font-bold">69€</span>
+                                    <span class="font-body-md text-body-md text-on-surface-variant">/ mes</span>
+                                </div>
+                                <div class="flex flex-col gap-3 font-body-sm text-body-sm text-on-surface">
+                                    <div class="flex items-center gap-2 font-semibold"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Hasta 20 trabajadores y doctores</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Modo Kiosco con Foto de Seguridad</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Geofencing para médicos itinerantes</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Alertas de solapamiento de cabina</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Portal del empleado en App móvil iOS/Android</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Soporte prioritario vía WhatsApp Clínicas</div>
+                                </div>
+                            </div>
+                            <a class="mt-8 w-full py-3.5 text-center rounded-lg bg-primary-container text-on-primary font-title-md text-sm hover:bg-primary transition-all shadow-md" href="#">Probar 14 días gratis Plan Pro</a>
+                        </div>
+                        <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                            <div class="flex flex-col gap-6">
+                                <div>
+                                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Plan Multi-Sede VIP</h3>
+                                    <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para grupos sanitarios, franquicias y centros con múltiples clínicas en varias ciudades.</p>
+                                </div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="font-headline-xl text-headline-xl text-secondary font-bold">149€</span>
+                                    <span class="font-body-md text-body-md text-on-surface-variant">/ mes</span>
+                                </div>
+                                <div class="flex flex-col gap-3 font-body-sm text-body-sm text-on-surface">
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Sedes y clínicas ilimitadas</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Usuarios y doctores ilimitados</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Panel directivo consolidado de grupos</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Conexión API con su software médico (Salud/ERP)</div>
+                                    <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check</span> Asesor jurídico laboral asignado</div>
+                                </div>
+                            </div>
+                            <a class="mt-8 w-full py-3 text-center rounded-lg bg-surface-container text-on-surface font-title-md text-sm hover:bg-surface-container-high transition-colors" href="#">Contactar Especialista Multi-Sede</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-bright py-20 px-margin" id="faq">
+                <div class="max-w-[1000px] mx-auto flex flex-col gap-10">
+                    <div class="flex flex-col items-center text-center gap-3">
+                        <span class="px-3 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold uppercase tracking-wider">
+                            Resolvemos sus Dudas
+                        </span>
+                        <h2 class="font-headline-xl text-headline-xl text-on-surface">Preguntas Frecuentes sobre Control Horario Sanitario</h2>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+                            <h3 class="font-headline-sm text-headline-sm text-base text-on-surface font-bold flex items-center justify-between">
+                                <span>¿Es legal registrar la jornada con PIN táctil según la Inspección de Trabajo?</span>
+                                <span class="material-symbols-outlined text-primary text-[20px]">help_outline</span>
+                            </h3>
+                            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-sm">
+                                Sí, plenamente. El RDL 8/2019 exige un registro objetivo, fiable y veraz con constancia de hora exacta de entrada y salida. El sistema de PIN de 4 dígitos intransferible con sellado temporal cumple de manera estricta y evita además los problemas legales que la AEPD ha impuesto recientemente sobre el uso indebido de lectores biométricos de huella.
+                            </p>
+                        </div>
+                        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+                            <h3 class="font-headline-sm text-headline-sm text-base text-on-surface font-bold flex items-center justify-between">
+                                <span>¿Qué ocurre si se va la conexión de internet en la clínica?</span>
+                                <span class="material-symbols-outlined text-primary text-[20px]">wifi_off</span>
+                            </h3>
+                            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-sm">
+                                GestionPersonal cuenta con tecnología Offline-First en el Modo Kiosco. El iPad o tablet guarda localmente y de forma encriptada todos los fichajes realizados con su marca horaria exacta y los sincroniza automáticamente en cuanto se restablece la conexión WiFi o de datos.
+                            </p>
+                        </div>
+                        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+                            <h3 class="font-headline-sm text-headline-sm text-base text-on-surface font-bold flex items-center justify-between">
+                                <span>¿Cómo gestiona a los médicos colaboradores o mercantiles?</span>
+                                <span class="material-symbols-outlined text-primary text-[20px]">medical_services</span>
+                            </h3>
+                            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-sm">
+                                El sistema permite clasificar los perfiles: empleados de régimen general (con obligación legal estricta de fichaje y cómputo de 40h) y doctores mercantiles/autónomos asociados (cuyo registro sirve para auditar ocupación de cabinas, cálculo de honorarios y seguridad sanitaria sin mezclar sus nóminas).
+                            </p>
+                        </div>
+                        <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+                            <h3 class="font-headline-sm text-headline-sm text-base text-on-surface font-bold flex items-center justify-between">
+                                <span>¿Necesito comprar un hardware o tótem específico y caro?</span>
+                                <span class="material-symbols-outlined text-primary text-[20px]">tablet</span>
+                            </h3>
+                            <p class="font-body-md text-body-md text-on-surface-variant mt-2 text-sm">
+                                No. Puede utilizar cualquier tablet iPad o Android que ya tenga en la clínica colocada en un soporte de diseño elegante en recepción, o bien descargar la aplicación en los teléfonos del personal. Cero gasto en dispositivos propietarios.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="w-full bg-surface-container-low py-16 px-margin">
+                <div class="max-w-[1200px] mx-auto bg-surface-container-lowest rounded-2xl p-10 md:p-14 shadow-lg text-center flex flex-col items-center gap-6">
+                    <span class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[32px]">health_and_safety</span>
+                    </span>
+                    <h2 class="font-headline-xl text-headline-xl text-on-surface max-w-2xl">
+                        Lleve el control horario de su clínica al nivel que sus pacientes esperan
+                    </h2>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                        Configure sus cabinas y cree los PINs de su equipo hoy mismo. Cancele en cualquier momento con 1 clic.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+                        <a class="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-title-md text-title-md bg-primary-container text-on-primary hover:bg-primary transition-all shadow-md" href="#precios">
+                            <span class="material-symbols-outlined">rocket_launch</span> Comenzar 14 días sin coste
+                        </a>
+                        <button type="button" class="px-8 py-4 rounded-lg font-title-md text-title-md bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors" @onclick="OpenAccessAsync">
+                            Acceso Portal Clínicas
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="w-full bg-surface-container-lowest shadow-[0_-1px_8px_rgba(0,0,0,0.03)]">
+        <div class="bg-surface-container-low py-space-md">
+            <div class="max-w-[1600px] mx-auto px-margin flex flex-wrap items-center justify-between gap-space-md">
+                <div class="flex items-center gap-space-sm text-primary">
+                    <span class="material-symbols-outlined text-primary text-[20px]">verified_user</span>
+                    <span class="font-label-md text-label-md text-on-surface font-semibold">Certificación Sanitaria &amp; Cumplimiento Normativo</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-space-lg">
+                    <div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-primary text-[18px]">shield</span><span class="font-body-sm text-body-sm">RGPD / LOPDGDD Salud Nivel Alto</span></div>
+                    <div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-primary text-[18px]">gavel</span><span class="font-body-sm text-body-sm">Registro Laboral Conforme a Ley</span></div>
+                    <div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-primary text-[18px]">fingerprint</span><span class="font-body-sm text-body-sm">Firma Biométrica Auditora</span></div>
+                    <div class="flex items-center gap-space-xs text-on-surface-variant"><span class="material-symbols-outlined text-primary text-[18px]">lock</span><span class="font-body-sm text-body-sm">Cifrado AES-256 Clínico</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-[1600px] mx-auto px-margin py-space-xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl">
+                <div class="lg:col-span-2 flex flex-col gap-space-md">
+                    <div class="flex items-center gap-space-sm">
+                        <div class="w-7 h-7 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">G</div>
+                        <span class="font-headline-sm text-headline-sm text-primary">Gestion<span class="text-secondary">Personal</span></span>
+                    </div>
+                    <p class="font-body-md text-body-md text-on-surface-variant max-w-md">Plataforma de alta precisión para control horario, asignación de cabinas, registro de consentimiento médico y gestión de personal especializada en medicina estética, dermatología cosmética y centros wellness de alto nivel.</p>
+                    <div class="flex items-center gap-space-sm pt-space-xs">
+                        <span class="px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">ISO/IEC 27001 Certified</span>
+                        <span class="px-space-sm py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Sector Sanitario EU</span>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-space-sm">
+                    <span class="font-title-md text-title-md text-on-surface">Plataforma</span>
+                    <ul class="flex flex-col gap-space-xs">
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Fichaje de Facultativos</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Gestión de Cabinas &amp; Boxes</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Consentimientos &amp; Tiempos</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Auditoría de Guardias</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Reportes Inspección de Trabajo</li>
+                    </ul>
+                </div>
+                <div class="flex flex-col gap-space-sm">
+                    <span class="font-title-md text-title-md text-on-surface">Especialidades</span>
+                    <ul class="flex flex-col gap-space-xs">
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Clínicas de Medicina Estética</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Dermatología y Láser</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Cirugía Plástica Ambulatoria</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Spas Médicos &amp; Wellness VIP</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Redes y Franquicias Clínicas</li>
+                    </ul>
+                </div>
+                <div class="flex flex-col gap-space-sm">
+                    <span class="font-title-md text-title-md text-on-surface">Seguridad y Legal</span>
+                    <ul class="flex flex-col gap-space-xs">
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Cumplimiento Laboral RDL 8/2019</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Aviso Legal &amp; Términos</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Política de Privacidad Sanitaria</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Acuerdo de Encargo de Tratamiento</li>
+                        <li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors cursor-pointer">Política de Cookies</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-space-xl pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md text-on-surface-variant font-body-sm text-body-sm">
+                <p>© 2026 GestionPersonal S.L. Todos los derechos reservados. Desarrollado para el cumplimiento médico y laboral riguroso.</p>
+                <div class="flex items-center gap-space-md">
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">health_and_safety</span> Entorno Seguro SSL</span>
+                    <span>Soporte Clínico 24/7</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+@code {
+    private async Task OpenAccessAsync()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CenterLoginDialog>("Acceso al centro", options: options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Navigation.NavigateTo("/app", forceLoad: true);
+        }
+    }
+}

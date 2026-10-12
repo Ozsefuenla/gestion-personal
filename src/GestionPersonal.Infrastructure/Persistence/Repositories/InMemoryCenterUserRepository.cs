@@ -5,10 +5,15 @@ namespace GestionPersonal.Infrastructure.Persistence.Repositories;
 
 public sealed class InMemoryCenterUserRepository : ICenterUserRepository
 {
-    private readonly List<CenterUser> _users =
-    [
-        CenterUser.Create(1, 1, "admin", "admin")
-    ];
+    private readonly List<CenterUser> _users;
+
+    public InMemoryCenterUserRepository(IPasswordHasher passwordHasher)
+    {
+        _users =
+        [
+            CenterUser.Create(1, 1, "admin", passwordHasher.Hash("admin"))
+        ];
+    }
 
     public Task<CenterUser?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {

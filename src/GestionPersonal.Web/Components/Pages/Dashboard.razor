@@ -1,0 +1,115 @@
+@page "/app"
+@attribute [Authorize]
+@layout AppLayout
+@inject IDialogService DialogService
+@inject ApiClient Api
+
+<PageTitle>Fichaje</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-1">Fichaje</MudText>
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">Control de fichaje del centro</MudText>
+
+<MudGrid Spacing="4">
+    <MudItem xs="12" md="4">
+        @if (_loggedInWorker is null)
+        {
+            <QuickClockPanel CenterId="_centerId" />
+        }
+        else
+        {
+            <DonutProgress Worker="_loggedInWorker" RefreshAsync="RefreshWorkerAsync" />
+        }
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        @if (_loggedInWorker is null)
+        {
+            <MudCard Elevation="2" Class="h-100">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Acceso</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Identifícate para ver tus datos personales</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenLoginAsync">
+                        <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
+                        Login
+                    </MudButton>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            <WorkerCard Worker="_loggedInWorker"
+                        ShowProfileButtons="true"
+                        RefreshAsync="RefreshWorkerAsync"
+                        LogoutAsync="LogoutAsync"
+                        ToggleTimeControl="ToggleTimeControlAsync" />
+
+            @if (_showTimeControl)
+            {
+                <div class="mt-4">
+                    <TimeControlPanel Worker="_loggedInWorker" />
+                </div>
+            }
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    private WorkerStatus? _loggedInWorker;
+    private bool _showTimeControl;
+    private int _centerId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var centers = await Api.GetCentersAsync();
+        var center = centers.FirstOrDefault();
+
+        if (center is not null)
+        {
+            _centerId = center.Id;
+        }
+    }
+
+    private async Task OpenLoginAsync()
+    {
+        var selectorOptions = new DialogOptions { CloseOnEscapeKey = true };
+        var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = _centerId }, selectorOptions);
+        var selectorResult = await selector.Result;
+
+        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerSummary worker)
+        {
+            return;
+        }
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", new DialogParameters { ["WorkerId"] = worker.Id }, options);
+        var result = await dialog.Result;
+
+        if (result?.Data is WorkerStatus loggedIn)
+        {
+            _loggedInWorker = loggedIn;
+        }
+    }
+
+    private async Task RefreshWorkerAsync()
+    {
+        if (_loggedInWorker is null)
+        {
+            return;
+        }
+
+        _loggedInWorker = await Api.GetWorkerStatusAsync(_loggedInWorker.Id);
+    }
+
+    private Task ToggleTimeControlAsync()
+    {
+        _showTimeControl = !_showTimeControl;
+        return Task.CompletedTask;
+    }
+
+    private Task LogoutAsync()
+    {
+        _loggedInWorker = null;
+        _showTimeControl = false;
+        return Task.CompletedTask;
+    }
+}

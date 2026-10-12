@@ -53,6 +53,19 @@ public sealed class ApiClient
         throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
     }
 
+    public async Task<CenterSessionResponse> LoginCenterAsync(string username, string password, CancellationToken cancellationToken = default)
+    {
+        var response = await _http.PostAsJsonAsync("/api/centers/login", new { username, password }, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<CenterSessionResponse>(cancellationToken)
+                ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
+        }
+
+        throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+    }
+
     public async Task ChangePinAsync(int workerId, string currentPin, string newPin, CancellationToken cancellationToken = default)
     {
         var response = await _http.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin, newPin }, cancellationToken);

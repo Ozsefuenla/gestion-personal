@@ -1,3 +1,20 @@
+:root {
+    --brand-primary: #5B3E8E;
+    --brand-primary-dark: #4A3476;
+    --brand-accent: #E58FA4;
+    --brand-success: #2E9E6B;
+    --brand-ink: #1F1B2E;
+    --brand-muted: #6B7280;
+    --brand-bg: #FAF7F9;
+    --brand-border: #ECE5F1;
+}
+
+body {
+    font-family: "Poppins", "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+    color: var(--brand-ink);
+    background: #FFFFFF;
+}
+
 h1:focus {
     outline: none;
 }

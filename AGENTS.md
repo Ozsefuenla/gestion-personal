@@ -9,8 +9,8 @@ frontend en Blazor Server.
 - Backend: ASP.NET Core 10 Web API (C#), persistencia en memoria (acceso SQL
   directo pendiente, sin ORM).
 - Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
-- Seguridad (diferida): JWT + cookie HTTP-Only, PIN de 4 dígitos hasheado
-  con BCrypt para fichaje en tablet.
+- Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña).
+  Pendiente: JWT y hash BCrypt del PIN de trabajador para fichaje en tablet.
 
 ## Arquitectura (Clean Architecture)
 - Proyectos: `Domain`, `Application`, `Infrastructure`, `Api`, `Web` (Blazor) y
@@ -45,6 +45,13 @@ frontend en Blazor Server.
   estados, colores, acciones, timeline) y en `docs/0004-frontend-ui-worker.md`
   (trabajador logueado: card personal, donut, cambio de PIN, edición de marcajes,
   control horario).
+- La landing page (copy, diseño, propuestas de venta) está en `docs/0006-landing-page.md`.
+  Se implementa como página raíz en `Components/Pages/LandingPage.razor` (ruta `/`) con su
+  layout `LandingLayout`. El dashboard tras login de centro está en `/app` (`Dashboard.razor`
+  + `AppLayout.razor`).
+- Existe una landing alternativa **v2** en `/v2` (`Components/Pages/LandingPageV2.razor`),
+  con diseño clínico-estético (Tailwind CDN + Material Symbols) y simulador interactivo de
+  PIN (`wwwroot/landing-v2.js`). No sustituye a la landing de `/`.
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo

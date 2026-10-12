@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -12,3 +12,30 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#5B3E8E",
+            Secondary = "#E58FA4",
+            Tertiary = "#2E9E6B",
+            AppbarBackground = "#5B3E8E",
+            AppbarText = "#FFFFFF",
+            DrawerBackground = "#FAF7F9",
+            DrawerText = "#1F1B2E",
+            Background = "#FFFFFF",
+            Surface = "#FFFFFF",
+            TextPrimary = "#1F1B2E",
+            TextSecondary = "#6B7280"
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = new[] { "Poppins", "Inter", "Roboto", "Helvetica", "Arial", "sans-serif" }
+            }
+        }
+    };
+}

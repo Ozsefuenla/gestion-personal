@@ -14,6 +14,7 @@ siguiendo Clean Architecture; frontend en Blazor Server (en desarrollo).
 | Documentación de API | Swagger / OpenAPI |
 | Manejo de errores | Result Pattern + `ProblemDetails` (RFC 7807) |
 | Persistencia | En memoria (actual). SQL directo sin ORM (pendiente) |
+| Autenticación | Cookie HTTP-Only para el centro (BCrypt en contraseña). JWT + BCrypt del PIN pendientes |
 | Testing | xUnit, `Microsoft.AspNetCore.Mvc.Testing` |
 | Frontend | Blazor Web App (.NET 10, interactividad Server) + MudBlazor |
 
@@ -59,7 +60,8 @@ docs/
 ├─ 0002-solution-structure.md
 ├─ 0003-frontend-ui.md
 ├─ 0004-frontend-ui-worker.md
-└─ 0005-multi-tenant-model.md
+├─ 0005-multi-tenant-model.md
+└─ 0006-landing-page.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -89,14 +91,19 @@ CHANGELOG.md
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
-| Landing page (producto, features, login de centro) | Pendiente |
-| Autenticación / login del centro (JWT) | Pendiente |
+| Login del centro (`POST /api/centers/login`) | Implementado (cookie HttpOnly) |
+| Landing page (`/`) | Implementado |
+| Landing v2 (`/v2`, diseño clínico-estético) | Implementado |
+| Dashboard del centro (`/app`) | Implementado (con layout profesional) |
 
 ## Usuario y contraseña de prueba
 
-Pendiente — todavía no hay autenticación ni login del centro implementados. Por
-ahora se opera contra un único centro demo (`id = 1`, "Peluquería Sol") con un
-`CenterUser` de prueba (`admin` / `admin`) aún sin endpoint que lo consuma.
+El login del centro se hace desde la landing (`/`, botón "Acceso") o en `/login`,
+con un `CenterUser` de prueba:
+
+- Centro demo `1` ("Peluquería Sol"): usuario `admin`, contraseña `admin`.
+
+La contraseña se guarda hasheada con BCrypt.
 
 Los trabajadores se identifican por un **PIN de 4 dígitos** asociado a cada
 trabajador (no hay email y el PIN no es único global).
@@ -106,9 +113,7 @@ PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana 
 
 ## Pendientes
 
-- Landing page (producto, features, login de centro) y seguridad (JWT + cookie).
-- Autenticación del centro: consumir `CenterUser` (`username`/`password`) para entrar al centro.
-- Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`) y `CenterUser.PasswordHash`.
+- JWT para la API y hash BCrypt del PIN de trabajador (hoy el PIN se guarda en claro en `PinHash`).
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
 - Botón "Ausencias" (solo visual por ahora).
