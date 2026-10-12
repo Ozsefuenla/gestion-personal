@@ -15,7 +15,7 @@ public static class WorkersEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapGet("/api/workers/status", async (GetWorkersStatusQueryHandler handler, CancellationToken cancellationToken) =>
         {
@@ -24,7 +24,7 @@ public static class WorkersEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapGet("/api/workers/{id:int}/status", async (int id, GetWorkerStatusQueryHandler handler, CancellationToken cancellationToken) =>
         {
@@ -33,12 +33,13 @@ public static class WorkersEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/workers/login", async (
             LoginCommand command,
             IValidator<LoginCommand> validator,
             LoginCommandHandler handler,
+            ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
             var validationResult = await validator.ValidateAsync(command, cancellationToken);
@@ -53,10 +54,16 @@ public static class WorkersEndpoints
 
             var result = await handler.Handle(command, cancellationToken);
 
+            if (result.IsFailure)
+            {
+                loggerFactory.CreateLogger("WorkersLogin").LogWarning(
+                    "Fallo de login de trabajador {WorkerId}: {Error}", command.WorkerId, result.Error.Message);
+            }
+
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireRateLimiting("login").RequireAuthorization();
 
         app.MapPost("/api/workers", async (
             CreateWorkerCommand command,
@@ -79,7 +86,7 @@ public static class WorkersEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/workers/{result.Value.Id}", result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/workers/{id:int}/change-pin", async (
             int id,
@@ -103,7 +110,7 @@ public static class WorkersEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         return app;
     }

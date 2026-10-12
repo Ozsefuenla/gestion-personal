@@ -29,7 +29,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/time-entries/pause", async (
             PauseTimeEntryCommand command,
@@ -52,7 +52,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/time-entries/end", async (
             EndTimeEntryCommand command,
@@ -75,7 +75,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/time-entries/resume", async (
             ResumeTimeEntryCommand command,
@@ -98,7 +98,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapGet("/api/time-entries/today", async (
             int workerId,
@@ -123,7 +123,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapGet("/api/time-entries/monthly", async (
             int workerId,
@@ -150,7 +150,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPost("/api/time-entries/quick-clock", async (
             QuickClockCommand command,
@@ -173,7 +173,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapPatch("/api/time-entries/active/{workerId:int}", async (
             int workerId,
@@ -197,7 +197,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         app.MapDelete("/api/time-entries/active/{workerId:int}", async (
             int workerId,
@@ -209,7 +209,7 @@ public static class TimeEntriesEndpoints
             return result.IsSuccess
                 ? Results.NoContent()
                 : result.ToProblemDetails();
-        });
+        }).RequireAuthorization();
 
         return app;
     }

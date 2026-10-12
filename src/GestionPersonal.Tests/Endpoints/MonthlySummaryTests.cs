@@ -6,13 +6,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class MonthlySummaryTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class MonthlySummaryTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public MonthlySummaryTests(WebApplicationFactory<Program> factory)
+    public MonthlySummaryTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]

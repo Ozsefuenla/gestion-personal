@@ -2,6 +2,7 @@ using System.Security.Claims;
 using GestionPersonal.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GestionPersonal.Web.Endpoints;
 
@@ -9,7 +10,7 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/auth/login", async (CenterLoginRequest request, ApiClient api, HttpContext httpContext) =>
+        app.MapPost("/auth/login", async (CenterLoginRequest request, ApiClient api, ILoggerFactory loggerFactory, HttpContext httpContext) =>
         {
             try
             {
@@ -20,7 +21,8 @@ public static class AuthEndpoints
                     new(ClaimTypes.NameIdentifier, session.CenterId.ToString()),
                     new(ClaimTypes.Name, session.Username),
                     new("centerId", session.CenterId.ToString()),
-                    new("centerName", session.CenterName)
+                    new("centerName", session.CenterName),
+                    new("jwt", session.Token)
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -35,9 +37,11 @@ public static class AuthEndpoints
             }
             catch (HttpRequestException ex)
             {
+                loggerFactory.CreateLogger("CentersLogin").LogWarning(
+                    "Fallo de login de centro '{Username}': {Error}", request.Username, ex.Message);
                 return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status400BadRequest);
             }
-        });
+        }).RequireRateLimiting("login");
 
         app.MapPost("/auth/logout", async (HttpContext httpContext) =>
         {

@@ -7,25 +7,30 @@ public sealed class MonthlySummaryQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
+    private readonly ICurrentCenter _currentCenter;
 
     public MonthlySummaryQueryHandler(
         IWorkerRepository workerRepository,
-        ITimeEntryRepository timeEntryRepository)
+        ITimeEntryRepository timeEntryRepository,
+        ICurrentCenter currentCenter)
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
+        _currentCenter = currentCenter;
     }
 
     public async Task<Result<MonthlySummaryResponse>> Handle(
         MonthlySummaryQuery query,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByIdAsync(query.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, query.WorkerId, cancellationToken);
 
-        if (worker is null)
+        if (workerResult.IsFailure)
         {
-            return Error.NotFound("El trabajador no existe.");
+            return workerResult.Error;
         }
+
+        var worker = workerResult.Value;
 
         var now = DateTimeOffset.UtcNow;
         var (from, to) = MonthlySummaryHelper.GetMonthRange(query.Year, query.Month);

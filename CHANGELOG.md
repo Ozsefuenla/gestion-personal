@@ -69,6 +69,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Landing v2 (`/v2`, `LandingPageV2.razor`) con diseño clínico-estético (Tailwind CDN +
   Material Symbols, paleta teal/rosa), simulador interactivo de PIN (`landing-v2.js`) y
   acceso real vía `CenterLoginDialog`.
+- Documento de seguridad (`docs/0007-seguridad-owasp.md`) con mapeo OWASP Top 10 (Web 2021 +
+  API 2023) y roadmap.
+- Rate limiting en endpoints de login (Web `/auth/login`; API `/api/centers/login` y
+  `/api/workers/login`), con rechazo `429`.
+- Headers de seguridad en el Web (`X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
+- Logging de intentos de login fallidos (centro y trabajador).
+- Autenticación de la API con JWT (HS256, `Microsoft.AspNetCore.Authentication.JwtBearer`):
+  `POST /api/centers/login` devuelve un token con claims `centerId`/`centerName`/`username`.
+- Scoping por centro (BOLA/BFLA): `RequireAuthorization` en todos los endpoints y verificación
+  de pertenencia al centro (`ICurrentCenter` + `IWorkerRepository.GetByIdAndCenterAsync` +
+  `WorkerScope`).
+- Frontend: `CenterTokenStore` y envío del JWT como `Authorization: Bearer` en `ApiClient`.
+- Lockout del PIN del trabajador (`ILoginAttemptTracker`): 5 intentos fallidos bloquean al
+  trabajador 15 minutos.
+
+### Security
+- El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
+  fichaje rápido y cambio de PIN, y se hashea en el alta.
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.

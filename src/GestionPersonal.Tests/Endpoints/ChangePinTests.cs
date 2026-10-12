@@ -5,13 +5,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class ChangePinTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ChangePinTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public ChangePinTests(WebApplicationFactory<Program> factory)
+    public ChangePinTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]

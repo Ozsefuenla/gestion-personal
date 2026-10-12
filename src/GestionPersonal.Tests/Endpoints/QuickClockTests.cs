@@ -6,13 +6,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class QuickClockTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public QuickClockTests(WebApplicationFactory<Program> factory)
+    public QuickClockTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]

@@ -8,20 +8,30 @@ public sealed class GetWorkerStatusQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
+    private readonly ICurrentCenter _currentCenter;
 
     public GetWorkerStatusQueryHandler(
         IWorkerRepository workerRepository,
-        ITimeEntryRepository timeEntryRepository)
+        ITimeEntryRepository timeEntryRepository,
+        ICurrentCenter currentCenter)
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
+        _currentCenter = currentCenter;
     }
 
     public async Task<Result<WorkerStatusResponse>> Handle(
         int workerId,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByIdAsync(workerId, cancellationToken);
+        var centerId = _currentCenter.CenterId;
+
+        if (centerId is null)
+        {
+            return Error.Forbidden("No autenticado.");
+        }
+
+        var worker = await _workerRepository.GetByIdAndCenterAsync(workerId, centerId.Value, cancellationToken);
 
         if (worker is null)
         {

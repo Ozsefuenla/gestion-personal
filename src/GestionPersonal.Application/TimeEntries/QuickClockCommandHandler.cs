@@ -7,6 +7,9 @@ public sealed class QuickClockCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly ICurrentCenter _currentCenter;
+    private readonly ILoginAttemptTracker _loginAttemptTracker;
     private readonly StartTimeEntryCommandHandler _startHandler;
     private readonly PauseTimeEntryCommandHandler _pauseHandler;
     private readonly ResumeTimeEntryCommandHandler _resumeHandler;
@@ -15,6 +18,9 @@ public sealed class QuickClockCommandHandler
     public QuickClockCommandHandler(
         IWorkerRepository workerRepository,
         ITimeEntryRepository timeEntryRepository,
+        IPasswordHasher passwordHasher,
+        ICurrentCenter currentCenter,
+        ILoginAttemptTracker loginAttemptTracker,
         StartTimeEntryCommandHandler startHandler,
         PauseTimeEntryCommandHandler pauseHandler,
         ResumeTimeEntryCommandHandler resumeHandler,
@@ -22,6 +28,9 @@ public sealed class QuickClockCommandHandler
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
+        _passwordHasher = passwordHasher;
+        _currentCenter = currentCenter;
+        _loginAttemptTracker = loginAttemptTracker;
         _startHandler = startHandler;
         _pauseHandler = pauseHandler;
         _resumeHandler = resumeHandler;
@@ -32,17 +41,32 @@ public sealed class QuickClockCommandHandler
         QuickClockCommand command,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByIdAsync(command.WorkerId, cancellationToken);
+        var centerId = _currentCenter.CenterId;
+
+        if (centerId is null)
+        {
+            return Error.Forbidden("No autenticado.");
+        }
+
+        if (_loginAttemptTracker.IsLockedOut(command.WorkerId))
+        {
+            return Error.Forbidden("Demasiados intentos fallidos. Inténtalo de nuevo más tarde.");
+        }
+
+        var worker = await _workerRepository.GetByIdAndCenterAsync(command.WorkerId, centerId.Value, cancellationToken);
 
         if (worker is null)
         {
             return Error.NotFound("El trabajador no existe.");
         }
 
-        if (worker.PinHash != command.Pin)
+        if (!_passwordHasher.Verify(command.Pin, worker.PinHash))
         {
+            _loginAttemptTracker.RecordFailure(command.WorkerId);
             return Error.Validation("El PIN introducido no es correcto.");
         }
+
+        _loginAttemptTracker.Reset(command.WorkerId);
 
         var now = DateTimeOffset.UtcNow;
         var (from, to) = TodayStatusHelper.GetTodayRange(now);

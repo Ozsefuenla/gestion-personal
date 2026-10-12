@@ -6,10 +6,17 @@ namespace GestionPersonal.Application.TimeEntries;
 
 public sealed class TodaySummaryQueryHandler
 {
+    private readonly IWorkerRepository _workerRepository;
+    private readonly ICurrentCenter _currentCenter;
     private readonly ITimeEntryRepository _timeEntryRepository;
 
-    public TodaySummaryQueryHandler(ITimeEntryRepository timeEntryRepository)
+    public TodaySummaryQueryHandler(
+        IWorkerRepository workerRepository,
+        ICurrentCenter currentCenter,
+        ITimeEntryRepository timeEntryRepository)
     {
+        _workerRepository = workerRepository;
+        _currentCenter = currentCenter;
         _timeEntryRepository = timeEntryRepository;
     }
 
@@ -17,6 +24,13 @@ public sealed class TodaySummaryQueryHandler
         TodaySummaryQuery query,
         CancellationToken cancellationToken = default)
     {
+        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, query.WorkerId, cancellationToken);
+
+        if (workerResult.IsFailure)
+        {
+            return workerResult.Error;
+        }
+
         var now = DateTimeOffset.UtcNow;
         var (from, to) = TodayStatusHelper.GetTodayRange(now);
 
