@@ -10,5 +10,7 @@ public sealed record Error(string Code, string Message)
 
     public static Error Conflict(string message) => new("Conflict", message);
 
+    public static Error Forbidden(string message) => new("Forbidden", message);
+
     public static Error Failure(string code, string message) => new(code, message);
 }

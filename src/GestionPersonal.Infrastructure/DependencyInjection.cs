@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddSingleton<ICenterRepository, InMemoryCenterRepository>();
         services.AddSingleton<ICenterUserRepository, InMemoryCenterUserRepository>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddSingleton<ILoginAttemptTracker, InMemoryLoginAttemptTracker>();
 
         return services;
     }

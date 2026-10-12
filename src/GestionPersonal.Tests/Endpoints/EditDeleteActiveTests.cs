@@ -5,13 +5,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class EditDeleteActiveTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class EditDeleteActiveTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public EditDeleteActiveTests(WebApplicationFactory<Program> factory)
+    public EditDeleteActiveTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]

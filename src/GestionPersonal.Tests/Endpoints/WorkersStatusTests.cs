@@ -4,13 +4,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class WorkersStatusTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class WorkersStatusTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public WorkersStatusTests(WebApplicationFactory<Program> factory)
+    public WorkersStatusTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]

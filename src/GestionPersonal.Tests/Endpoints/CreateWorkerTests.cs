@@ -5,13 +5,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
 
-public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class CreateWorkerTests : AuthenticatedApiTest, IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient _client;
-
-    public CreateWorkerTests(WebApplicationFactory<Program> factory)
+    public CreateWorkerTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]
@@ -78,7 +75,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
     }
 
     [Fact]
-    public async Task PostWorker_WithUnknownCenter_ReturnsNotFound()
+    public async Task PostWorker_WithOtherCenter_ReturnsForbidden()
     {
         var response = await _client.PostAsJsonAsync("/api/workers", new
         {
@@ -88,7 +85,7 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
             centerId = TestWorkerIds.New()
         });
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]

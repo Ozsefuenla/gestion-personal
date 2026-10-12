@@ -11,6 +11,7 @@ public static class ResultExtensions
             "NotFound" => StatusCodes.Status404NotFound,
             "Conflict" => StatusCodes.Status409Conflict,
             "Validation" => StatusCodes.Status400BadRequest,
+            "Forbidden" => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status400BadRequest
         };
 

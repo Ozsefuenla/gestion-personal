@@ -6,10 +6,17 @@ namespace GestionPersonal.Application.Workers;
 public sealed class ChangePinCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly ICurrentCenter _currentCenter;
 
-    public ChangePinCommandHandler(IWorkerRepository workerRepository)
+    public ChangePinCommandHandler(
+        IWorkerRepository workerRepository,
+        IPasswordHasher passwordHasher,
+        ICurrentCenter currentCenter)
     {
         _workerRepository = workerRepository;
+        _passwordHasher = passwordHasher;
+        _currentCenter = currentCenter;
     }
 
     public async Task<Result> Handle(
@@ -17,14 +24,21 @@ public sealed class ChangePinCommandHandler
         ChangePinCommand command,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByIdAsync(workerId, cancellationToken);
+        var centerId = _currentCenter.CenterId;
+
+        if (centerId is null)
+        {
+            return Error.Forbidden("No autenticado.");
+        }
+
+        var worker = await _workerRepository.GetByIdAndCenterAsync(workerId, centerId.Value, cancellationToken);
 
         if (worker is null)
         {
             return Error.NotFound("El trabajador no existe.");
         }
 
-        if (worker.PinHash != command.CurrentPin)
+        if (!_passwordHasher.Verify(command.CurrentPin, worker.PinHash))
         {
             return Error.Validation("El PIN actual no es correcto.");
         }
@@ -34,7 +48,7 @@ public sealed class ChangePinCommandHandler
             return Error.Validation("El nuevo PIN debe ser distinto.");
         }
 
-        worker.ChangePin(command.NewPin);
+        worker.ChangePin(_passwordHasher.Hash(command.NewPin));
 
         return Result.Success();
     }
