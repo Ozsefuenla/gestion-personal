@@ -104,7 +104,7 @@ public sealed class EditDeleteActiveTests : IClassFixture<WebApplicationFactory<
 
     private async Task<int> CreateWorkerAsync(string pin)
     {
-        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = $"Worker {pin}", pin = pin, role = "worker" });
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = $"Worker {pin}", pin = pin, role = "worker", centerId = 1 });
         var worker = await response.Content.ReadFromJsonAsync<WorkerResponse>();
 
         return worker!.Id;

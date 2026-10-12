@@ -19,6 +19,9 @@ public sealed class CreateWorkerCommandValidator : AbstractValidator<CreateWorke
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("El rol es obligatorio.")
             .Must(IsAllowedRole).WithMessage("El rol debe ser 'admin' o 'worker'.");
+
+        RuleFor(x => x.CenterId)
+            .GreaterThan(0).WithMessage("El centro es obligatorio.");
     }
 
     private static bool IsAllowedRole(string? role) =>

@@ -24,11 +24,23 @@
 
 @code {
     [Parameter]
+    public int CenterId { get; set; }
+
+    [Parameter]
     public EventCallback RefreshAsync { get; set; }
 
     private async Task OpenAsync(string action)
     {
-        var parameters = new DialogParameters { ["Action"] = action };
+        var selectorOptions = new DialogOptions { CloseOnEscapeKey = true };
+        var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = CenterId }, selectorOptions);
+        var selectorResult = await selector.Result;
+
+        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerSummary worker)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters { ["Action"] = action, ["WorkerId"] = worker.Id };
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<QuickClockDialog>("Fichaje rápido", parameters, options);
         var result = await dialog.Result;

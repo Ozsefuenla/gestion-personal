@@ -102,7 +102,7 @@ public sealed class MonthlySummaryTests : IClassFixture<WebApplicationFactory<Pr
 
     private async Task<int> CreateWorkerAsync()
     {
-        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Test Worker", pin = "9999", role = "worker" });
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Test Worker", pin = "9999", role = "worker", centerId = 1 });
 
         response.EnsureSuccessStatusCode();
 

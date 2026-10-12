@@ -21,7 +21,8 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         {
             fullName = "Laura Pérez",
             pin = "0421",
-            role = "worker"
+            role = "worker",
+            centerId = 1
         });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -41,7 +42,8 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         {
             fullName = "",
             pin = "0421",
-            role = "worker"
+            role = "worker",
+            centerId = 1
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -54,7 +56,8 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         {
             fullName = "Laura",
             pin = "0421",
-            role = "supervisor"
+            role = "supervisor",
+            centerId = 1
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -67,10 +70,25 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         {
             fullName = "Laura",
             pin = "12ab",
-            role = "worker"
+            role = "worker",
+            centerId = 1
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostWorker_WithUnknownCenter_ReturnsNotFound()
+    {
+        var response = await _client.PostAsJsonAsync("/api/workers", new
+        {
+            fullName = "Laura",
+            pin = "0421",
+            role = "worker",
+            centerId = TestWorkerIds.New()
+        });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -82,7 +100,8 @@ public sealed class CreateWorkerTests : IClassFixture<WebApplicationFactory<Prog
         {
             fullName = fullName,
             pin = "1111",
-            role = "worker"
+            role = "worker",
+            centerId = 1
         });
 
         var workers = await _client.GetFromJsonAsync<List<WorkerResponse>>("/api/workers");

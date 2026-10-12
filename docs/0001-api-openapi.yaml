@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Peluquería — Gestión de Trabajadores
+  title: Gestión de Personal por Centro
   version: 1.0.0
-  description: API para alta de trabajadores, fichajes de jornada y solicitudes de vacaciones.
+  description: API para centros, alta de trabajadores, fichajes de jornada y solicitudes de vacaciones.
 servers:
   - url: /api
 paths:
@@ -25,6 +25,44 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /centers:
+    get:
+      summary: Listar centros
+      tags: [Centers]
+      security: []
+      responses:
+        '200':
+          description: Lista de centros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Center'
+
+  /centers/{id}/workers:
+    get:
+      summary: Listar los trabajadores de un centro
+      tags: [Centers]
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de trabajadores del centro
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /workers:
     get:
@@ -92,10 +130,9 @@ paths:
 
   /workers/login:
     post:
-      summary: Iniciar sesión por PIN
+      summary: Iniciar sesión de un trabajador por PIN
       tags: [Workers]
-      security:
-        - bearerAuth: []
+      security: []
       requestBody:
         required: true
         content:
@@ -111,10 +148,8 @@ paths:
                 $ref: '#/components/schemas/WorkerStatus'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /workers/{id}/status:
     get:
@@ -344,10 +379,9 @@ paths:
 
   /time-entries/quick-clock:
     post:
-      summary: Fichaje rápido por PIN
+      summary: Fichaje rápido por trabajador y PIN
       tags: [TimeEntries]
-      security:
-        - bearerAuth: []
+      security: []
       requestBody:
         required: true
         content:
@@ -363,10 +397,8 @@ paths:
                 $ref: '#/components/schemas/QuickClockResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /time-entries/active/{workerId}:
     patch:
@@ -609,6 +641,15 @@ components:
       type: string
       enum: [admin, worker]
 
+    Center:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
     VacationStatus:
       type: string
       enum: [pending, approved, rejected]
@@ -635,7 +676,7 @@ components:
 
     WorkerCreateRequest:
       type: object
-      required: [fullName, pin, role]
+      required: [fullName, pin, role, centerId]
       properties:
         fullName:
           type: string
@@ -644,11 +685,15 @@ components:
           pattern: '^\d{4}$'
         role:
           $ref: '#/components/schemas/Role'
+        centerId:
+          type: integer
 
     LoginRequest:
       type: object
-      required: [pin]
+      required: [workerId, pin]
       properties:
+        workerId:
+          type: integer
         pin:
           type: string
           pattern: '^\d{4}$'
@@ -666,9 +711,11 @@ components:
 
     Worker:
       type: object
-      required: [id, fullName, role]
+      required: [id, fullName, role, centerId]
       properties:
         id:
+          type: integer
+        centerId:
           type: integer
         fullName:
           type: string
@@ -753,8 +800,10 @@ components:
 
     QuickClockRequest:
       type: object
-      required: [pin, action]
+      required: [workerId, pin, action]
       properties:
+        workerId:
+          type: integer
         pin:
           type: string
           pattern: '^\d{4}$'

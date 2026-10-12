@@ -32,9 +32,14 @@ public sealed class QuickClockCommandHandler
         QuickClockCommand command,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByPinAsync(command.Pin, cancellationToken);
+        var worker = await _workerRepository.GetByIdAsync(command.WorkerId, cancellationToken);
 
         if (worker is null)
+        {
+            return Error.NotFound("El trabajador no existe.");
+        }
+
+        if (worker.PinHash != command.Pin)
         {
             return Error.Validation("El PIN introducido no es correcto.");
         }
@@ -84,6 +89,11 @@ public sealed class QuickClockCommandHandler
 
     private static string BuildMessage(string currentStatus, IReadOnlyList<string> actions)
     {
+        if (currentStatus == "finished")
+        {
+            return "Tu jornada ya está finalizada. Si tienes que hacer modificaciones, ve a tu espacio personal.";
+        }
+
         var label = currentStatus switch
         {
             "idle" => "Sin iniciar",

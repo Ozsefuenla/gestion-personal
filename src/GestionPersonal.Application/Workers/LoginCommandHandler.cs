@@ -21,9 +21,14 @@ public sealed class LoginCommandHandler
         LoginCommand command,
         CancellationToken cancellationToken = default)
     {
-        var worker = await _workerRepository.GetByPinAsync(command.Pin, cancellationToken);
+        var worker = await _workerRepository.GetByIdAsync(command.WorkerId, cancellationToken);
 
         if (worker is null)
+        {
+            return Error.NotFound("El trabajador no existe.");
+        }
+
+        if (worker.PinHash != command.Pin)
         {
             return Error.Validation("El PIN introducido no es correcto.");
         }

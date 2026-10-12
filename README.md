@@ -1,8 +1,9 @@
 # GestionPersonal
 
 Aplicación web de gestión de personal, control horario, turnos y vacaciones para
-peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) siguiendo
-Clean Architecture; frontend en Blazor Server (en desarrollo).
+peluquerías y clínicas estéticas en España. El software se vende por centro: cada
+centro tiene sus trabajadores y un usuario de acceso. Backend en C# (.NET 10)
+siguiendo Clean Architecture; frontend en Blazor Server (en desarrollo).
 
 ## Stack tecnológico
 
@@ -57,7 +58,8 @@ docs/
 ├─ 0001-api-openapi.yaml
 ├─ 0002-solution-structure.md
 ├─ 0003-frontend-ui.md
-└─ 0004-frontend-ui-worker.md
+├─ 0004-frontend-ui-worker.md
+└─ 0005-multi-tenant-model.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -66,7 +68,9 @@ CHANGELOG.md
 
 | Funcionalidad | Estado |
 |---------------|--------|
-| Alta de trabajadores (`POST /api/workers`) | Implementado (sin control de rol todavía) |
+| Listado de centros (`GET /api/centers`) | Implementado |
+| Trabajadores de un centro (`GET /api/centers/{id}/workers`) | Implementado |
+| Alta de trabajadores (`POST /api/workers`) | Implementado (con `centerId`) |
 | Listado de trabajadores (`GET /api/workers`) | Implementado |
 | Estado actual de todos los trabajadores (`GET /api/workers/status`) | Implementado (con resumen trabajado/pausado y timeline) |
 | Inicio de fichaje (`POST /api/time-entries/start`) | Implementado |
@@ -74,8 +78,8 @@ CHANGELOG.md
 | Reanudar fichaje (`POST /api/time-entries/resume`) | Implementado |
 | Fin de fichaje (`POST /api/time-entries/end`) | Implementado |
 | Estado actual y resumen del día (`GET /api/time-entries/today`) | Implementado |
-| Fichaje rápido por PIN (`POST /api/time-entries/quick-clock`) | Implementado |
-| Inicio de sesión por PIN (`POST /api/workers/login`) | Implementado |
+| Fichaje rápido por trabajador y PIN (`POST /api/time-entries/quick-clock`) | Implementado |
+| Inicio de sesión por trabajador y PIN (`POST /api/workers/login`) | Implementado |
 | Estado de un trabajador por id (`GET /api/workers/{id}/status`) | Implementado |
 | Cambiar PIN (`POST /api/workers/{id}/change-pin`) | Implementado |
 | Editar inicio del fichaje activo (`PATCH /api/time-entries/active/{workerId}`) | Implementado |
@@ -85,20 +89,28 @@ CHANGELOG.md
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de vacaciones | Pendiente |
 | Aprobación de vacaciones | Pendiente |
-| Autenticación / login (JWT) | Pendiente |
+| Landing page (producto, features, login de centro) | Pendiente |
+| Autenticación / login del centro (JWT) | Pendiente |
 
 ## Usuario y contraseña de prueba
 
-Pendiente — todavía no hay autenticación ni login implementados. Los trabajadores
-se identifican por un **PIN de 4 dígitos** (no hay email).
+Pendiente — todavía no hay autenticación ni login del centro implementados. Por
+ahora se opera contra un único centro demo (`id = 1`, "Peluquería Sol") con un
+`CenterUser` de prueba (`admin` / `admin`) aún sin endpoint que lo consuma.
 
-PINs de prueba (en memoria): `1111` (María García), `2222` (Ana López), `3333` (Carlos Ruiz).
+Los trabajadores se identifican por un **PIN de 4 dígitos** asociado a cada
+trabajador (no hay email y el PIN no es único global).
+
+PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana López →
+`2222`, `3` Carlos Ruiz → `3333`.
 
 ## Pendientes
 
-- Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`).
+- Landing page (producto, features, login de centro) y seguridad (JWT + cookie).
+- Autenticación del centro: consumir `CenterUser` (`username`/`password`) para entrar al centro.
+- Hashear el PIN con BCrypt (hoy se guarda en claro en `PinHash`) y `CenterUser.PasswordHash`.
 - Persistencia SQL real (hoy en memoria, sin ORM).
-- Seguridad (JWT + cookie).
+- Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
 - Botón "Ausencias" (solo visual por ahora).
 - Botón "Exportar" del panel de Control Horario (pendiente).
 - Botón "+ Añadir marcaje" (solo visual por ahora).

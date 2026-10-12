@@ -9,9 +9,18 @@
     <DialogContent>
         <MudText Typo="Typo.body1">Introduce tu PIN de trabajador</MudText>
 
-        @if (_availableActions.Count > 0)
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+        }
+
+        @if (_message is not null)
         {
             <MudAlert Severity="Severity.Warning" Class="mt-4">@_message</MudAlert>
+        }
+
+        @if (_availableActions.Count > 0)
+        {
             <div class="d-flex flex-column gap-2 mt-4">
                 @foreach (var action in _availableActions)
                 {
@@ -24,11 +33,6 @@
         }
         else
         {
-            @if (_error is not null)
-            {
-                <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
-            }
-
             <MudTextField @ref="_pinField"
                           T="string"
                           Value="_pin"
@@ -56,6 +60,9 @@
     [Parameter]
     public string? Action { get; set; }
 
+    [Parameter]
+    public int WorkerId { get; set; }
+
     private MudTextField<string> _pinField = default!;
     private string _pin = "";
     private string _action = "";
@@ -81,6 +88,7 @@
     {
         _pin = new string(value.Where(char.IsDigit).Take(4).ToArray());
         _error = null;
+        _message = null;
 
         if (_pin.Length != 4)
         {
@@ -100,7 +108,7 @@
     {
         try
         {
-            var worker = await Api.LoginAsync(_pin);
+            var worker = await Api.LoginAsync(WorkerId, _pin);
             DialogInstance.Close(DialogResult.Ok(worker));
         }
         catch (Exception ex)
@@ -119,7 +127,7 @@
 
         try
         {
-            var result = await Api.QuickClockAsync(_pin, action);
+            var result = await Api.QuickClockAsync(WorkerId, _pin, action);
 
             if (result.Success)
             {
@@ -131,6 +139,12 @@
             _message = result.Message;
             _availableActions = result.AvailableActions;
             _error = null;
+
+            if (_availableActions.Count == 0)
+            {
+                _pin = "";
+                await _pinField.FocusAsync();
+            }
         }
         catch (Exception ex)
         {
