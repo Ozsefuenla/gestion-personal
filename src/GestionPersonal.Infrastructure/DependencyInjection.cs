@@ -1,5 +1,6 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Infrastructure.Persistence.Repositories;
+using GestionPersonal.Infrastructure.Security;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionPersonal.Infrastructure;
@@ -12,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<ITimeEntryRepository, InMemoryTimeEntryRepository>();
         services.AddSingleton<ICenterRepository, InMemoryCenterRepository>();
         services.AddSingleton<ICenterUserRepository, InMemoryCenterUserRepository>();
+        services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 
         return services;
     }

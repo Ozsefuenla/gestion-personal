@@ -1,0 +1,25 @@
+@page "/login"
+@layout LandingLayout
+@inject NavigationManager Navigation
+
+<PageTitle>Acceso al centro</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="login-container">
+    <MudCard Elevation="4" Class="login-card">
+        <MudCardContent Class="pa-6">
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-1">Acceso al centro</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary mb-6">
+                Introduce las credenciales de tu centro
+            </MudText>
+            <CenterLoginForm OnLoggedInAsync="HandleLoggedInAsync" />
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private Task HandleLoggedInAsync()
+    {
+        Navigation.NavigateTo("/app", forceLoad: true);
+        return Task.CompletedTask;
+    }
+}

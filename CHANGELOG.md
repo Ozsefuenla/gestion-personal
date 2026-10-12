@@ -50,6 +50,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documento de reglas de UI del trabajador logueado (`docs/0004-frontend-ui-worker.md`).
 - Datos de demo en memoria (`SeedData`): fichajes para los 3 workers seed en septiembre/octubre 2026
   (días laborables hasta hoy, con jornadas de más/menos/justas y pausas).
+- Documento de landing page (`docs/0006-landing-page.md`): copy completo en español, diseño
+  (paleta, tipografía, rejilla), propuestas de venta y detalle del componente de acceso.
+- Login del centro end-to-end: `CenterLoginCommand`, `CenterLoginCommandValidator`,
+  `CenterSessionResponse`, `CenterLoginCommandHandler` (verifica contraseña con BCrypt) y
+  endpoint `POST /api/centers/login`.
+- Abstracción `IPasswordHasher` + implementación `BcryptPasswordHasher` (`BCrypt.Net-Next`);
+  el seed de `CenterUser` ahora guarda la contraseña hasheada con BCrypt.
+- Autenticación del centro en el Web con cookie HttpOnly (`AddAuthentication(Cookie)`),
+  endpoints `POST /auth/login` y `POST /auth/logout`, `AuthorizeRouteView` + `RedirectToLogin`.
+- Landing page en `/` (`LandingPage.razor` + `LandingLayout.razor`) con el copy de `docs/0006`
+  y estilos (paleta violeta/rosa, tipografía Poppins/Inter).
+- Dashboard protegido en `/app` (`Dashboard.razor` + `AppLayout.razor`) con app bar y menú lateral.
+- Componentes `CenterLoginForm` (formulario reutilizable), `CenterLoginDialog` (modal) y
+  página `/login`.
+- Tests `CenterLoginTests` (login de centro: credenciales válidas, contraseña incorrecta,
+  usuario inexistente y campos vacíos).
+- Landing v2 (`/v2`, `LandingPageV2.razor`) con diseño clínico-estético (Tailwind CDN +
+  Material Symbols, paleta teal/rosa), simulador interactivo de PIN (`landing-v2.js`) y
+  acceso real vía `CenterLoginDialog`.
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
@@ -65,3 +84,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `POST /api/workers`: añade `centerId` obligatorio para asociar el trabajador a un centro.
 - `IWorkerRepository`: eliminado `GetByPinAsync` (PIN global); añadido `GetByCenterAsync`.
 - Frontend: el flujo de PIN queda precedido por un selector de trabajadores del centro.
+- Frontend: `/` pasa a ser la landing page; el dashboard (fichaje/estado del equipo) se mueve
+  a `/app`, accesible tras el login del centro.
+- `MudTheme` con paleta violeta/rosa (primario `#5B3E8E`) y tipografía Poppins/Inter.
+- `/app`: el dashboard del centro ahora es el kiosco de fichaje (Iniciar/Pausar/Finalizar +
+  botón "Login" para el acceso personal del trabajador por PIN), en lugar de la vista
+  "Estado del equipo".

@@ -1,0 +1,48 @@
+<MudForm @ref="_form">
+    @if (_error is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+    }
+
+    <MudTextField @ref="_usernameField"
+                  T="string"
+                  Value="_username"
+                  ValueChanged="@(value => _username = value ?? "")"
+                  Immediate="true"
+                  Label="Usuario del centro"
+                  Placeholder="Nombre de tu centro"
+                  Variant="Variant.Outlined"
+                  Required="true"
+                  RequiredError="Introduce el usuario del centro."
+                  Class="mb-4" />
+
+    <MudTextField T="string"
+                  Value="_password"
+                  ValueChanged="@(value => _password = value ?? "")"
+                  Immediate="true"
+                  InputType="InputType.Password"
+                  Label="Contraseña"
+                  Placeholder="••••••••"
+                  Variant="Variant.Outlined"
+                  Required="true"
+                  RequiredError="Introduce tu contraseña."
+                  Class="mb-2" />
+
+    <div class="d-flex justify-end mt-2 mb-4">
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   Color="Color.Primary"
+                   OnClick="ForgotPassword">
+            ¿Olvidaste tu contraseña?
+        </MudButton>
+    </div>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               FullWidth="true"
+               Size="Size.Large"
+               OnClick="SubmitAsync"
+               Disabled="_loading">
+        @(_loading ? "Entrando..." : "Entrar")
+    </MudButton>
+</MudForm>

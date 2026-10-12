@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<ListWorkersByCenterQueryHandler>();
         services.AddScoped<ListCentersQueryHandler>();
+        services.AddScoped<CenterLoginCommandHandler>();
         services.AddScoped<CreateWorkerCommandHandler>();
         services.AddScoped<GetWorkersStatusQueryHandler>();
         services.AddScoped<GetWorkerStatusQueryHandler>();

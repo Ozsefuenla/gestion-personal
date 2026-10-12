@@ -1,0 +1,81 @@
+@inherits LayoutComponentBase
+@layout MainLayout
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<header class="landing-header">
+    <div class="landing-header-inner">
+        <a class="landing-brand" href="/">
+            <span class="landing-brand-mark">G</span>
+            <span class="landing-brand-name">GestionPersonal</span>
+        </a>
+
+        <nav class="landing-nav">
+            <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#seguridad">Seguridad</a>
+            <a href="#faq">FAQ</a>
+        </nav>
+
+        <div class="landing-header-actions">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OpenAccessAsync">Acceso</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="#demo">Probar gratis</MudButton>
+        </div>
+    </div>
+</header>
+
+<main>
+    @Body
+</main>
+
+<footer class="landing-footer">
+    <div class="landing-footer-inner">
+        <div class="landing-footer-col">
+            <a class="landing-brand" href="/">
+                <span class="landing-brand-mark">G</span>
+                <span class="landing-brand-name">GestionPersonal</span>
+            </a>
+            <p class="landing-footer-tagline">Control horario y gestión de personal para centros de belleza.</p>
+        </div>
+        <div class="landing-footer-col">
+            <h4>Producto</h4>
+            <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#seguridad">Seguridad</a>
+            <a href="#multiplataforma">Multiplataforma</a>
+        </div>
+        <div class="landing-footer-col">
+            <h4>Empresa</h4>
+            <a href="#">Sobre nosotros</a>
+            <a href="#">Contacto</a>
+            <a href="#">Blog</a>
+        </div>
+        <div class="landing-footer-col">
+            <h4>Legal</h4>
+            <a href="#">Aviso legal</a>
+            <a href="#">Política de privacidad</a>
+            <a href="#">Cookies</a>
+        </div>
+    </div>
+    <div class="landing-footer-bottom">
+        © 2026 GestionPersonal. Todos los derechos reservados.
+    </div>
+</footer>
+
+@code {
+    private async Task OpenAccessAsync()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackdropClick = true,
+            CloseButton = true
+        };
+
+        var dialog = await DialogService.ShowAsync<CenterLoginDialog>("Acceso al centro", options: options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            Navigation.NavigateTo("/app", forceLoad: true);
+        }
+    }
+}

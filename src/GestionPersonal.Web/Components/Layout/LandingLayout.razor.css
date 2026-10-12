@@ -1,0 +1,135 @@
+.landing-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--brand-border);
+}
+
+.landing-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.landing-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--brand-ink);
+    font-weight: 600;
+}
+
+.landing-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    background: var(--brand-primary);
+    color: #fff;
+    font-weight: 700;
+}
+
+.landing-brand-name {
+    font-size: 1.1rem;
+}
+
+.landing-nav {
+    display: flex;
+    gap: 1.5rem;
+    margin-left: auto;
+}
+
+.landing-nav a {
+    text-decoration: none;
+    color: var(--brand-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+.landing-nav a:hover {
+    color: var(--brand-primary);
+}
+
+.landing-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 720px) {
+    .landing-nav {
+        display: none;
+    }
+}
+
+.landing-footer {
+    background: var(--brand-ink);
+    color: #e9e4f0;
+    padding: 3rem 1.5rem 1.5rem;
+}
+
+.landing-footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+}
+
+.landing-footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.landing-footer-col h4 {
+    color: #fff;
+    font-size: 0.9rem;
+    margin: 0 0 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.landing-footer-col a {
+    color: #c9c0d6;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.landing-footer-col a:hover {
+    color: #fff;
+}
+
+.landing-footer .landing-brand {
+    color: #fff;
+}
+
+.landing-footer-tagline {
+    font-size: 0.9rem;
+    color: #c9c0d6;
+    max-width: 280px;
+}
+
+.landing-footer-bottom {
+    max-width: 1200px;
+    margin: 2rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.85rem;
+    color: #9f96b0;
+}
+
+@media (max-width: 720px) {
+    .landing-footer-inner {
+        grid-template-columns: 1fr 1fr;
+    }
+}

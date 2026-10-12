@@ -1,0 +1,13 @@
+.app-appbar {
+    background: var(--brand-primary) !important;
+}
+
+.app-brand {
+    font-weight: 600;
+    margin-left: 0.5rem;
+    color: #fff;
+}
+
+.app-drawer {
+    min-width: 240px;
+}
