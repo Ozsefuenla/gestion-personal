@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documento de diseño de API (`docs/0001-api-design.md`).
 - Especificación OpenAPI (`docs/0001-api-openapi.yaml`).
+- Modelo multi-centro (`docs/0005-multi-tenant-model.md`).
+- Entidades de dominio `Center` (centro/tenant) y `CenterUser` (usuario de acceso al centro).
+- Campo `CenterId` en `Worker`; los trabajadores pertenecen a un centro.
+- Repositorios `ICenterRepository` e `ICenterUserRepository` (in-memory) con seed de
+  centro demo (`1`, "Peluquería Sol") y `CenterUser` (`admin`/`admin`).
+- Endpoint `GET /api/centers` (listar centros).
+- Endpoint `GET /api/centers/{id}/workers` (trabajadores del centro para el selector).
+- Frontend: selector de trabajadores (`WorkerSelectorDialog`) previo al PIN en fichaje rápido y login.
 - Archivo de reglas del asistente (`AGENTS.md`).
 - Solución .NET `GestionPersonal` (Domain, Application, Infrastructure, Api)
   con entidades, Result Pattern, EF Core, repositorios y middleware de excepciones.
@@ -52,3 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Acción "Iniciar" unificada con "Reanudar" (iniciar jornada o reanudar según estado) en card y fichaje rápido.
 - `docs/0003-frontend-ui.md` se reestructura como base común; el contenido del trabajador logueado pasa a `docs/0004-frontend-ui-worker.md`.
 - `Worker.Id` y `WorkerId` migrados de `Guid` a `int` (autoincremental; seed `1`, `2`, `3`); `TimeEntry.Id` y `Vacation.Id` siguen en `Guid`.
+- `POST /api/workers/login`: ahora recibe `{ workerId, pin }` (antes `{ pin }`); el PIN se valida contra el trabajador seleccionado.
+- `POST /api/time-entries/quick-clock`: ahora recibe `{ workerId, pin, action }` (antes `{ pin, action }`).
+- `POST /api/workers`: añade `centerId` obligatorio para asociar el trabajador a un centro.
+- `IWorkerRepository`: eliminado `GetByPinAsync` (PIN global); añadido `GetByCenterAsync`.
+- Frontend: el flujo de PIN queda precedido por un selector de trabajadores del centro.

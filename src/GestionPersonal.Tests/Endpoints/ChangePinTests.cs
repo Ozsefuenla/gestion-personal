@@ -17,20 +17,20 @@ public sealed class ChangePinTests : IClassFixture<WebApplicationFactory<Program
     [Fact]
     public async Task ChangePin_WithCorrectCurrentPin_Succeeds()
     {
-        var workerId = await GetWorkerIdAsync("2222");
+        const int workerId = 2;
 
         var response = await _client.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin = "2222", newPin = "9999" });
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        var login = await _client.PostAsJsonAsync("/api/workers/login", new { pin = "9999" });
+        var login = await _client.PostAsJsonAsync("/api/workers/login", new { workerId, pin = "9999" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
 
     [Fact]
     public async Task ChangePin_WithWrongCurrentPin_ReturnsBadRequest()
     {
-        var workerId = await GetWorkerIdAsync("3333");
+        const int workerId = 3;
 
         var response = await _client.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin = "0000", newPin = "4444" });
 
@@ -40,7 +40,7 @@ public sealed class ChangePinTests : IClassFixture<WebApplicationFactory<Program
     [Fact]
     public async Task ChangePin_WithSamePin_ReturnsBadRequest()
     {
-        var workerId = await GetWorkerIdAsync("1111");
+        const int workerId = 1;
 
         var response = await _client.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin = "1111", newPin = "1111" });
 
@@ -50,18 +50,10 @@ public sealed class ChangePinTests : IClassFixture<WebApplicationFactory<Program
     [Fact]
     public async Task ChangePin_WithInvalidFormat_ReturnsBadRequest()
     {
-        var workerId = await GetWorkerIdAsync("1111");
+        const int workerId = 1;
 
         var response = await _client.PostAsJsonAsync($"/api/workers/{workerId}/change-pin", new { currentPin = "1111", newPin = "12ab" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    private async Task<int> GetWorkerIdAsync(string pin)
-    {
-        var login = await _client.PostAsJsonAsync("/api/workers/login", new { pin });
-        var worker = await login.Content.ReadFromJsonAsync<WorkerStatusResponse>();
-
-        return worker!.Id;
     }
 }

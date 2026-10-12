@@ -1,4 +1,5 @@
 using FluentValidation;
+using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.TimeEntries;
 using GestionPersonal.Application.Workers;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<ListWorkersQueryHandler>();
+        services.AddScoped<ListWorkersByCenterQueryHandler>();
+        services.AddScoped<ListCentersQueryHandler>();
         services.AddScoped<CreateWorkerCommandHandler>();
         services.AddScoped<GetWorkersStatusQueryHandler>();
         services.AddScoped<GetWorkerStatusQueryHandler>();

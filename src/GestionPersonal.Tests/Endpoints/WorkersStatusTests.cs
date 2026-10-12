@@ -58,7 +58,7 @@ public sealed class WorkersStatusTests : IClassFixture<WebApplicationFactory<Pro
 
     private async Task<int> CreateWorkerAsync()
     {
-        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Transition Worker", pin = "6001", role = "worker" });
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = "Transition Worker", pin = "6001", role = "worker", centerId = 1 });
         response.EnsureSuccessStatusCode();
 
         var worker = await response.Content.ReadFromJsonAsync<WorkerResponse>()

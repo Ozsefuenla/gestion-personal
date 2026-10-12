@@ -17,7 +17,7 @@ public sealed class LoginTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Login_WithValidPin_ReturnsWorkerStatus()
     {
-        var response = await _client.PostAsJsonAsync("/api/workers/login", new { pin = "1111" });
+        var response = await _client.PostAsJsonAsync("/api/workers/login", new { workerId = 1, pin = "1111" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -30,15 +30,23 @@ public sealed class LoginTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Login_WithUnknownPin_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/workers/login", new { pin = "5555" });
+        var response = await _client.PostAsJsonAsync("/api/workers/login", new { workerId = 1, pin = "5555" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
+    public async Task Login_WithUnknownWorker_ReturnsNotFound()
+    {
+        var response = await _client.PostAsJsonAsync("/api/workers/login", new { workerId = TestWorkerIds.New(), pin = "1111" });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Login_WithInvalidPinFormat_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/workers/login", new { pin = "12ab" });
+        var response = await _client.PostAsJsonAsync("/api/workers/login", new { workerId = 1, pin = "12ab" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -46,17 +54,13 @@ public sealed class LoginTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task GetWorkerStatus_WithValidId_ReturnsWorkerStatus()
     {
-        var login = await _client.PostAsJsonAsync("/api/workers/login", new { pin = "1111" });
-        var worker = await login.Content.ReadFromJsonAsync<WorkerStatusResponse>();
-        Assert.NotNull(worker);
-
-        var response = await _client.GetAsync($"/api/workers/{worker.Id}/status");
+        var response = await _client.GetAsync("/api/workers/1/status");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var status = await response.Content.ReadFromJsonAsync<WorkerStatusResponse>();
         Assert.NotNull(status);
-        Assert.Equal(worker.Id, status.Id);
+        Assert.Equal(1, status.Id);
         Assert.Equal("María García", status.FullName);
     }
 

@@ -12,6 +12,16 @@ public sealed class ApiClient
         _http = http;
     }
 
+    public async Task<IReadOnlyList<CenterSummary>> GetCentersAsync(CancellationToken cancellationToken = default)
+    {
+        return await _http.GetFromJsonAsync<List<CenterSummary>>("/api/centers", cancellationToken) ?? [];
+    }
+
+    public async Task<IReadOnlyList<WorkerSummary>> ListCenterWorkersAsync(int centerId, CancellationToken cancellationToken = default)
+    {
+        return await _http.GetFromJsonAsync<List<WorkerSummary>>($"/api/centers/{centerId}/workers", cancellationToken) ?? [];
+    }
+
     public async Task<IReadOnlyList<WorkerStatus>> GetWorkersStatusAsync(CancellationToken cancellationToken = default)
     {
         return await _http.GetFromJsonAsync<List<WorkerStatus>>("/api/workers/status", cancellationToken) ?? [];
@@ -30,9 +40,9 @@ public sealed class ApiClient
             ?? throw new InvalidOperationException("Respuesta inválida del servidor.");
     }
 
-    public async Task<WorkerStatus> LoginAsync(string pin, CancellationToken cancellationToken = default)
+    public async Task<WorkerStatus> LoginAsync(int workerId, string pin, CancellationToken cancellationToken = default)
     {
-        var response = await _http.PostAsJsonAsync("/api/workers/login", new { pin }, cancellationToken);
+        var response = await _http.PostAsJsonAsync("/api/workers/login", new { workerId, pin }, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
@@ -85,9 +95,9 @@ public sealed class ApiClient
     public Task EndAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/end", workerId, cancellationToken);
 
-    public async Task<QuickClockResult> QuickClockAsync(string pin, string action, CancellationToken cancellationToken = default)
+    public async Task<QuickClockResult> QuickClockAsync(int workerId, string pin, string action, CancellationToken cancellationToken = default)
     {
-        var response = await _http.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action }, cancellationToken);
+        var response = await _http.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId, pin, action }, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {

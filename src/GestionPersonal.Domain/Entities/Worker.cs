@@ -5,6 +5,7 @@ namespace GestionPersonal.Domain.Entities;
 public sealed class Worker
 {
     public int Id { get; private set; }
+    public int CenterId { get; private set; }
     public string FullName { get; private set; } = default!;
     public string PinHash { get; private set; } = default!;
     public Role Role { get; private set; }
@@ -16,11 +17,12 @@ public sealed class Worker
     {
     }
 
-    public static Worker Create(int id, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null)
+    public static Worker Create(int id, int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null)
     {
         return new Worker
         {
             Id = id,
+            CenterId = centerId,
             FullName = fullName.Trim(),
             PinHash = pinHash,
             Role = role,

@@ -12,7 +12,7 @@
         <MudItem xs="12" md="4">
             @if (_loggedInWorker is null)
             {
-                <QuickClockPanel />
+                <QuickClockPanel CenterId="_centerId" />
             }
             else
             {
@@ -56,16 +56,37 @@
 @code {
     private WorkerStatus? _loggedInWorker;
     private bool _showTimeControl;
+    private int _centerId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var centers = await Api.GetCentersAsync();
+        var center = centers.FirstOrDefault();
+
+        if (center is not null)
+        {
+            _centerId = center.Id;
+        }
+    }
 
     private async Task OpenLoginAsync()
     {
+        var selectorOptions = new DialogOptions { CloseOnEscapeKey = true };
+        var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = _centerId }, selectorOptions);
+        var selectorResult = await selector.Result;
+
+        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerSummary worker)
+        {
+            return;
+        }
+
         var options = new DialogOptions { CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", options);
+        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", new DialogParameters { ["WorkerId"] = worker.Id }, options);
         var result = await dialog.Result;
 
-        if (result?.Data is WorkerStatus worker)
+        if (result?.Data is WorkerStatus loggedIn)
         {
-            _loggedInWorker = worker;
+            _loggedInWorker = loggedIn;
         }
     }
 

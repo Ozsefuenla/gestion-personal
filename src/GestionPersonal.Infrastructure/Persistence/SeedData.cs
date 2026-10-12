@@ -28,7 +28,7 @@ internal static class SeedData
                     continue;
                 }
 
-                if (date > today)
+                if (date >= today)
                 {
                     continue;
                 }

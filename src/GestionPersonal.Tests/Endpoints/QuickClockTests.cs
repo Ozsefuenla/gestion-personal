@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using GestionPersonal.Application.TimeEntries;
+using GestionPersonal.Application.Workers;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestionPersonal.Tests.Endpoints;
@@ -17,7 +18,7 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_WithInvalidPinFormat_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "12ab", action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = 1, pin = "12ab", action = "start" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -25,17 +26,25 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_WithUnknownPin_ReturnsBadRequest()
     {
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin = "5555", action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = 1, pin = "5555", action = "start" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
+    public async Task QuickClock_WithUnknownWorker_ReturnsNotFound()
+    {
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = TestWorkerIds.New(), pin = "1111", action = "start" });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task QuickClock_StartWhenIdle_Succeeds()
     {
-        var pin = await CreateWorkerAsync("7001");
+        var worker = await CreateWorkerAsync("7001");
 
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7001", action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -47,10 +56,10 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_StartWhenInProgress_ReturnsAvailableActions()
     {
-        var pin = await CreateWorkerAsync("7002");
+        var worker = await CreateWorkerAsync("7002");
 
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7002", action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7002", action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -64,12 +73,12 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
     [Fact]
     public async Task QuickClock_StartActsAsResume_WhenPaused()
     {
-        var pin = await CreateWorkerAsync("7003");
+        var worker = await CreateWorkerAsync("7003");
 
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
-        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "pause" });
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7003", action = "start" });
+        await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7003", action = "pause" });
 
-        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { pin, action = "start" });
+        var response = await _client.PostAsJsonAsync("/api/time-entries/quick-clock", new { workerId = worker.Id, pin = "7003", action = "start" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -78,10 +87,12 @@ public sealed class QuickClockTests : IClassFixture<WebApplicationFactory<Progra
         Assert.True(result.Success);
     }
 
-    private async Task<string> CreateWorkerAsync(string pin)
+    private async Task<WorkerResponse> CreateWorkerAsync(string pin)
     {
-        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = $"Worker {pin}", pin, role = "worker" });
+        var response = await _client.PostAsJsonAsync("/api/workers", new { fullName = $"Worker {pin}", pin, role = "worker", centerId = 1 });
         response.EnsureSuccessStatusCode();
-        return pin;
+
+        return await response.Content.ReadFromJsonAsync<WorkerResponse>()
+            ?? throw new InvalidOperationException("No se pudo crear el trabajador.");
     }
 }

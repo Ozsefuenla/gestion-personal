@@ -1,0 +1,77 @@
+@inject ApiClient Api
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Selecciona tu trabajador</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="mb-4">¿Quién eres?</MudText>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" Class="my-4" />
+        }
+        else if (_workers.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay trabajadores en este centro.</MudText>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-2">
+                @foreach (var worker in _workers)
+                {
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               OnClick="@(() => SelectAsync(worker))">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+                        @worker.FullName
+                    </MudButton>
+                }
+            </div>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter]
+    public int CenterId { get; set; }
+
+    private readonly List<WorkerSummary> _workers = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var workers = await Api.ListCenterWorkersAsync(CenterId);
+            _workers.AddRange(workers);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void SelectAsync(WorkerSummary worker) => DialogInstance.Close(DialogResult.Ok(worker));
+
+    private void Cancel() => DialogInstance.Cancel();
+}

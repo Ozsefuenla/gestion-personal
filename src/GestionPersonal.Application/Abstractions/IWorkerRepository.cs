@@ -6,7 +6,7 @@ public interface IWorkerRepository
 {
     Task<Worker?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<Worker?> GetByPinAsync(string pin, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Worker>> GetByCenterAsync(int centerId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Worker>> GetAllAsync(CancellationToken cancellationToken = default);
 
