@@ -45,6 +45,17 @@ public sealed class VacationsTests : AuthenticatedApiTest, IClassFixture<WebAppl
     }
 
     [Fact]
+    public async Task RequestVacation_AsAdmin_IsAutoApproved()
+    {
+        var workerId = await CreateWorkerAsync("admin");
+        var today = MadridToday();
+
+        var vacation = await RequestVacationAsync(workerId, today.AddDays(1), today.AddDays(2));
+
+        Assert.Equal("approved", vacation.Status);
+    }
+
+    [Fact]
     public async Task RequestVacation_OverlappingActive_ReturnsConflict()
     {
         var workerId = await CreateWorkerAsync();

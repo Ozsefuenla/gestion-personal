@@ -145,7 +145,8 @@ mismo hueco que el Control Horario. Carga `GET /api/vacations?workerId={id}`.
 - Validación: fin ≥ inicio (mensaje de error si no se cumple) y solape con otra ausencia
   pendiente/aprobada (error del servidor `409`).
 - Al **Aceptar** → `POST /api/vacations` con `{ workerId, startDate, endDate, type }`; queda
-  en estado `Pendiente` a la espera de que el admin la apruebe. Botones Aceptar/Cancelar.
+  en estado `Pendiente` a la espera de que el admin la apruebe. Si quien la solicita es
+  `admin`, queda **aprobada** directamente (no pasa por pendiente). Botones Aceptar/Cancelar.
 
 ## Gestión de ausencias del admin (`ManageAbsencesDialog.razor`)
 

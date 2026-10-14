@@ -1,6 +1,7 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Domain.Entities;
+using GestionPersonal.Domain.Enums;
 
 namespace GestionPersonal.Application.Vacations;
 
@@ -32,6 +33,8 @@ public sealed class RequestVacationCommandHandler
             return workerResult.Error;
         }
 
+        var worker = workerResult.Value;
+
         var type = VacationTypeHelper.Parse(command.Type);
 
         if (type is null)
@@ -52,12 +55,19 @@ public sealed class RequestVacationCommandHandler
             return Error.Conflict("Ya tienes una ausencia pendiente o aprobada en esas fechas.");
         }
 
+        var now = DateTimeOffset.UtcNow;
+
         var vacation = Vacation.Request(
             command.WorkerId,
             command.StartDate,
             command.EndDate,
             type.Value,
-            DateTimeOffset.UtcNow);
+            now);
+
+        if (worker.Role == Role.Admin)
+        {
+            vacation.Approve(now);
+        }
 
         _vacationRepository.Add(vacation);
 

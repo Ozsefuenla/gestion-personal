@@ -116,7 +116,8 @@
 - `POST /api/vacations` recibe `{ workerId, startDate, endDate, type }`, con `type` en
   `vacations` / `sick-leave` / `other`. La fecha de fin no puede ser anterior a la de
   inicio (`400`) y no puede solapar con otra ausencia pendiente o aprobada del mismo
-  trabajador (`409`). La solicitud queda en estado `pending`.
+  trabajador (`409`). La solicitud queda en estado `pending`; si la solicita un
+  trabajador con rol `admin`, queda `approved` automáticamente.
 - `GET /api/vacations?workerId={id}` devuelve las ausencias pendientes, aprobadas y
   denegadas del trabajador, ordenadas por fecha de inicio descendente (las eliminadas no
   se listan).
