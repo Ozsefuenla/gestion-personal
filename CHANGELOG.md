@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Integración continua con GitHub Actions (`.github/workflows/ci.yml`): compila y corre los
+  tests en cada push/PR a `main`. Plantilla de PR en `.github/pull_request_template.md`.
 - Documento de diseño de API (`docs/0001-api-design.md`).
 - Especificación OpenAPI (`docs/0001-api-openapi.yaml`).
 - Modelo multi-centro (`docs/0005-multi-tenant-model.md`).
