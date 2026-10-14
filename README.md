@@ -61,7 +61,9 @@ docs/
 ├─ 0003-frontend-ui.md
 ├─ 0004-frontend-ui-worker.md
 ├─ 0005-multi-tenant-model.md
-└─ 0006-landing-page.md
+├─ 0006-landing-page.md
+├─ 0007-seguridad-owasp.md
+└─ 0008-frontend-ui-admin.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -87,7 +89,10 @@ CHANGELOG.md
 | Editar inicio del fichaje activo (`PATCH /api/time-entries/active/{workerId}`) | Implementado |
 | Eliminar el último fichaje activo (`DELETE /api/time-entries/active/{workerId}`) | Implementado |
 | Resumen mensual por día (`GET /api/time-entries/monthly`) | Implementado |
-| Control Horario (panel mensual con barra segmentada vs horas diarias) | Implementado (sin exportar) |
+| Control Horario (panel mensual con barra segmentada vs horas diarias) | Implementado (con exportar PDF) |
+| Marcajes de hoy de los trabajadores (admin) | Implementado (en directo) |
+| Ver horarios trabajadores (admin, filtro mes/año) | Implementado |
+| Exportar PDF del control horario (QuestPDF) | Implementado |
 | Visualización de fichajes (propios / globales) | Pendiente |
 | Solicitud de ausencias (`POST /api/vacations`) | Implementado (vacaciones/enfermedad/otro) |
 | Listado de ausencias (`GET /api/vacations?workerId`) | Implementado (pendientes + aprobadas) |
@@ -120,5 +125,4 @@ PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana 
 - JWT para la API y hash BCrypt del PIN de trabajador (hoy el PIN se guarda en claro en `PinHash`).
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
-- Botón "Exportar" del panel de Control Horario (pendiente).
 - Botón "+ Añadir marcaje" (solo visual por ahora).

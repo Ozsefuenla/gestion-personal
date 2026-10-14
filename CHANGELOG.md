@@ -102,6 +102,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Aprobar/Denegar por ausencia pendiente.
 - Estado `rejected` (denegada): aparece en la lista propia del trabajador como "Denegado"
   (rojo, no eliminable).
+- Panel "Marcajes de hoy" para el admin (`TodayWorkersPanel`): debajo del donut, lista los
+  trabajadores no-admin del centro con horas/minutos trabajados hoy y diferencia vs objetivo,
+  refrescado en directo cada 30 s (reutiliza `GET /api/workers/status`).
+- En "Marcajes de hoy": cada fila muestra el **estado actual** (chip En curso / En pausa /
+  Finalizado / Sin iniciar); si el trabajador tiene una **ausencia aprobada hoy**, la fila
+  muestra solo "Ausencia - {Motivo}" en lugar de estado/trabajadas/diferencia.
+- Botón "Ver horarios trabajadores" (solo admin) en el panel Control Horario y diálogo
+  `WorkersTimeControlDialog` con tabs por trabajador y filtro Mes/Año a nivel de diálogo.
+- Componente compartido `MonthlyTimeControlView` (resumen + listado diario) extraído de
+  `TimeControlPanel` para reutilizarlo en el diálogo del admin.
+- Exportar a PDF del control horario con **QuestPDF** (`TimeControlPdfExporter` + descarga
+  vía JS interop `downloadFileFromStream`): botón "Exportar" del Control Horario propio y
+  botón "Exportar PDF" del diálogo del admin (todos los trabajadores). El PDF incluye nombre,
+  mes, año y el resumen completo del mes.
+- Documento de reglas de UI del admin (`docs/0008-frontend-ui-admin.md`).
 
 ### Security
 - El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
@@ -150,3 +165,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Layout `/app`: el nombre del centro ("Peluquería Sol") se muestra en blanco, heredando el
   `AppbarText` del tema en lugar de un `MudChip` con color explícito; antes texto e ícono
   salían en negro.
+- Test `DeleteVacation_WhenApprovedAndAdmin_Succeeds`: corregido para reflejar que la
+  solicitud de ausencia del admin queda `approved` automáticamente (ya no intenta aprobarla
+  de nuevo, lo que lanzaba `Solo se puede decidir sobre una ausencia pendiente`).
