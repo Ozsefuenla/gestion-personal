@@ -93,7 +93,6 @@ CHANGELOG.md
 | Aprobación de vacaciones | Pendiente |
 | Login del centro (`POST /api/centers/login`) | Implementado (cookie HttpOnly) |
 | Landing page (`/`) | Implementado |
-| Landing v2 (`/v2`, diseño clínico-estético) | Implementado |
 | Dashboard del centro (`/app`) | Implementado (con layout profesional) |
 
 ## Usuario y contraseña de prueba

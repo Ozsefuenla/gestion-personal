@@ -66,9 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   página `/login`.
 - Tests `CenterLoginTests` (login de centro: credenciales válidas, contraseña incorrecta,
   usuario inexistente y campos vacíos).
-- Landing v2 (`/v2`, `LandingPageV2.razor`) con diseño clínico-estético (Tailwind CDN +
-  Material Symbols, paleta teal/rosa), simulador interactivo de PIN (`landing-v2.js`) y
-  acceso real vía `CenterLoginDialog`.
 - Documento de seguridad (`docs/0007-seguridad-owasp.md`) con mapeo OWASP Top 10 (Web 2021 +
   API 2023) y roadmap.
 - Rate limiting en endpoints de login (Web `/auth/login`; API `/api/centers/login` y
@@ -83,10 +80,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend: `CenterTokenStore` y envío del JWT como `Authorization: Bearer` en `ApiClient`.
 - Lockout del PIN del trabajador (`ILoginAttemptTracker`): 5 intentos fallidos bloquean al
   trabajador 15 minutos.
+- Inventario de endpoints y propuesta de versionado (`/api/v1`) documentados en
+  `docs/0007-seguridad-owasp.md`.
+- Auditoría BOPLA y escaneo de dependencias (`dotnet list package --vulnerable --include-transitive`):
+  sin hallazgos.
 
 ### Security
 - El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
   fichaje rápido y cambio de PIN, y se hashea en el alta.
+
+### Removed
+- Landing v2 (`/v2`, `LandingPageV2.razor` + `landing-v2.js`): eliminada en favor de la landing
+  principal (`/`).
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
