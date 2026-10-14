@@ -52,7 +52,7 @@ para la API. Cada item se marca con su estado y la mitigación aplicada o previs
 | A03 | Injection | ✅ | Persistencia en memoria (sin SQL). Al pasar a SQL: parámetros, nunca concatenación |
 | A04 | Insecure Design | ✅ | Rate limiting en login + lockout del PIN por trabajador |
 | A05 | Security Misconfiguration | ⚠️ | Headers básicos añadidos; detalle de error solo en Dev; CSP pendiente (→ Fase 3) |
-| A06 | Vulnerable Components | ⚠️ | Revisar `dotnet list package --vulnerable` de forma periódica |
+| A06 | Vulnerable Components | ✅ | Escaneo `dotnet list package --vulnerable --include-transitive` sin vulnerabilidades (revisar periódicamente) |
 | A07 | Identification & Auth Failures | ✅ | Cookie HttpOnly + JWT + rate limiting + lockout del PIN |
 | A08 | Software & Data Integrity | ⚠️ | Antiforgery en Web; verificar integridad de dependencias |
 | A09 | Security Logging | ⚠️ | Logging de fallos de login (centro y trabajador). Ampliar a eventos de autorización |
@@ -64,13 +64,13 @@ para la API. Cada item se marca con su estado y la mitigación aplicada o previs
 |---|--------|--------|------------|
 | API1 | BOLA (Object Level Authorization) | ✅ | `GetByIdAndCenterAsync` + `WorkerScope` verifican que el recurso pertenece al centro |
 | API2 | Broken Authentication | ✅ | JWT HS256 por centro; `RequireAuthorization` en todos los endpoints |
-| API3 | BOPLA (Property Level Authorization) | ⚠️ | Commands como `record` con campos explícitos + FluentValidation; revisar en Fase 3 |
+| API3 | BOPLA (Property Level Authorization) | ✅ | Commands como `record` con campos explícitos + FluentValidation + verificación de `centerId` en handlers |
 | API4 | Unrestricted Resource Consumption | ⚠️ | Rate limiting en login; considerar límite global |
 | API5 | BFLA (Function Level Authorization) | ✅ | Todos los endpoints requieren centro autenticado (claim `centerId` + role `center`) |
 | API6 | Sensitive Business Flows | ✅ | Fichajes protegidos con lockout del PIN + scoping |
 | API7 | SSRF | ✅ | La API no consume URLs externas |
-| API8 | Security Misconfiguration | ⚠️ | Headers/CORS explícito; detalle de error solo en Dev |
-| API9 | Improper Inventory | ⚠️ | Documentar/versionar endpoints; inventario en el doc de API |
+| API8 | Security Misconfiguration | ⚠️ | Sin CORS (la API solo se consume server-to-server desde el Web); detalle de error solo en Dev |
+| API9 | Improper Inventory | ⚠️ | Inventario de endpoints documentado abajo; versionado propuesto `/api/v1` (pendiente de aplicar) |
 | API10 | Unsafe Consumption | ✅ | Sin consumo de APIs de terceros |
 
 ## Roadmap
@@ -79,7 +79,38 @@ para la API. Cada item se marca con su estado y la mitigación aplicada o previs
   logging de intentos fallidos.
 - **Fase 2 (hecho)**: JWT por centro en la API + scoping por centro en todos los endpoints
   (BOLA/BFLA), lockout del PIN por trabajador.
-- **Fase 3**: CSP, BOPLA, CORS explícito, versionado/inventario de API, escaneo de dependencias.
+- **Fase 3 (hecho parcial)**: escaneo de dependencias (sin vulnerables), BOPLA auditada,
+  CORS e inventario/versionado documentados. **CSP diferido** (complejidad Blazor + Tailwind).
+
+## Inventario de endpoints y versionado
+
+Todos los endpoints requieren JWT (claim `centerId`) salvo los marcados como anónimos.
+
+| Método | Ruta | Auth |
+|--------|------|------|
+| GET | `/api/centers` | JWT |
+| POST | `/api/centers/login` | anónimo |
+| GET | `/api/centers/{id}/workers` | JWT |
+| GET | `/api/workers` | JWT |
+| GET | `/api/workers/status` | JWT |
+| GET | `/api/workers/{id}/status` | JWT |
+| POST | `/api/workers` | JWT |
+| POST | `/api/workers/login` | JWT |
+| POST | `/api/workers/{id}/change-pin` | JWT |
+| POST | `/api/time-entries/start` | JWT |
+| POST | `/api/time-entries/pause` | JWT |
+| POST | `/api/time-entries/end` | JWT |
+| POST | `/api/time-entries/resume` | JWT |
+| GET | `/api/time-entries/today` | JWT |
+| GET | `/api/time-entries/monthly` | JWT |
+| POST | `/api/time-entries/quick-clock` | JWT |
+| PATCH | `/api/time-entries/active/{workerId}` | JWT |
+| DELETE | `/api/time-entries/active/{workerId}` | JWT |
+
+Web: `POST /auth/login` y `POST /auth/logout` (cookie del centro).
+
+**Versionado**: propuesto prefijo de ruta `/api/v1/...` cuando se rompa compatibilidad.
+Hoy no se aplica (v0 sin versionar); mantener Swagger como inventario de referencia.
 
 ## Referencias
 

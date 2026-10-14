@@ -49,9 +49,6 @@ frontend en Blazor Server.
   Se implementa como página raíz en `Components/Pages/LandingPage.razor` (ruta `/`) con su
   layout `LandingLayout`. El dashboard tras login de centro está en `/app` (`Dashboard.razor`
   + `AppLayout.razor`).
-- Existe una landing alternativa **v2** en `/v2` (`Components/Pages/LandingPageV2.razor`),
-  con diseño clínico-estético (Tailwind CDN + Material Symbols) y simulador interactivo de
-  PIN (`wwwroot/landing-v2.js`). No sustituye a la landing de `/`.
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo
