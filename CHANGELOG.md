@@ -141,6 +141,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `workerId`; `GET /api/vacations?workerId` lista también las denegadas.
 - `POST /api/vacations`: si la solicita un trabajador con rol `admin`, la ausencia queda
   `approved` automáticamente (no `pending`).
+- Paneles de "Ausencias" y "Control Horario" ahora son mutuamente excluyentes: al abrir
+  uno se cierra el otro.
 
 ### Fixed
 - Login del centro: la tecla Enter ahora envía el formulario (`OnEnterPressed` en

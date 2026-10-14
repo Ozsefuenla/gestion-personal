@@ -137,12 +137,14 @@
     private Task ToggleTimeControlAsync()
     {
         _showTimeControl = !_showTimeControl;
+        _showAbsences = false;
         return Task.CompletedTask;
     }
 
     private Task ToggleAbsencesAsync()
     {
         _showAbsences = !_showAbsences;
+        _showTimeControl = false;
         return Task.CompletedTask;
     }
 
