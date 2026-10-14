@@ -97,6 +97,11 @@ Todos los endpoints requieren JWT (claim `centerId`) salvo los marcados como an√
 | POST | `/api/workers` | JWT |
 | POST | `/api/workers/login` | JWT |
 | POST | `/api/workers/{id}/change-pin` | JWT |
+| GET | `/api/workers/manage` | JWT |
+| PATCH | `/api/workers/{id}/name` | JWT |
+| POST | `/api/workers/{id}/reset-pin` | JWT |
+| PATCH | `/api/workers/{id}/activate` | JWT |
+| PATCH | `/api/workers/{id}/deactivate` | JWT |
 | POST | `/api/time-entries/start` | JWT |
 | POST | `/api/time-entries/pause` | JWT |
 | POST | `/api/time-entries/end` | JWT |

@@ -27,6 +27,7 @@ internal static class WorkerStatusBuilder
             entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetWorkedDuration(now)),
             entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetPausedDuration(now)),
             worker.DailyHours,
+            worker.MustChangePin,
             TodayStatusHelper.BuildTimeline(entries, now));
     }
 }

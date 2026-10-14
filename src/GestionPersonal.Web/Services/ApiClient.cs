@@ -29,6 +29,13 @@ public sealed class ApiClient
         return await response.Content.ReadFromJsonAsync<List<WorkerSummary>>(cancellationToken) ?? [];
     }
 
+    public async Task<IReadOnlyList<WorkerSummary>> ListAllCenterWorkersAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, "/api/workers/manage", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<WorkerSummary>>(cancellationToken) ?? [];
+    }
+
     public async Task<IReadOnlyList<WorkerStatus>> GetWorkersStatusAsync(CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Get, "/api/workers/status", cancellationToken);
@@ -81,6 +88,56 @@ public sealed class ApiClient
     public async Task ChangePinAsync(int workerId, string currentPin, string newPin, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, $"/api/workers/{workerId}/change-pin", new { currentPin, newPin }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task CreateWorkerAsync(string fullName, string pin, int centerId, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, "/api/workers", new { fullName, pin, role = "worker", centerId, mustChangePin = true }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task RenameWorkerAsync(int workerId, string fullName, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Patch, $"/api/workers/{workerId}/name", new { fullName }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task ResetWorkerPinAsync(int workerId, string pin, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, $"/api/workers/{workerId}/reset-pin", new { pin }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task ActivateWorkerAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Patch, $"/api/workers/{workerId}/activate", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task DeactivateWorkerAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Patch, $"/api/workers/{workerId}/deactivate", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

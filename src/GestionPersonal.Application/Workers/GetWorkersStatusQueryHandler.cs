@@ -37,7 +37,7 @@ public sealed class GetWorkersStatusQueryHandler
 
         var result = new List<WorkerStatusResponse>();
 
-        foreach (var worker in workers)
+        foreach (var worker in workers.Where(w => w.Active))
         {
             result.Add(await WorkerStatusBuilder.BuildAsync(worker, now, from, to, _timeEntryRepository, cancellationToken));
         }

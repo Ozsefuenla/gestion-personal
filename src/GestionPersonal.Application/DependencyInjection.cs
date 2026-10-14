@@ -13,6 +13,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<ListWorkersByCenterQueryHandler>();
+        services.AddScoped<ListWorkersForAdminQueryHandler>();
         services.AddScoped<ListCentersQueryHandler>();
         services.AddScoped<CenterLoginCommandHandler>();
         services.AddScoped<CreateWorkerCommandHandler>();
@@ -20,6 +21,10 @@ public static class DependencyInjection
         services.AddScoped<GetWorkerStatusQueryHandler>();
         services.AddScoped<LoginCommandHandler>();
         services.AddScoped<ChangePinCommandHandler>();
+        services.AddScoped<RenameWorkerCommandHandler>();
+        services.AddScoped<ResetWorkerPinCommandHandler>();
+        services.AddScoped<DeactivateWorkerCommandHandler>();
+        services.AddScoped<ActivateWorkerCommandHandler>();
         services.AddScoped<StartTimeEntryCommandHandler>();
         services.AddScoped<PauseTimeEntryCommandHandler>();
         services.AddScoped<EndTimeEntryCommandHandler>();

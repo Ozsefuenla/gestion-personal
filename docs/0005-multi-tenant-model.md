@@ -38,6 +38,8 @@ Con el modelo multi-centro:
 ### `Worker` (extendido)
 
 - Añade `CenterId` a los campos existentes (`Id`, `FullName`, `PinHash`, `Role`, `Active`, `DailyHours`).
+- `MustChangePin` (bool): marca que el trabajador debe cambiar su PIN en el próximo
+  acceso (activado por el admin al resetear el PIN; se apaga al cambiarlo).
 
 ## Flujo de identificación
 

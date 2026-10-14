@@ -207,6 +207,132 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /workers/manage:
+    get:
+      summary: Listar todos los trabajadores del centro (activos e inactivos)
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de trabajadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /workers/{id}/name:
+    patch:
+      summary: Renombrar un trabajador
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameWorkerRequest'
+      responses:
+        '204':
+          description: Nombre actualizado
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workers/{id}/reset-pin:
+    post:
+      summary: Resetear el PIN de un trabajador (fuerza cambio al entrar)
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetWorkerPinRequest'
+      responses:
+        '204':
+          description: PIN reseteado
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workers/{id}/activate:
+    patch:
+      summary: Reactivar un trabajador inactivo
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Trabajador reactivado
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workers/{id}/deactivate:
+    patch:
+      summary: Dar de baja a un trabajador (no admin)
+      tags: [Workers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Trabajador dado de baja
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /time-entries/start:
     post:
       summary: Registrar inicio de jornada
@@ -735,6 +861,9 @@ components:
           $ref: '#/components/schemas/Role'
         centerId:
           type: integer
+        mustChangePin:
+          type: boolean
+          default: false
 
     LoginRequest:
       type: object
@@ -757,6 +886,21 @@ components:
           type: string
           pattern: '^\d{4}$'
 
+    RenameWorkerRequest:
+      type: object
+      required: [fullName]
+      properties:
+        fullName:
+          type: string
+
+    ResetWorkerPinRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          type: string
+          pattern: '^\d{4}$'
+
     Worker:
       type: object
       required: [id, fullName, role, centerId]
@@ -770,6 +914,8 @@ components:
         role:
           $ref: '#/components/schemas/Role'
         active:
+          type: boolean
+        mustChangePin:
           type: boolean
 
     WorkerStatus:
@@ -800,6 +946,8 @@ components:
         dailyHours:
           type: string
           description: Horas diarias objetivo en formato hh:mm:ss
+        mustChangePin:
+          type: boolean
         timeline:
           type: array
           items:

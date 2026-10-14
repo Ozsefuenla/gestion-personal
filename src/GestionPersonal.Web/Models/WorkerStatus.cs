@@ -10,6 +10,7 @@ public sealed record WorkerStatus(
     TimeSpan WorkedTime,
     TimeSpan PausedTime,
     TimeSpan DailyHours,
+    bool MustChangePin,
     IReadOnlyList<TimelineSegment> Timeline);
 
 public sealed record TimelineSegment(string Type, DateTimeOffset From, DateTimeOffset To);

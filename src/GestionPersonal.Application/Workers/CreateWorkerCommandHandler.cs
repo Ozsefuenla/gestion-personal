@@ -55,7 +55,7 @@ public sealed class CreateWorkerCommandHandler
         var workers = await _workerRepository.GetAllAsync(cancellationToken);
         var nextId = workers.Count == 0 ? 1 : workers.Max(w => w.Id) + 1;
 
-        var worker = Worker.Create(nextId, command.CenterId, command.FullName, _passwordHasher.Hash(command.Pin), role.Value);
+        var worker = Worker.Create(nextId, command.CenterId, command.FullName, _passwordHasher.Hash(command.Pin), role.Value, mustChangePin: command.MustChangePin);
 
         _workerRepository.Add(worker);
 

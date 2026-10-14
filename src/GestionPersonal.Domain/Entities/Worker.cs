@@ -10,6 +10,7 @@ public sealed class Worker
     public string PinHash { get; private set; } = default!;
     public Role Role { get; private set; }
     public bool Active { get; private set; }
+    public bool MustChangePin { get; private set; }
     public TimeSpan DailyHours { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -17,7 +18,7 @@ public sealed class Worker
     {
     }
 
-    public static Worker Create(int id, int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null)
+    public static Worker Create(int id, int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null, bool mustChangePin = false)
     {
         return new Worker
         {
@@ -27,6 +28,7 @@ public sealed class Worker
             PinHash = pinHash,
             Role = role,
             Active = true,
+            MustChangePin = mustChangePin,
             DailyHours = dailyHours ?? TimeSpan.FromHours(8),
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -35,5 +37,27 @@ public sealed class Worker
     public void ChangePin(string newPinHash)
     {
         PinHash = newPinHash;
+        MustChangePin = false;
+    }
+
+    public void ResetPin(string newPinHash)
+    {
+        PinHash = newPinHash;
+        MustChangePin = true;
+    }
+
+    public void Rename(string fullName)
+    {
+        FullName = fullName.Trim();
+    }
+
+    public void Activate()
+    {
+        Active = true;
+    }
+
+    public void Deactivate()
+    {
+        Active = false;
     }
 }

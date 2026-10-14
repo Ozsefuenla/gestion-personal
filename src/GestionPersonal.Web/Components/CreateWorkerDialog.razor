@@ -1,0 +1,120 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Añadir nuevo trabajador</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudTextField T="string"
+                      Value="_fullName"
+                      ValueChanged="@((string v) => _fullName = v)"
+                      Immediate="true"
+                      Label="Nombre"
+                      Variant="Variant.Outlined"
+                      Class="mb-4" />
+
+        <MudTextField T="string"
+                      Value="_pin"
+                      ValueChanged="OnPinChanged"
+                      Immediate="true"
+                      InputType="InputType.Password"
+                      InputMode="InputMode.numeric"
+                      MaxLength="4"
+                      Label="PIN inicial"
+                      Placeholder="••••"
+                      Variant="Variant.Outlined"
+                      Class="mb-4" />
+
+        <MudTextField T="string"
+                      Value="_repeatPin"
+                      ValueChanged="OnRepeatPinChanged"
+                      Immediate="true"
+                      InputType="InputType.Password"
+                      InputMode="InputMode.numeric"
+                      MaxLength="4"
+                      Label="Repetir PIN"
+                      Placeholder="••••"
+                      Variant="Variant.Outlined" />
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-3">
+            El trabajador deberá cambiar este PIN la primera vez que entre.
+        </MudText>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmAsync">Crear</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required int CenterId { get; set; }
+
+    private string _fullName = "";
+    private string _pin = "";
+    private string _repeatPin = "";
+    private string? _error;
+
+    private Task OnPinChanged(string value)
+    {
+        _pin = SanitizePin(value);
+        return Task.CompletedTask;
+    }
+
+    private Task OnRepeatPinChanged(string value)
+    {
+        _repeatPin = SanitizePin(value);
+        return Task.CompletedTask;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(_fullName))
+        {
+            _error = "El nombre es obligatorio.";
+            return;
+        }
+
+        if (!IsValidPin(_pin) || !IsValidPin(_repeatPin))
+        {
+            _error = "El PIN debe tener 4 dígitos.";
+            return;
+        }
+
+        if (_pin != _repeatPin)
+        {
+            _error = "Los PIN no coinciden.";
+            return;
+        }
+
+        try
+        {
+            await Api.CreateWorkerAsync(_fullName.Trim(), _pin, CenterId);
+            Snackbar.Add("Trabajador creado. Deberá cambiar el PIN al entrar.", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private static bool IsValidPin(string? pin) => pin is not null && pin.Length == 4 && pin.All(char.IsDigit);
+
+    private static string SanitizePin(string? value) => new string((value ?? "").Where(char.IsDigit).Take(4).ToArray());
+}

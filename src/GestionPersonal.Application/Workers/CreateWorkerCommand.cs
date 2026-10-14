@@ -1,3 +1,3 @@
 namespace GestionPersonal.Application.Workers;
 
-public sealed record CreateWorkerCommand(string FullName, string Pin, string Role, int CenterId);
+public sealed record CreateWorkerCommand(string FullName, string Pin, string Role, int CenterId, bool MustChangePin = false);

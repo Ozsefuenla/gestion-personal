@@ -1,0 +1,297 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Gestión de trabajadores</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" Class="my-4" />
+        }
+        else if (_activeWorkers.Count == 0 && _inactiveWorkers.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay trabajadores en el centro.</MudText>
+        }
+        else
+        {
+            <MudTabs Elevation="0" Outlined="true">
+                <MudTabPanel Text="Activos" BadgeColor="Color.Success">
+                    <MudExpansionPanels MultiExpansion="false" Elevation="0" Class="mt-2">
+                        @foreach (var worker in _activeWorkers)
+                        {
+                            <MudExpansionPanel Text="@worker.FullName">
+                                <ChildContent>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Cambiar nombre</MudText>
+                                    <div class="d-flex align-center" style="gap: 8px; margin-bottom: 16px;">
+                                        <MudTextField T="string"
+                                                      Value="@GetEditName(worker.Id)"
+                                                      ValueChanged="@((string v) => SetEditName(worker.Id, v))"
+                                                      Immediate="true"
+                                                      Label="Nombre"
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;" />
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => RenameAsync(worker))">
+                                            Aceptar
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@(() => CancelRename(worker))">
+                                            Cancelar
+                                        </MudButton>
+                                    </div>
+
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Resetear PIN</MudText>
+                                    <div class="d-flex align-center" style="gap: 8px; margin-bottom: 16px;">
+                                        <MudTextField T="string"
+                                                      Value="@GetResetPin(worker.Id)"
+                                                      ValueChanged="@((string v) => SetResetPin(worker.Id, v))"
+                                                      Immediate="true"
+                                                      InputType="InputType.Password"
+                                                      InputMode="InputMode.numeric"
+                                                      MaxLength="4"
+                                                      Label="PIN temporal"
+                                                      Placeholder="••••"
+                                                      Variant="Variant.Outlined"
+                                                      Style="flex: 1;" />
+                                        <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="@(() => ResetPinAsync(worker))">
+                                            Resetear
+                                        </MudButton>
+                                    </div>
+
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="@(() => DeactivateAsync(worker))">
+                                        <MudIcon Icon="@Icons.Material.Filled.RemoveCircle" Class="mr-2" />
+                                        Dar de baja
+                                    </MudButton>
+                                </ChildContent>
+                            </MudExpansionPanel>
+                        }
+                    </MudExpansionPanels>
+                </MudTabPanel>
+
+                @if (_inactiveWorkers.Count > 0)
+                {
+                    <MudTabPanel Text="Inactivos" BadgeColor="Color.Default">
+                        <MudExpansionPanels MultiExpansion="false" Elevation="0" Class="mt-2">
+                            @foreach (var worker in _inactiveWorkers)
+                            {
+                                <MudExpansionPanel Text="@worker.FullName">
+                                    <ChildContent>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Trabajador inactivo</MudText>
+                                        <div class="mt-2">
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => ActivateAsync(worker))">
+                                                <MudIcon Icon="@Icons.Material.Filled.AddCircle" Class="mr-2" />
+                                                Reactivar
+                                            </MudButton>
+                                        </div>
+                                    </ChildContent>
+                                </MudExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreateWorkerAsync">
+            Añadir nuevo trabajador
+        </MudButton>
+        <MudSpacer />
+        <MudButton Color="Color.Default" OnClick="Cancel">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    private List<WorkerSummary> _activeWorkers = [];
+    private List<WorkerSummary> _inactiveWorkers = [];
+    private readonly Dictionary<int, string> _editNames = [];
+    private readonly Dictionary<int, string> _resetPins = [];
+    private bool _loading = true;
+    private int _centerId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCenterAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadCenterAsync()
+    {
+        try
+        {
+            var centers = await Api.GetCentersAsync();
+            var center = centers.FirstOrDefault();
+
+            if (center is not null)
+            {
+                _centerId = center.Id;
+            }
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    private async Task OpenCreateWorkerAsync()
+    {
+        if (_centerId <= 0)
+        {
+            Snackbar.Add("No se pudo determinar el centro.", Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters { ["CenterId"] = _centerId };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<CreateWorkerDialog>("Añadir nuevo trabajador", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var workers = await Api.ListAllCenterWorkersAsync();
+
+            _activeWorkers = workers.Where(w => w.Active).OrderBy(w => w.FullName).ToList();
+            _inactiveWorkers = workers.Where(w => !w.Active).OrderBy(w => w.FullName).ToList();
+
+            _editNames.Clear();
+            _resetPins.Clear();
+
+            foreach (var worker in workers)
+            {
+                _editNames[worker.Id] = worker.FullName;
+                _resetPins[worker.Id] = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetEditName(int id) => _editNames.GetValueOrDefault(id, "");
+
+    private void SetEditName(int id, string value) => _editNames[id] = value;
+
+    private string GetResetPin(int id) => _resetPins.GetValueOrDefault(id, "");
+
+    private void SetResetPin(int id, string value) => _resetPins[id] = SanitizePin(value);
+
+    private async Task RenameAsync(WorkerSummary worker)
+    {
+        var name = _editNames.GetValueOrDefault(worker.Id, "").Trim();
+
+        if (string.IsNullOrEmpty(name))
+        {
+            Snackbar.Add("El nombre no puede estar vacío.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await Api.RenameWorkerAsync(worker.Id, name);
+            Snackbar.Add("Nombre actualizado correctamente", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void CancelRename(WorkerSummary worker) => _editNames[worker.Id] = worker.FullName;
+
+    private async Task ResetPinAsync(WorkerSummary worker)
+    {
+        var pin = _resetPins.GetValueOrDefault(worker.Id, "");
+
+        if (pin.Length != 4)
+        {
+            Snackbar.Add("El PIN temporal debe tener 4 dígitos.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await Api.ResetWorkerPinAsync(worker.Id, pin);
+            Snackbar.Add("PIN reseteado. El trabajador deberá cambiarlo al entrar.", Severity.Success);
+            _resetPins[worker.Id] = "";
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task DeactivateAsync(WorkerSummary worker)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Dar de baja",
+            $"¿Seguro que quieres dar de baja a {worker.FullName}?",
+            yesText: "Dar de baja",
+            cancelText: "Cancelar");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Api.DeactivateWorkerAsync(worker.Id);
+            Snackbar.Add("Trabajador dado de baja", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task ActivateAsync(WorkerSummary worker)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Reactivar",
+            $"¿Seguro que quieres reactivar a {worker.FullName}?",
+            yesText: "Reactivar",
+            cancelText: "Cancelar");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Api.ActivateWorkerAsync(worker.Id);
+            Snackbar.Add("Trabajador reactivado", Severity.Success);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private static string SanitizePin(string? value) => new string((value ?? "").Where(char.IsDigit).Take(4).ToArray());
+}
