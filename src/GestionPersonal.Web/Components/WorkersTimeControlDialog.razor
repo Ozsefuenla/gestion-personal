@@ -1,0 +1,159 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+@inject TimeControlPdfExporter Exporter
+@inject IJSRuntime Js
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Horarios de trabajadores</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="d-flex align-center flex-wrap mb-4" style="gap: 16px;">
+            <div style="min-width: 180px;">
+                <MudSelect T="int" Label="Mes" Value="_month" ValueChanged="OnMonthChanged">
+                    @for (var i = 1; i <= 12; i++)
+                    {
+                        var month = i;
+                        <MudSelectItem T="int" Value="@month">@TimeFormatting.MonthName(month)</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            <div style="min-width: 140px;">
+                <MudSelect T="int" Label="Año" Value="_year" ValueChanged="OnYearChanged">
+                    @foreach (var year in Years)
+                    {
+                        <MudSelectItem T="int" Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportAsync" Disabled="@(!_loaded)">
+                <MudIcon Icon="@Icons.Material.Filled.FileDownload" Class="mr-2" />
+                Exportar PDF
+            </MudButton>
+        </div>
+
+        @if (_loading)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Cargando…</MudText>
+        }
+        else if (_workers.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay trabajadores a los que mostrar.</MudText>
+        }
+        else
+        {
+            <MudTabs Elevation="0" Outlined="true">
+                @foreach (var worker in _workers)
+                {
+                    <MudTabPanel Text="@worker.FullName">
+                        @if (_summaries.TryGetValue(worker.Id, out var summary))
+                        {
+                            <MonthlyTimeControlView DailyHours="worker.DailyHours" Summary="summary" Year="_year" Month="_month" />
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">No se pudo cargar el resumen.</MudText>
+                        }
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    private List<WorkerStatus> _workers = [];
+    private readonly Dictionary<int, MonthlySummary> _summaries = [];
+    private bool _loading = true;
+    private bool _loaded;
+    private int _year;
+    private int _month;
+
+    private IReadOnlyList<int> Years =>
+        Enumerable.Range(DateTime.Now.Year - 5, 6).Reverse().ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _year = DateTime.Now.Year;
+        _month = DateTime.Now.Month;
+        await LoadAsync();
+    }
+
+    private async Task OnMonthChanged(int value)
+    {
+        _month = value;
+        await LoadAsync();
+    }
+
+    private async Task OnYearChanged(int value)
+    {
+        _year = value;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _loaded = false;
+        _summaries.Clear();
+
+        try
+        {
+            var all = await Api.GetWorkersStatusAsync();
+            _workers = all.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+
+            foreach (var worker in _workers)
+            {
+                _summaries[worker.Id] = await Api.GetMonthlySummaryAsync(worker.Id, _year, _month);
+            }
+
+            _loaded = true;
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudieron cargar los horarios", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ExportAsync()
+    {
+        if (!_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var rows = _workers
+                .Where(w => _summaries.ContainsKey(w.Id))
+                .Select(w => new TimeControlExportWorker(w.FullName, _year, _month, w.DailyHours, _summaries[w.Id]))
+                .ToList();
+
+            var bytes = Exporter.Build(rows);
+
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            await Js.InvokeVoidAsync("downloadFileFromStream", $"control-horario-trabajadores-{_year}-{_month:00}.pdf", streamRef);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudo exportar el PDF", Severity.Error);
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+}

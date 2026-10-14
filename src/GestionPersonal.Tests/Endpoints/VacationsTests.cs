@@ -132,7 +132,8 @@ public sealed class VacationsTests : AuthenticatedApiTest, IClassFixture<WebAppl
         var today = MadridToday();
 
         var vacation = await RequestVacationAsync(workerId, today.AddDays(3), today.AddDays(4));
-        ApproveVacation(vacation.Id);
+
+        Assert.Equal("approved", vacation.Status);
 
         var response = await _client.DeleteAsync($"/api/vacations/{vacation.Id}");
 

@@ -18,6 +18,11 @@
         else
         {
             <DonutProgress Worker="_loggedInWorker" RefreshAsync="RefreshWorkerAsync" />
+
+            @if (_loggedInWorker.Role == "admin")
+            {
+                <TodayWorkersPanel />
+            }
         }
     </MudItem>
 

@@ -1,0 +1,114 @@
+@inject IDialogService DialogService
+
+@if (Summary is null)
+{
+    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Cargando…</MudText>
+}
+else
+{
+    <div class="d-flex align-center flex-wrap mt-4" style="gap: 16px;">
+        <MudText Typo="Typo.body2"><b>Previstas:</b> @TimeFormatting.FormatHours(Previstas)</MudText>
+        <MudText Typo="Typo.body2"><b>Trabajadas:</b> @TimeFormatting.FormatHours(Trabajadas)</MudText>
+        <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(Trabajadas, Previstas)"><b>Diferencia:</b> @TimeFormatting.FormatDelta(Trabajadas, Previstas)</MudText>
+    </div>
+
+    <div class="mt-4">
+        @foreach (var day in Summary.Days)
+        {
+            var date = new DateTime(Year, Month, day.Day);
+            var isWorkingDay = date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
+
+            <div class="d-flex align-center" style="gap: 12px; padding: 6px 0;">
+                <MudText Typo="Typo.body2" Style="min-width: 90px;">@date.ToString("dd/MM/yyyy")</MudText>
+
+                @if (day.IsAbsence)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+                        Ausencia - @AbsenceLabel(day.AbsenceType)
+                    </MudChip>
+                }
+                else if (!isWorkingDay)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Día no laborable</MudText>
+                }
+                else if (!day.HasEntries)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Día sin datos registrados</MudText>
+                }
+                else
+                {
+                    <div class="flex-grow-1">
+                        <SegmentedBar Worked="day.WorkedTime" Paused="day.PausedTime" Target="DailyHours" />
+                    </div>
+                    <MudText Typo="Typo.body2" Style="min-width: 90px;">Previstas: @TimeFormatting.FormatHours(DailyHours)</MudText>
+                    <MudText Typo="Typo.body2" Style="min-width: 110px;">Trabajadas: @TimeFormatting.FormatHours(day.WorkedTime)</MudText>
+                    <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(day.WorkedTime, DailyHours)" Style="min-width: 110px; font-weight: 600;">Diferencia: @TimeFormatting.FormatDelta(day.WorkedTime, DailyHours)</MudText>
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
+                                   OnClick="@(() => OpenDetailAsync(date, day))" />
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required TimeSpan DailyHours { get; set; }
+
+    [Parameter]
+    public MonthlySummary? Summary { get; set; }
+
+    [Parameter]
+    public int Year { get; set; }
+
+    [Parameter]
+    public int Month { get; set; }
+
+    private TimeSpan Previstas
+    {
+        get
+        {
+            var first = new DateTime(Year, Month, 1);
+            var today = DateTime.Today;
+
+            if (today < first)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var last = first.AddMonths(1).AddDays(-1);
+            var end = today > last ? last : today;
+            var workingDays = Enumerable.Range(0, (end - first).Days + 1)
+                .Select(d => first.AddDays(d))
+                .Count(d => d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday && !IsAbsenceDay(d.Day));
+
+            return DailyHours * workingDays;
+        }
+    }
+
+    private TimeSpan Trabajadas =>
+        Summary?.Days.Aggregate(TimeSpan.Zero, (total, day) => total + day.WorkedTime) ?? TimeSpan.Zero;
+
+    private async Task OpenDetailAsync(DateTime date, DailySummary day)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Day"] = day,
+            ["DailyHours"] = DailyHours
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        await DialogService.ShowAsync<DayDetailDialog>($"Detalle — {date:dd/MM/yyyy}", parameters, options);
+    }
+
+    private bool IsAbsenceDay(int day) =>
+        Summary?.Days.Any(d => d.Day == day && d.IsAbsence) == true;
+
+    private static string AbsenceLabel(string? type) => type switch
+    {
+        "vacations" => "Vacaciones",
+        "sick-leave" => "Enfermedad",
+        _ => "Otro"
+    };
+}

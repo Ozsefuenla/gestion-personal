@@ -38,6 +38,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CenterTokenStore>();
+builder.Services.AddSingleton<TimeControlPdfExporter>();
 
 builder.Services.AddRateLimiter(options =>
 {

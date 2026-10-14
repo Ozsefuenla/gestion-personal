@@ -1,0 +1,128 @@
+@inject ApiClient Api
+@implements IAsyncDisposable
+
+<MudCard Elevation="2" Class="mt-4">
+    <MudCardContent>
+        <MudText Typo="Typo.h6">Marcajes de hoy</MudText>
+
+        @if (_loading && _workers.Count == 0)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">Cargando…</MudText>
+        }
+        else if (_workers.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">No hay trabajadores en el centro.</MudText>
+        }
+        else
+        {
+            <div class="mt-2">
+                @foreach (var worker in _workers)
+                {
+                    <div class="d-flex align-center flex-wrap" style="gap: 12px; padding: 8px 0; border-bottom: 1px solid #ECE5F1;">
+                        <MudText Typo="Typo.body2" Style="min-width: 140px; font-weight: 500;">@worker.FullName</MudText>
+
+                        @if (_absencesToday.TryGetValue(worker.Id, out var absenceType))
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+                                Ausencia - @AbsenceLabel(absenceType)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@StatusColor(worker.CurrentStatus)">
+                                @StatusLabel(worker.CurrentStatus)
+                            </MudChip>
+                            <MudText Typo="Typo.body2"><b>Trabajadas:</b> @TimeFormatting.FormatHours(worker.WorkedTime)</MudText>
+                            <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(worker.WorkedTime, worker.DailyHours)"><b>Diferencia:</b> @TimeFormatting.FormatDelta(worker.WorkedTime, worker.DailyHours)</MudText>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private readonly PeriodicTimer _timer = new(TimeSpan.FromSeconds(30));
+    private List<WorkerStatus> _workers = [];
+    private readonly Dictionary<int, string> _absencesToday = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _ = RunRefreshLoopAsync();
+    }
+
+    private async Task RunRefreshLoopAsync()
+    {
+        while (await _timer.WaitForNextTickAsync())
+        {
+            await LoadAsync();
+
+            try
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var all = await Api.GetWorkersStatusAsync();
+            _workers = all.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var vacations = await Api.GetCenterVacationsAsync();
+
+            _absencesToday.Clear();
+
+            foreach (var vacation in vacations.Where(v => v.Status == "approved" && today >= v.StartDate && today <= v.EndDate))
+            {
+                _absencesToday[vacation.WorkerId] = vacation.Type;
+            }
+        }
+        catch (Exception)
+        {
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string AbsenceLabel(string? type) => type switch
+    {
+        "vacations" => "Vacaciones",
+        "sick-leave" => "Enfermedad",
+        _ => "Otro"
+    };
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "in-progress" => Color.Success,
+        "paused" => Color.Warning,
+        "finished" => Color.Info,
+        _ => Color.Default
+    };
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "in-progress" => "En curso",
+        "paused" => "En pausa",
+        "finished" => "Finalizado",
+        _ => "Sin iniciar"
+    };
+
+    public ValueTask DisposeAsync()
+    {
+        _timer.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}
