@@ -56,6 +56,16 @@ frontend en Blazor Server.
 - Secciones: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`;
   entrada `Unreleased` siempre al tope.
 
+## Git y control de versiones
+- `main` está protegida: **nunca** se commitea ni se hace push directo. Todo cambio
+  va por **rama + Pull Request** y se mergea tras el CI en verde.
+- Nombres de rama: `tipo/descripcion` en minúsculas (p. ej. `feat/gestion-trabajadores`,
+  `fix/login-enter`, `chore/ci-setup`).
+- Commits en formato Conventional Commits (`feat(scope): descripción`), sin trailers
+  de co-autoría.
+- El CI (`.github/workflows/ci.yml`) compila y corre los tests en cada PR; debe pasar
+  antes de mergear. Plantilla de PR en `.github/pull_request_template.md`.
+
 ## Testing
 - TDD: escribir el test antes que la implementación.
 - Framework: xUnit. Comandos: `dotnet test`, `dotnet build`.

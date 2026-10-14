@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: src/**/*.csproj
+
+      - name: Restore
+        run: dotnet restore src/GestionPersonal.slnx
+
+      - name: Build
+        run: dotnet build src/GestionPersonal.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test src/GestionPersonal.slnx -c Release --no-build

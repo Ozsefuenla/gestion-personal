@@ -1,5 +1,7 @@
 # GestionPersonal
 
+![CI](https://github.com/Ozsefuenla/gestion-personal/actions/workflows/ci.yml/badge.svg)
+
 Aplicación web de gestión de personal, control horario, turnos y vacaciones para
 peluquerías y clínicas estéticas en España. El software se vende por centro: cada
 centro tiene sus trabajadores y un usuario de acceso. Backend en C# (.NET 10)
