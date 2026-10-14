@@ -26,6 +26,15 @@ public static class WorkersEndpoints
                 : result.ToProblemDetails();
         }).RequireAuthorization();
 
+        app.MapGet("/api/workers/manage", async (ListWorkersForAdminQueryHandler handler, CancellationToken cancellationToken) =>
+        {
+            var result = await handler.Handle(new ListWorkersForAdminQuery(), cancellationToken);
+
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
         app.MapGet("/api/workers/{id:int}/status", async (int id, GetWorkerStatusQueryHandler handler, CancellationToken cancellationToken) =>
         {
             var result = await handler.Handle(id, cancellationToken);
@@ -106,6 +115,78 @@ public static class WorkersEndpoints
             }
 
             var result = await handler.Handle(id, command, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
+        app.MapPatch("/api/workers/{id:int}/name", async (
+            int id,
+            RenameWorkerCommand command,
+            IValidator<RenameWorkerCommand> validator,
+            RenameWorkerCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(id, command, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
+        app.MapPost("/api/workers/{id:int}/reset-pin", async (
+            int id,
+            ResetWorkerPinCommand command,
+            IValidator<ResetWorkerPinCommand> validator,
+            ResetWorkerPinCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(id, command, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
+        app.MapPatch("/api/workers/{id:int}/activate", async (
+            int id,
+            ActivateWorkerCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await handler.Handle(id, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.NoContent()
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
+        app.MapPatch("/api/workers/{id:int}/deactivate", async (
+            int id,
+            DeactivateWorkerCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await handler.Handle(id, cancellationToken);
 
             return result.IsSuccess
                 ? Results.NoContent()

@@ -63,7 +63,8 @@ docs/
 ├─ 0005-multi-tenant-model.md
 ├─ 0006-landing-page.md
 ├─ 0007-seguridad-owasp.md
-└─ 0008-frontend-ui-admin.md
+├─ 0008-frontend-ui-admin.md
+└─ 0009-gestion-trabajadores.md
 AGENTS.md
 CHANGELOG.md
 ```
@@ -74,7 +75,7 @@ CHANGELOG.md
 |---------------|--------|
 | Listado de centros (`GET /api/centers`) | Implementado |
 | Trabajadores de un centro (`GET /api/centers/{id}/workers`) | Implementado |
-| Alta de trabajadores (`POST /api/workers`) | Implementado (con `centerId`) |
+| Alta de trabajadores (`POST /api/workers`) | Implementado (con `centerId`; UI con PIN inicial que fuerza cambio) |
 | Listado de trabajadores (`GET /api/workers`) | Implementado |
 | Estado actual de todos los trabajadores (`GET /api/workers/status`) | Implementado (con resumen trabajado/pausado y timeline) |
 | Inicio de fichaje (`POST /api/time-entries/start`) | Implementado |
@@ -100,6 +101,7 @@ CHANGELOG.md
 | Panel de Ausencias + solicitud (trabajador) | Implementado |
 | Días de ausencia en Control Horario | Implementado (ausencias aprobadas) |
 | Gestión de ausencias del admin (aprobar/denegar) | Implementado |
+| Gestión de trabajadores del admin (renombrar, resetear PIN, dar de baja/reactivar) | Implementado |
 | Aprobación de ausencias | Implementado |
 | Login del centro (`POST /api/centers/login`) | Implementado (cookie HttpOnly) |
 | Landing page (`/`) | Implementado |

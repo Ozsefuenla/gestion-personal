@@ -108,6 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - En "Marcajes de hoy": cada fila muestra el **estado actual** (chip En curso / En pausa /
   Finalizado / Sin iniciar); si el trabajador tiene una **ausencia aprobada hoy**, la fila
   muestra solo "Ausencia - {Motivo}" en lugar de estado/trabajadas/diferencia.
+- Botón de **refresco manual** en la cabecera de "Marcajes de hoy": recarga los datos al
+  instante sin recargar la página (se deshabilita mientras carga).
 - Botón "Ver horarios trabajadores" (solo admin) en el panel Control Horario y diálogo
   `WorkersTimeControlDialog` con tabs por trabajador y filtro Mes/Año a nivel de diálogo.
 - Componente compartido `MonthlyTimeControlView` (resumen + listado diario) extraído de
@@ -117,6 +119,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   botón "Exportar PDF" del diálogo del admin (todos los trabajadores). El PDF incluye nombre,
   mes, año y el resumen completo del mes.
 - Documento de reglas de UI del admin (`docs/0008-frontend-ui-admin.md`).
+- Gestión de trabajadores del admin (`docs/0009-gestion-trabajadores.md`): renombrar,
+  resetear PIN (con cambio forzado al entrar) y dar de baja / reactivar trabajadores.
+- `Worker.MustChangePin` (bool) y métodos de dominio `Rename`, `ResetPin`, `Activate`
+  y `Deactivate`; `ChangePin` apaga `MustChangePin` al cambiar el PIN.
+- Endpoints `GET /api/workers/manage` (todos los trabajadores del centro, activos e
+  inactivos), `PATCH /api/workers/{id}/name`, `POST /api/workers/{id}/reset-pin`,
+  `PATCH /api/workers/{id}/activate` y `PATCH /api/workers/{id}/deactivate`.
+- `WorkerResponse`/`WorkerStatusResponse` exponen `Active` y/o `MustChangePin`.
+- Frontend admin: botón "Gestión de trabajadores" en el perfil y diálogo
+  `ManageWorkersDialog` con tabs Activos/Inactivos, acciones por trabajador y
+  confirmaciones de baja/reactivación.
+- Cambio forzado de PIN tras reset: `Dashboard` abre `ChangePinDialog` bloqueante cuando
+  `MustChangePin == true`.
+- Alta de trabajador desde el panel de gestión: botón "Añadir nuevo trabajador"
+  (`CreateWorkerDialog`) con nombre y PIN inicial (`role = "worker"`, `mustChangePin = true`),
+  de modo que el trabajador debe cambiar el PIN en su primer acceso.
+- `CreateWorkerCommand` y `Worker.Create` aceptan `MustChangePin` opcional (default `false`).
 
 ### Security
 - El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
@@ -158,6 +177,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `approved` automáticamente (no `pending`).
 - Paneles de "Ausencias" y "Control Horario" ahora son mutuamente excluyentes: al abrir
   uno se cierra el otro.
+- Listados de trabajadores (`GET /api/workers`, `GET /api/centers/{id}/workers` y
+  `GET /api/workers/status`) filtran solo trabajadores **activos**; los inactivos se
+  consultan con `GET /api/workers/manage`.
+- `POST /api/workers/login` y `POST /api/time-entries/quick-clock` rechazan a los
+  trabajadores inactivos (`403`).
 
 ### Fixed
 - Login del centro: la tecla Enter ahora envía el formulario (`OnEnterPressed` en

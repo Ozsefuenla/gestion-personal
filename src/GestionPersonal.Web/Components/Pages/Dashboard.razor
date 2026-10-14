@@ -107,7 +107,21 @@
         {
             _loggedInWorker = loggedIn;
             await RefreshPendingAsync();
+
+            if (loggedIn.MustChangePin)
+            {
+                await ForceChangePinAsync();
+            }
         }
+    }
+
+    private async Task ForceChangePinAsync()
+    {
+        var parameters = new DialogParameters { ["WorkerId"] = _loggedInWorker!.Id };
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };
+        var dialog = await DialogService.ShowAsync<ChangePinDialog>("Debes cambiar tu PIN", parameters, options);
+        await dialog.Result;
+        await RefreshWorkerAsync();
     }
 
     private async Task RefreshWorkerAsync()

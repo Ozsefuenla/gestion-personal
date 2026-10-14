@@ -41,6 +41,11 @@
 | POST | `/api/workers/login` | Iniciar sesión de un trabajador seleccionado por PIN (`{ workerId, pin }` → estado) | Público |
 | GET | `/api/workers/{id}/status` | Estado actual de un trabajador por id | admin |
 | POST | `/api/workers/{id}/change-pin` | Cambiar el PIN de un trabajador (verifica el PIN actual) | trabajador |
+| GET | `/api/workers/manage` | Listar todos los trabajadores del centro (activos e inactivos) | admin |
+| PATCH | `/api/workers/{id}/name` | Renombrar un trabajador (`{ fullName }`) | admin |
+| POST | `/api/workers/{id}/reset-pin` | Resetear el PIN de un trabajador (`{ pin }` temporal + fuerza cambio al entrar) | admin |
+| PATCH | `/api/workers/{id}/activate` | Reactivar un trabajador inactivo | admin |
+| PATCH | `/api/workers/{id}/deactivate` | Dar de baja a un trabajador (rechazado si es admin) | admin |
 
 ### Fichajes
 
@@ -134,3 +139,11 @@
   una con su `workerId`) para la vista de gestión del admin.
 - `GET /api/time-entries/monthly` marca los días cubiertos por una ausencia **aprobada**
   con `isAbsence` + `absenceType`; esos días no computan para las horas del trabajador.
+- Gestión de trabajadores (`docs/0009`): `Worker` gana `MustChangePin` (bool). Los
+  listados "activos" (`GET /api/workers`, `GET /api/centers/{id}/workers`,
+  `GET /api/workers/status`) filtran `Active == true`; `GET /api/workers/manage` devuelve
+  todos (activos e inactivos) para el panel del admin. El login y el fichaje rápido
+  rechazan a los trabajadores inactivos (`403`). `reset-pin` guarda el PIN temporal y
+  activa `MustChangePin`; al entrar, el trabajador debe cambiarlo (al cambiarlo se apaga
+  el flag). `deactivate` no permite dar de baja a un `admin` (`400`). La restricción de
+  rol `admin` de estos endpoints se aplica en el frontend (la API autentica por centro).

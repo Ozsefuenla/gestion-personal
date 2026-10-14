@@ -28,6 +28,7 @@ public sealed class ListWorkersQueryHandler
         var workers = await _workerRepository.GetByCenterAsync(centerId.Value, cancellationToken);
 
         IReadOnlyList<WorkerResponse> response = workers
+            .Where(w => w.Active)
             .Select(WorkerResponse.From)
             .ToList();
 

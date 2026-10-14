@@ -49,6 +49,11 @@ public sealed class LoginCommandHandler
             return Error.NotFound("El trabajador no existe.");
         }
 
+        if (!worker.Active)
+        {
+            return Error.Forbidden("El trabajador está inactivo. Contacta con el administrador.");
+        }
+
         if (!_passwordHasher.Verify(command.Pin, worker.PinHash))
         {
             _loginAttemptTracker.RecordFailure(command.WorkerId);
