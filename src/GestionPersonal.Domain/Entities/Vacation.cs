@@ -8,6 +8,7 @@ public sealed class Vacation
     public int WorkerId { get; private set; }
     public DateOnly StartDate { get; private set; }
     public DateOnly EndDate { get; private set; }
+    public VacationType Type { get; private set; }
     public VacationStatus Status { get; private set; }
     public DateTimeOffset RequestedAt { get; private set; }
     public DateTimeOffset? DecidedAt { get; private set; }
@@ -16,7 +17,12 @@ public sealed class Vacation
     {
     }
 
-    public static Vacation Request(int workerId, DateOnly startDate, DateOnly endDate, DateTimeOffset now)
+    public static Vacation Request(
+        int workerId,
+        DateOnly startDate,
+        DateOnly endDate,
+        VacationType type,
+        DateTimeOffset now)
     {
         if (endDate < startDate)
         {
@@ -29,6 +35,7 @@ public sealed class Vacation
             WorkerId = workerId,
             StartDate = startDate,
             EndDate = endDate,
+            Type = type,
             Status = VacationStatus.Pending,
             RequestedAt = now
         };
@@ -48,11 +55,24 @@ public sealed class Vacation
         DecidedAt = now;
     }
 
+    public void Delete()
+    {
+        if (Status == VacationStatus.Deleted)
+        {
+            throw new InvalidOperationException("La ausencia ya está eliminada.");
+        }
+
+        Status = VacationStatus.Deleted;
+    }
+
+    public bool Overlaps(DateOnly startDate, DateOnly endDate) =>
+        startDate <= EndDate && endDate >= StartDate;
+
     private void EnsurePending()
     {
         if (Status != VacationStatus.Pending)
         {
-            throw new InvalidOperationException("Solo se puede decidir sobre una solicitud pendiente.");
+            throw new InvalidOperationException("Solo se puede decidir sobre una ausencia pendiente.");
         }
     }
 }

@@ -40,8 +40,17 @@
                     </MudButton>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">
-                        <MudIcon Icon="@Icons.Material.Filled.EventBusy" Class="mr-2" />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" OnClick="@(() => ToggleAbsences.InvokeAsync())">
+                        @if (PendingAbsences > 0)
+                        {
+                            <MudBadge Content="@PendingAbsences" Color="Color.Error" Bordered="true" Overlap="true" Class="mr-2">
+                                <MudIcon Icon="@Icons.Material.Filled.EventBusy" />
+                            </MudBadge>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.EventBusy" Class="mr-2" />
+                        }
                         Ausencias
                     </MudButton>
                 </MudItem>
@@ -71,6 +80,12 @@
 
     [Parameter]
     public EventCallback ToggleTimeControl { get; set; }
+
+    [Parameter]
+    public EventCallback ToggleAbsences { get; set; }
+
+    [Parameter]
+    public int PendingAbsences { get; set; }
 
     private bool CanIniciar => Worker.CurrentStatus is "idle" or "paused";
     private bool CanPause => Worker.CurrentStatus == "in-progress";

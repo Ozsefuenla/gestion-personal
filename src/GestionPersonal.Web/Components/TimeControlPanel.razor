@@ -56,7 +56,13 @@
                     <div class="d-flex align-center" style="gap: 12px; padding: 6px 0;">
                         <MudText Typo="Typo.body2" Style="min-width: 90px;">@date.ToString("dd/MM/yyyy")</MudText>
 
-                        @if (!isWorkingDay)
+                        @if (day.IsAbsence)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+                                Ausencia - @AbsenceLabel(day.AbsenceType)
+                            </MudChip>
+                        }
+                        else if (!isWorkingDay)
                         {
                             <MudText Typo="Typo.body2" Class="mud-text-secondary">Día no laborable</MudText>
                         }
@@ -116,7 +122,7 @@
             var end = today > last ? last : today;
             var workingDays = Enumerable.Range(0, (end - first).Days + 1)
                 .Select(d => first.AddDays(d))
-                .Count(d => d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday);
+                .Count(d => d.DayOfWeek != DayOfWeek.Saturday && d.DayOfWeek != DayOfWeek.Sunday && !IsAbsenceDay(d.Day));
 
             return Worker.DailyHours * workingDays;
         }
@@ -186,6 +192,16 @@
 
     private Color DeltaColor(DailySummary day) =>
         day.WorkedTime.TotalMinutes >= Worker.DailyHours.TotalMinutes ? Color.Success : Color.Error;
+
+    private bool IsAbsenceDay(int day) =>
+        _summary?.Days.Any(d => d.Day == day && d.IsAbsence) == true;
+
+    private static string AbsenceLabel(string? type) => type switch
+    {
+        "vacations" => "Vacaciones",
+        "sick-leave" => "Enfermedad",
+        _ => "Otro"
+    };
 
     private string FormatSummaryDelta()
     {

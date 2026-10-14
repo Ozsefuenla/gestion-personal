@@ -1,4 +1,4 @@
-<MudForm @ref="_form">
+<MudForm @ref="_form" OnEnterPressed="SubmitAsync">
     @if (_error is not null)
     {
         <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>

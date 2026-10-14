@@ -10,8 +10,9 @@
 4. **Fichajes propios**: cada trabajador consulta únicamente sus fichajes.
 5. **Fichajes globales**: el `admin` del centro consulta los fichajes de los
    trabajadores de su centro.
-6. **Solicitud de vacaciones**: cada trabajador solicita días de vacaciones.
-7. **Aprobación de vacaciones**: el `admin` aprueba o rechaza solicitudes.
+6. **Solicitud de ausencias**: cada trabajador solicita días de ausencia (vacaciones,
+   enfermedad u otro) y consulta las suyas.
+7. **Aprobación de ausencias**: el `admin` aprueba solicitudes (pendiente de implementar).
 8. **Identificación de rol y centro** (imprescindible): autenticación mínima para
    distinguir `admin` de `trabajador` y aislar cada centro.
 
@@ -57,14 +58,16 @@
 | GET | `/api/time-entries/me` | Consultar fichajes propios | trabajador |
 | GET | `/api/time-entries` | Consultar fichajes de todos los trabajadores (filtro opcional por `workerId`) | admin |
 
-### Vacaciones
+### Ausencias (vacaciones / enfermedad / otro)
 
 | Método | Ruta | Propósito | Rol |
 |--------|------|-----------|-----|
-| POST | `/api/vacations` | Crear solicitud de vacaciones | trabajador |
-| GET | `/api/vacations` | Listar solicitudes (filtro opcional por estado) | admin |
-| PATCH | `/api/vacations/{id}/approve` | Aprobar solicitud | admin |
-| PATCH | `/api/vacations/{id}/reject` | Rechazar solicitud | admin |
+| GET | `/api/vacations?workerId={id}` | Listar las ausencias del trabajador (pendientes, aprobadas y denegadas, por fecha descendente) | trabajador |
+| GET | `/api/vacations/center` | Listar todas las ausencias no eliminadas del centro (para la gestión del admin) | admin |
+| POST | `/api/vacations` | Crear solicitud de ausencia (`{ workerId, startDate, endDate, type }`) → queda `pending` | trabajador |
+| DELETE | `/api/vacations/{id}` | Eliminar (borrado lógico) una ausencia: pendiente siempre; aprobada solo si el dueño es `admin` | trabajador/admin |
+| PATCH | `/api/vacations/{id}/approve` | Aprobar una solicitud pendiente | admin |
+| PATCH | `/api/vacations/{id}/reject` | Denegar una solicitud pendiente | admin |
 
 ## Notas
 
@@ -110,3 +113,24 @@
   elimina el último fichaje activo (deshacer). Ambos devuelven `204` o `400`.
 - `GET /api/time-entries/monthly` recibe `{ workerId, year, month }` y devuelve el
   resumen mensual del trabajador (ver `docs/0004` para el detalle de UI).
+- `POST /api/vacations` recibe `{ workerId, startDate, endDate, type }`, con `type` en
+  `vacations` / `sick-leave` / `other`. La fecha de fin no puede ser anterior a la de
+  inicio (`400`) y no puede solapar con otra ausencia pendiente o aprobada del mismo
+  trabajador (`409`). La solicitud queda en estado `pending`; si la solicita un
+  trabajador con rol `admin`, queda `approved` automáticamente.
+- `GET /api/vacations?workerId={id}` devuelve las ausencias pendientes, aprobadas y
+  denegadas del trabajador, ordenadas por fecha de inicio descendente (las eliminadas no
+  se listan).
+- `DELETE /api/vacations/{id}` aplica **borrado lógico** (pasa a `deleted`). Solo se
+  pueden eliminar las pendientes; las aprobadas únicamente si el trabajador dueño es
+  `admin` (`403` en caso contrario).
+- Estados de ausencia: `pending`, `approved`, `rejected`, `deleted`. Tipos: `vacations`,
+  `sick-leave`, `other`.
+- `PATCH /api/vacations/{id}/approve` y `PATCH /api/vacations/{id}/reject` deciden sobre
+  una solicitud `pending` (`409` si no lo está, `404` si fue eliminada). La restricción de
+  rol `admin` se aplica en el frontend (la API está autenticada por centro, no por
+  trabajador).
+- `GET /api/vacations/center` lista las ausencias no eliminadas de todo el centro (cada
+  una con su `workerId`) para la vista de gestión del admin.
+- `GET /api/time-entries/monthly` marca los días cubiertos por una ausencia **aprobada**
+  con `isAbsence` + `absenceType`; esos días no computan para las horas del trabajador.

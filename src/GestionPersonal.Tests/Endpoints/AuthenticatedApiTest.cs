@@ -7,7 +7,10 @@ namespace GestionPersonal.Tests.Endpoints;
 
 public abstract class AuthenticatedApiTest : IAsyncLifetime
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private static readonly SemaphoreSlim LoginLock = new(1, 1);
+    private static string? _cachedToken;
+
+    protected readonly WebApplicationFactory<Program> _factory;
 
     protected HttpClient _client = default!;
 
@@ -20,18 +23,45 @@ public abstract class AuthenticatedApiTest : IAsyncLifetime
     {
         _client = _factory.CreateClient();
 
-        var response = await _client.PostAsJsonAsync("/api/centers/login", new { username = "admin", password = "admin" });
-        response.EnsureSuccessStatusCode();
-
-        var session = await response.Content.ReadFromJsonAsync<CenterLoginResponse>()
-            ?? throw new InvalidOperationException("No se pudo obtener la sesión.");
-
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", session.Token);
+        var token = await GetTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     public Task DisposeAsync()
     {
         _client.Dispose();
         return Task.CompletedTask;
+    }
+
+    private async Task<string> GetTokenAsync()
+    {
+        if (_cachedToken is not null)
+        {
+            return _cachedToken;
+        }
+
+        await LoginLock.WaitAsync();
+
+        try
+        {
+            if (_cachedToken is not null)
+            {
+                return _cachedToken;
+            }
+
+            using var client = _factory.CreateClient();
+            var response = await client.PostAsJsonAsync("/api/centers/login", new { username = "admin", password = "admin" });
+            response.EnsureSuccessStatusCode();
+
+            var session = await response.Content.ReadFromJsonAsync<CenterLoginResponse>()
+                ?? throw new InvalidOperationException("No se pudo obtener la sesión.");
+
+            _cachedToken = session.Token;
+            return _cachedToken;
+        }
+        finally
+        {
+            LoginLock.Release();
+        }
     }
 }

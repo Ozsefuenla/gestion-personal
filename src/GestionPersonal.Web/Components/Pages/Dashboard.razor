@@ -41,12 +41,24 @@
                         ShowProfileButtons="true"
                         RefreshAsync="RefreshWorkerAsync"
                         LogoutAsync="LogoutAsync"
-                        ToggleTimeControl="ToggleTimeControlAsync" />
+                        ToggleTimeControl="ToggleTimeControlAsync"
+                        ToggleAbsences="ToggleAbsencesAsync"
+                        PendingAbsences="_pendingAbsences" />
 
             @if (_showTimeControl)
             {
                 <div class="mt-4">
                     <TimeControlPanel Worker="_loggedInWorker" />
+                </div>
+            }
+
+            @if (_showAbsences)
+            {
+                <div class="mt-4">
+                    <AbsencesPanel Worker="_loggedInWorker"
+                                   CenterId="_centerId"
+                                   PendingAbsences="_pendingAbsences"
+                                   Changed="RefreshPendingAsync" />
                 </div>
             }
         }
@@ -56,6 +68,8 @@
 @code {
     private WorkerStatus? _loggedInWorker;
     private bool _showTimeControl;
+    private bool _showAbsences;
+    private int _pendingAbsences;
     private int _centerId;
 
     protected override async Task OnInitializedAsync()
@@ -87,6 +101,7 @@
         if (result?.Data is WorkerStatus loggedIn)
         {
             _loggedInWorker = loggedIn;
+            await RefreshPendingAsync();
         }
     }
 
@@ -100,9 +115,36 @@
         _loggedInWorker = await Api.GetWorkerStatusAsync(_loggedInWorker.Id);
     }
 
+    private async Task RefreshPendingAsync()
+    {
+        if (_loggedInWorker is null || _loggedInWorker.Role != "admin")
+        {
+            _pendingAbsences = 0;
+            return;
+        }
+
+        try
+        {
+            var vacations = await Api.GetCenterVacationsAsync();
+            _pendingAbsences = vacations.Count(v => v.Status == "pending");
+        }
+        catch (Exception)
+        {
+            _pendingAbsences = 0;
+        }
+    }
+
     private Task ToggleTimeControlAsync()
     {
         _showTimeControl = !_showTimeControl;
+        _showAbsences = false;
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleAbsencesAsync()
+    {
+        _showAbsences = !_showAbsences;
+        _showTimeControl = false;
         return Task.CompletedTask;
     }
 
@@ -110,6 +152,8 @@
     {
         _loggedInWorker = null;
         _showTimeControl = false;
+        _showAbsences = false;
+        _pendingAbsences = 0;
         return Task.CompletedTask;
     }
 }

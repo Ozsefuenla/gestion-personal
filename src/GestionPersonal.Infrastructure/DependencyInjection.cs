@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IWorkerRepository, InMemoryWorkerRepository>();
         services.AddSingleton<ITimeEntryRepository, InMemoryTimeEntryRepository>();
+        services.AddSingleton<IVacationRepository, InMemoryVacationRepository>();
         services.AddSingleton<ICenterRepository, InMemoryCenterRepository>();
         services.AddSingleton<ICenterUserRepository, InMemoryCenterUserRepository>();
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();

@@ -84,6 +84,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docs/0007-seguridad-owasp.md`.
 - Auditoría BOPLA y escaneo de dependencias (`dotnet list package --vulnerable --include-transitive`):
   sin hallazgos.
+- Ausencias del trabajador (vacaciones / enfermedad / otro): entidad `Vacation` con `Type`,
+  estados `pending`/`approved`/`deleted` y borrado lógico; `IVacationRepository` (in-memory).
+- Endpoints `GET /api/vacations?workerId`, `POST /api/vacations` (queda `pending`) y
+  `DELETE /api/vacations/{id}` (borrado lógico; aprobadas solo si el dueño es admin).
+- Validación de solape: no se permite una ausencia que coincida con otra pendiente o aprobada
+  del mismo trabajador (`409`).
+- Frontend trabajador: botón "Ausencias" operativo, panel `AbsencesPanel` (listado con estado,
+  tipo y borrado) y `RequestAbsenceDialog` (tipo + fecha inicio/fin con validación).
+- Control Horario: los días con ausencia aprobada se muestran como "Ausencia - {tipo}" y no
+  computan en el cálculo de horas.
+- Gestión de ausencias del admin: `PATCH /api/vacations/{id}/approve` y
+  `PATCH /api/vacations/{id}/reject` (deciden sobre una solicitud pendiente) y
+  `GET /api/vacations/center` (ausencias no eliminadas del centro).
+- Frontend admin: badge de pendientes en el botón "Ausencias", botón "Gestionar Ausencias"
+  remarcado y diálogo `ManageAbsencesDialog` con tabs por trabajador (no-admin) y acciones
+  Aprobar/Denegar por ausencia pendiente.
+- Estado `rejected` (denegada): aparece en la lista propia del trabajador como "Denegado"
+  (rojo, no eliminable).
 
 ### Security
 - El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
@@ -92,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Landing v2 (`/v2`, `LandingPageV2.razor` + `landing-v2.js`): eliminada en favor de la landing
   principal (`/`).
+- Menú lateral "Panel" (`MudDrawer`) del layout `/app` (`AppLayout.razor`).
 
 ### Changed
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
@@ -113,3 +132,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/app`: el dashboard del centro ahora es el kiosco de fichaje (Iniciar/Pausar/Finalizar +
   botón "Login" para el acceso personal del trabajador por PIN), en lugar de la vista
   "Estado del equipo".
+- `VacationStatus`: `rejected` se sustituye por `deleted` (borrado lógico); `Vacation` gana
+  `type` (`vacations`/`sick-leave`/`other`) y `Delete`. `GET /api/vacations` pasa a listar por
+  `workerId` (pendientes y aprobadas, descendente) en lugar de filtrar por estado.
+- `DailySummaryResponse`/`DailySummary` añaden `isAbsence` y `absenceType` (días cubiertos por
+  ausencia aprobada).
+- `VacationStatus` añade `rejected` (denegada por el admin); `VacationResponse` incluye
+  `workerId`; `GET /api/vacations?workerId` lista también las denegadas.
+- `POST /api/vacations`: si la solicita un trabajador con rol `admin`, la ausencia queda
+  `approved` automáticamente (no `pending`).
+- Paneles de "Ausencias" y "Control Horario" ahora son mutuamente excluyentes: al abrir
+  uno se cierra el otro.
+
+### Fixed
+- Login del centro: la tecla Enter ahora envía el formulario (`OnEnterPressed` en
+  `CenterLoginForm`); antes solo respondía al clic en "Entrar".
+- Layout `/app`: el nombre del centro ("Peluquería Sol") se muestra en blanco, heredando el
+  `AppbarText` del tema en lugar de un `MudChip` con color explícito; antes texto e ícono
+  salían en negro.
