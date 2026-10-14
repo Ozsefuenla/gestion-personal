@@ -8,6 +8,7 @@
     color: #fff;
 }
 
-.app-drawer {
-    min-width: 240px;
+.app-center-chip {
+    align-items: center;
+    gap: 0.4rem;
 }
