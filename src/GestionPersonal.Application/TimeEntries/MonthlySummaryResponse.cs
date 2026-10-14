@@ -11,4 +11,6 @@ public sealed record DailySummaryResponse(
     TimeSpan WorkedTime,
     TimeSpan PausedTime,
     bool HasEntries,
+    bool IsAbsence,
+    string? AbsenceType,
     IReadOnlyList<TimelineSegmentResponse> Timeline);

@@ -496,19 +496,19 @@ paths:
 
   /vacations:
     get:
-      summary: Listar solicitudes de vacaciones
+      summary: Listar ausencias del trabajador
       tags: [Vacations]
       security:
         - bearerAuth: []
       parameters:
-        - name: status
+        - name: workerId
           in: query
+          required: true
           schema:
-            $ref: '#/components/schemas/VacationStatus'
-          description: Filtrar por estado (opcional)
+            type: integer
       responses:
         '200':
-          description: Lista de solicitudes
+          description: Ausencias pendientes, aprobadas y denegadas, por fecha de inicio descendente
           content:
             application/json:
               schema:
@@ -520,7 +520,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
-      summary: Crear solicitud de vacaciones
+      summary: Crear solicitud de ausencia
       tags: [Vacations]
       security:
         - bearerAuth: []
@@ -532,7 +532,7 @@ paths:
               $ref: '#/components/schemas/VacationCreateRequest'
       responses:
         '201':
-          description: Solicitud creada
+          description: Solicitud creada (estado pending)
           content:
             application/json:
               schema:
@@ -543,10 +543,50 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /vacations/center:
+    get:
+      summary: Listar ausencias no eliminadas del centro (gestión del admin)
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ausencias del centro con su workerId
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vacation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /vacations/{id}:
+    delete:
+      summary: Eliminar (borrado lógico) una ausencia
+      tags: [Vacations]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VacationId'
+      responses:
+        '204':
+          description: Ausencia eliminada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /vacations/{id}/approve:
     patch:
-      summary: Aprobar solicitud de vacaciones
+      summary: Aprobar solicitud de ausencia
       tags: [Vacations]
       security:
         - bearerAuth: []
@@ -565,10 +605,12 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /vacations/{id}/reject:
     patch:
-      summary: Rechazar solicitud de vacaciones
+      summary: Denegar solicitud de ausencia
       tags: [Vacations]
       security:
         - bearerAuth: []
@@ -576,7 +618,7 @@ paths:
         - $ref: '#/components/parameters/VacationId'
       responses:
         '200':
-          description: Solicitud rechazada
+          description: Solicitud denegada
           content:
             application/json:
               schema:
@@ -587,6 +629,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
 components:
   securitySchemes:
@@ -652,7 +696,11 @@ components:
 
     VacationStatus:
       type: string
-      enum: [pending, approved, rejected]
+      enum: [pending, approved, rejected, deleted]
+
+    VacationType:
+      type: string
+      enum: [vacations, sick-leave, other]
 
     AuthLoginRequest:
       type: object
@@ -896,7 +944,7 @@ components:
 
     DailySummary:
       type: object
-      required: [day, workedTime, pausedTime, hasEntries, timeline]
+      required: [day, workedTime, pausedTime, hasEntries, isAbsence, timeline]
       properties:
         day:
           type: integer
@@ -908,6 +956,12 @@ components:
           description: Duración en pausa en formato hh:mm:ss
         hasEntries:
           type: boolean
+        isAbsence:
+          type: boolean
+          description: El día está cubierto por una ausencia aprobada
+        absenceType:
+          $ref: '#/components/schemas/VacationType'
+          nullable: true
         timeline:
           type: array
           items:
@@ -915,18 +969,22 @@ components:
 
     VacationCreateRequest:
       type: object
-      required: [startDate, endDate]
+      required: [workerId, startDate, endDate, type]
       properties:
+        workerId:
+          type: integer
         startDate:
           type: string
           format: date
         endDate:
           type: string
           format: date
+        type:
+          $ref: '#/components/schemas/VacationType'
 
     Vacation:
       type: object
-      required: [id, workerId, startDate, endDate, status]
+      required: [id, workerId, startDate, endDate, type, status]
       properties:
         id:
           type: string
@@ -939,6 +997,8 @@ components:
         endDate:
           type: string
           format: date
+        type:
+          $ref: '#/components/schemas/VacationType'
         status:
           $ref: '#/components/schemas/VacationStatus'
         requestedAt:

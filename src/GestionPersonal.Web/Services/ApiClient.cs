@@ -133,6 +133,60 @@ public sealed class ApiClient
         throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
     }
 
+    public async Task<IReadOnlyList<VacationSummary>> GetVacationsAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, $"/api/vacations?workerId={workerId}", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<VacationSummary>>(cancellationToken) ?? [];
+    }
+
+    public async Task RequestVacationAsync(int workerId, DateOnly startDate, DateOnly endDate, string type, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, "/api/vacations", new { workerId, startDate, endDate, type }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task DeleteVacationAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Delete, $"/api/vacations/{id}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task<IReadOnlyList<VacationSummary>> GetCenterVacationsAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Get, "/api/vacations/center", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<VacationSummary>>(cancellationToken) ?? [];
+    }
+
+    public async Task ApproveVacationAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Patch, $"/api/vacations/{id}/approve", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
+    public async Task RejectVacationAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Patch, $"/api/vacations/{id}/reject", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
     private async Task PostAsync(string path, int workerId, CancellationToken cancellationToken)
     {
         using var response = await SendAsync(HttpMethod.Post, path, new { workerId }, cancellationToken);
@@ -176,11 +230,11 @@ public sealed class ApiClient
                 }
             }
 
-            return problem?.Detail ?? problem?.Title ?? "No se pudo realizar el fichaje.";
+            return problem?.Detail ?? problem?.Title ?? "No se pudo completar la operación.";
         }
         catch
         {
-            return "No se pudo realizar el fichaje.";
+            return "No se pudo completar la operación.";
         }
     }
 

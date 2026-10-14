@@ -18,7 +18,7 @@ Todo visible por defecto (sin click-para-expandir):
 |-------|-------|----------------|
 | Cambiar PIN | `Password` | abre `ChangePinDialog` |
 | Control Horario | `Schedule` | muestra/oculta el panel `TimeControlPanel` debajo de la card |
-| Ausencias | `EventBusy` | visual (sin lógica) |
+| Ausencias | `EventBusy` | muestra/oculta el panel `AbsencesPanel` debajo de la card |
 | Cerrar sesión | `Logout` | vuelve a la tarjeta de Login |
 
 - La card se refresca tras cada acción con `GET /api/workers/{id}/status`.
@@ -101,3 +101,65 @@ Panel que se muestra **debajo de la card personal** al pulsar "Control Horario" 
   - 8h30 trabajadas → `+30 min` (verde).
   - 7h45 trabajadas → `-15 min` (rojo).
 - El texto "Trabajadas" usa **horas y minutos** (`8 h` o `7 h 45 m`); "Previstas" solo horas (`8 h`).
+
+### Días de ausencia
+
+- Un día cubierto por una ausencia **aprobada** se muestra como chip **"Ausencia - Vacaciones"
+  / "Ausencia - Enfermedad" / "Ausencia - Otro"** (en lugar de la barra segmentada).
+- Los días de ausencia **no cuentan** en el cálculo de horas: quedan fuera de "Previstas"
+  (no penalizan) y no aportan "Trabajadas".
+- Solo las ausencias **aprobadas** marcan el día; las pendientes no afectan al control horario.
+
+## Ausencias (`AbsencesPanel.razor` + `RequestAbsenceDialog.razor`)
+
+Panel que se muestra **debajo de la card personal** al pulsar "Ausencias" (toggle), en el
+mismo hueco que el Control Horario. Carga `GET /api/vacations?workerId={id}`.
+
+### Listado
+
+- Cabecera "Ausencias" + botón **"Solicitar nueva ausencia"** (y, para el admin, **"Gestionar
+  Ausencias"**).
+- Una fila por ausencia con estado **Pendiente**, **Aprobado** o **Denegado** (las eliminadas
+  no se listan), ordenadas por fecha de inicio **descendente**:
+  - Fecha de inicio y fin (`dd/MM/yyyy`, o una sola fecha si coinciden).
+  - Chip de estado: **Pendiente** (ámbar) / **Aprobado** (verde) / **Denegado** (rojo).
+  - Tipo: Vacaciones / Enfermedad / Otro.
+  - **X** (icono `Close`) para eliminar, con confirmación previa.
+- Estado vacío: "No tienes ausencias registradas."
+
+### Permisos de borrado (botón X)
+
+- Ausencia **pendiente** → X visible siempre (el trabajador borra la suya).
+- Ausencia **aprobada** → X visible solo si `Worker.Role == "admin"`.
+- Ausencia **denegada** → sin X (no es eliminable).
+- `DELETE /api/vacations/{id}` aplica borrado lógico; `403` si una ausencia aprobada la
+  intenta borrar un trabajador que no es admin.
+
+### Solicitar nueva ausencia (`RequestAbsenceDialog`)
+
+- **Tipo**: select (Vacaciones / Enfermedad / Otro).
+- **Fecha de inicio**: `MudDatePicker`.
+- **Fecha de final**: `MudDatePicker` **deshabilitado** hasta elegir la fecha de inicio; al
+  elegirla se habilita y se precarga con la misma fecha de inicio. `MinDate` bloquea fechas
+  anteriores al inicio.
+- Validación: fin ≥ inicio (mensaje de error si no se cumple) y solape con otra ausencia
+  pendiente/aprobada (error del servidor `409`).
+- Al **Aceptar** → `POST /api/vacations` con `{ workerId, startDate, endDate, type }`; queda
+  en estado `Pendiente` a la espera de que el admin la apruebe. Botones Aceptar/Cancelar.
+
+## Gestión de ausencias del admin (`ManageAbsencesDialog.razor`)
+
+Solo disponible cuando `Worker.Role == "admin"`.
+
+- Si hay ausencias **pendientes** de cualquier trabajador del centro, el botón "Ausencias" de
+  la card muestra un **badge rojo** con el número de pendientes, y el botón "Gestionar
+  Ausencias" del panel aparece **remarcado** (color ámbar + badge).
+- **"Gestionar Ausencias"** abre un `MudDialog` con `MudTabs`: una tab por cada **trabajador
+  no-admin** del centro (el propio admin no aparece).
+  - Cada tab (nombre del worker) muestra un **punto rojo** (`BadgeDot`) si ese worker tiene
+    ausencias pendientes.
+  - Dentro de cada tab: todas las ausencias del worker (fecha, estado, tipo) y, sobre las
+    **pendientes**, botones **"Aprobar"** y **"Denegar"**.
+- `PATCH /api/vacations/{id}/approve` → estado `approved`; `PATCH /api/vacations/{id}/reject`
+  → estado `rejected`. Ambas recargan el listado y refrescan el badge de pendientes.
+- La restricción de rol es de **frontend** (la API autentica por centro, no por trabajador).

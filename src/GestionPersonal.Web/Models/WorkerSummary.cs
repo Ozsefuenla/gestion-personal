@@ -1,3 +1,3 @@
 namespace GestionPersonal.Web.Models;
 
-public sealed record WorkerSummary(int Id, string FullName);
+public sealed record WorkerSummary(int Id, string FullName, string Role);

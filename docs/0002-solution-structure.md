@@ -8,7 +8,7 @@ de ninguna librería de infraestructura.
 
 | Proyecto | Referencia a | Responsabilidad |
 |----------|--------------|-----------------|
-| `GestionPersonal.Domain` | — | Entidades (`Center`, `CenterUser`, `Worker`, `TimeEntry`, `Vacation`) y enums (`Role`, `TimeEntryStatus`, `VacationStatus`) |
+| `GestionPersonal.Domain` | — | Entidades (`Center`, `CenterUser`, `Worker`, `TimeEntry`, `Vacation`) y enums (`Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`) |
 | `GestionPersonal.Application` | `Domain` | Casos de uso, DTOs (`record`), validadores, interfaces de repositorio, `Result` |
 | `GestionPersonal.Infrastructure` | `Application` | Implementaciones de persistencia (por ahora en memoria), DI |
 | `GestionPersonal.Api` | `Application`, `Infrastructure` | Minimal APIs, middleware de excepciones, `Program.cs` |
@@ -23,28 +23,32 @@ de ninguna librería de infraestructura.
 - `Entities/Worker.cs`: alta con `Create` (nombre, `PinHash`, rol, `CenterId`).
 - `Entities/TimeEntry.cs`: máquina de estados `Start` → `Pause`/`Resume` → `End`,
   con historial de pausas (`PausePeriod`).
-- `Entities/Vacation.cs`: `Request` → `Approve`/`Reject` con validación de fechas.
-- `Enums/`: `Role`, `TimeEntryStatus`, `VacationStatus`.
+- `Entities/Vacation.cs`: `Request` (con `Type`) → `Approve`/`Reject`/`Delete` (borrado lógico) y validación de fechas.
+- `Enums/`: `Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`.
 
 ### Application
 - `Common/`: `Error`, `Result`, `Result<T>` (Result Pattern).
-- `Abstractions/`: `ICenterRepository`, `ICenterUserRepository`, `IWorkerRepository`, `ITimeEntryRepository`.
+- `Abstractions/`: `ICenterRepository`, `ICenterUserRepository`, `IWorkerRepository`, `ITimeEntryRepository`, `IVacationRepository`.
 - `Centers/`: listado de centros (`ListCentersQuery`, `CenterResponse`).
 - `Workers/`: alta (`CreateWorkerCommand`), listado (`ListWorkersQuery`), listado por centro
   (`ListWorkersByCenterQuery`), login por trabajador y PIN (`LoginCommand`), handlers, `WorkerResponse`.
 - `TimeEntries/`: `start`, `pause`, `resume`, `end`, `today` y `quick-clock` (handlers, validadores, responses).
+- `Vacations/`: solicitud (`RequestVacationCommand`), listado (`ListVacationsQuery`), borrado
+  (`DeleteVacationCommand`), decisión del admin (`ApproveVacationCommand`/`RejectVacationCommand`)
+  y listado de centro (`ListCenterVacationsQuery`), con handlers y validador.
 - `DependencyInjection.cs`: `AddApplication()` registra handlers y validadores.
 
 ### Infrastructure
 - `Persistence/Repositories/InMemoryCenterRepository.cs`,
   `InMemoryCenterUserRepository.cs`, `InMemoryWorkerRepository.cs` e
-  `InMemoryTimeEntryRepository.cs`: persistencia en memoria con datos de ejemplo.
+  `InMemoryTimeEntryRepository.cs` (y `InMemoryVacationRepository.cs`): persistencia en
+  memoria con datos de ejemplo.
 - `DependencyInjection.cs`: `AddInfrastructure()` registra las implementaciones.
 
 ### Api
 - `Program.cs`: DI, Swagger (solo en desarrollo), endpoint raíz.
-- `Endpoints/CentersEndpoints.cs`, `Endpoints/WorkersEndpoints.cs` y
-  `Endpoints/TimeEntriesEndpoints.cs`: endpoints delgados.
+- `Endpoints/CentersEndpoints.cs`, `Endpoints/WorkersEndpoints.cs`,
+  `Endpoints/TimeEntriesEndpoints.cs` y `Endpoints/VacationsEndpoints.cs`: endpoints delgados.
 - `Extensions/ResultExtensions.cs`: mapea `Result` → `ProblemDetails`.
 - `Middleware/ExceptionHandlingMiddleware.cs`: excepciones no controladas →
   `ProblemDetails` (RFC 7807).

@@ -1,0 +1,116 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Solicitar nueva ausencia</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <MudSelect T="string" Label="Tipo de ausencia" Value="_type" ValueChanged="OnTypeChanged"
+                   Variant="Variant.Outlined" Class="mb-4">
+            <MudSelectItem T="string" Value="@("vacations")">Vacaciones</MudSelectItem>
+            <MudSelectItem T="string" Value="@("sick-leave")">Enfermedad</MudSelectItem>
+            <MudSelectItem T="string" Value="@("other")">Otro</MudSelectItem>
+        </MudSelect>
+
+        <MudDatePicker T="DateTime?" Date="_startDate" DateChanged="OnStartChanged"
+                       Label="Fecha de inicio" Variant="Variant.Outlined" Class="mb-4"
+                       Required="true" />
+
+        <MudDatePicker T="DateTime?" Date="_endDate" DateChanged="OnEndChanged"
+                       Label="Fecha de final" Variant="Variant.Outlined"
+                       Disabled="_startDate is null" MinDate="_startDate" Required="true" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitAsync" Disabled="_saving">
+            @(_saving ? "Enviando…" : "Aceptar")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required int WorkerId { get; set; }
+
+    private string _type = "vacations";
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+    private string? _error;
+    private bool _saving;
+
+    private Task OnTypeChanged(string value)
+    {
+        _type = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnStartChanged(DateTime? value)
+    {
+        _startDate = value;
+
+        if (value is not null && (_endDate is null || _endDate.Value.Date < value.Value.Date))
+        {
+            _endDate = value;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnEndChanged(DateTime? value)
+    {
+        _endDate = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SubmitAsync()
+    {
+        _error = null;
+
+        if (_startDate is null)
+        {
+            _error = "Selecciona una fecha de inicio.";
+            return;
+        }
+
+        if (_endDate is null || _endDate.Value.Date < _startDate.Value.Date)
+        {
+            _error = "La fecha de final no puede ser anterior a la de inicio.";
+            return;
+        }
+
+        _saving = true;
+
+        try
+        {
+            await Api.RequestVacationAsync(
+                WorkerId,
+                DateOnly.FromDateTime(_startDate.Value),
+                DateOnly.FromDateTime(_endDate.Value),
+                _type);
+
+            Snackbar.Add("Solicitud de ausencia registrada", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+}

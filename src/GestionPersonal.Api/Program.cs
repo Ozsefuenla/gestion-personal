@@ -75,6 +75,7 @@ app.MapGet("/", () => Results.Ok(new { name = "GestionPersonal API", status = "o
 app.MapCentersEndpoints();
 app.MapWorkersEndpoints();
 app.MapTimeEntriesEndpoints();
+app.MapVacationsEndpoints();
 
 app.Run();
 

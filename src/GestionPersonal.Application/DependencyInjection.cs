@@ -1,6 +1,7 @@
 using FluentValidation;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.TimeEntries;
+using GestionPersonal.Application.Vacations;
 using GestionPersonal.Application.Workers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,6 +29,12 @@ public static class DependencyInjection
         services.AddScoped<QuickClockCommandHandler>();
         services.AddScoped<EditActiveTimeEntryCommandHandler>();
         services.AddScoped<DeleteActiveTimeEntryCommandHandler>();
+        services.AddScoped<RequestVacationCommandHandler>();
+        services.AddScoped<ListVacationsQueryHandler>();
+        services.AddScoped<DeleteVacationCommandHandler>();
+        services.AddScoped<ApproveVacationCommandHandler>();
+        services.AddScoped<RejectVacationCommandHandler>();
+        services.AddScoped<ListCenterVacationsQueryHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

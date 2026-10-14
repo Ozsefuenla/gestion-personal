@@ -89,8 +89,13 @@ CHANGELOG.md
 | Resumen mensual por día (`GET /api/time-entries/monthly`) | Implementado |
 | Control Horario (panel mensual con barra segmentada vs horas diarias) | Implementado (sin exportar) |
 | Visualización de fichajes (propios / globales) | Pendiente |
-| Solicitud de vacaciones | Pendiente |
-| Aprobación de vacaciones | Pendiente |
+| Solicitud de ausencias (`POST /api/vacations`) | Implementado (vacaciones/enfermedad/otro) |
+| Listado de ausencias (`GET /api/vacations?workerId`) | Implementado (pendientes + aprobadas) |
+| Eliminar ausencia (`DELETE /api/vacations/{id}`) | Implementado (borrado lógico) |
+| Panel de Ausencias + solicitud (trabajador) | Implementado |
+| Días de ausencia en Control Horario | Implementado (ausencias aprobadas) |
+| Gestión de ausencias del admin (aprobar/denegar) | Implementado |
+| Aprobación de ausencias | Implementado |
 | Login del centro (`POST /api/centers/login`) | Implementado (cookie HttpOnly) |
 | Landing page (`/`) | Implementado |
 | Dashboard del centro (`/app`) | Implementado (con layout profesional) |
@@ -115,6 +120,5 @@ PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana 
 - JWT para la API y hash BCrypt del PIN de trabajador (hoy el PIN se guarda en claro en `PinHash`).
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
-- Botón "Ausencias" (solo visual por ahora).
 - Botón "Exportar" del panel de Control Horario (pendiente).
 - Botón "+ Añadir marcaje" (solo visual por ahora).

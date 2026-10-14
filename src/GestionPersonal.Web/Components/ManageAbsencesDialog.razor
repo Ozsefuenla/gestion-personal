@@ -1,0 +1,145 @@
+@inject ApiClient Api
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Gestionar Ausencias</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Cargando…</MudText>
+        }
+        else if (_workers.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay trabajadores a los que gestionar.</MudText>
+        }
+        else
+        {
+            <MudTabs Elevation="0" Outlined="true">
+                @foreach (var worker in _workers)
+                {
+                    var pending = _vacations.Count(v => v.WorkerId == worker.Id && v.Status == "pending");
+
+                    <MudTabPanel Text="@worker.FullName" BadgeDot="@(pending > 0)" BadgeColor="Color.Error">
+                        @foreach (var vacation in _vacations.Where(v => v.WorkerId == worker.Id))
+                        {
+                            <div class="d-flex align-center flex-wrap" style="gap: 12px; padding: 8px 0; border-bottom: 1px solid #ECE5F1;">
+                                <MudText Typo="Typo.body2" Style="min-width: 200px;">@FormatRange(vacation)</MudText>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@StatusColor(vacation.Status)">
+                                    @StatusLabel(vacation.Status)
+                                </MudChip>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary">@TypeLabel(vacation.Type)</MudText>
+                                <MudSpacer />
+                                @if (vacation.Status == "pending")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@(() => DecideAsync(vacation, true))">
+                                        Aprobar
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => DecideAsync(vacation, false))">
+                                        Denegar
+                                    </MudButton>
+                                }
+                            </div>
+                        }
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required int CenterId { get; set; }
+
+    private List<WorkerSummary> _workers = [];
+    private IReadOnlyList<VacationSummary> _vacations = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var workers = await Api.ListCenterWorkersAsync(CenterId);
+            _workers = workers.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            _vacations = await Api.GetCenterVacationsAsync();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("No se pudieron cargar las ausencias", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DecideAsync(VacationSummary vacation, bool approve)
+    {
+        try
+        {
+            if (approve)
+            {
+                await Api.ApproveVacationAsync(vacation.Id);
+                Snackbar.Add("Ausencia aprobada", Severity.Success);
+            }
+            else
+            {
+                await Api.RejectVacationAsync(vacation.Id);
+                Snackbar.Add("Ausencia denegada", Severity.Success);
+            }
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "approved" => Color.Success,
+        "pending" => Color.Warning,
+        "rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "approved" => "Aprobado",
+        "pending" => "Pendiente",
+        "rejected" => "Denegado",
+        _ => status
+    };
+
+    private static string TypeLabel(string type) => type switch
+    {
+        "vacations" => "Vacaciones",
+        "sick-leave" => "Enfermedad",
+        _ => "Otro"
+    };
+
+    private static string FormatRange(VacationSummary vacation) =>
+        vacation.StartDate == vacation.EndDate
+            ? vacation.StartDate.ToString("dd/MM/yyyy")
+            : $"{vacation.StartDate:dd/MM/yyyy} – {vacation.EndDate:dd/MM/yyyy}";
+}
