@@ -42,7 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Endpoint `POST /api/workers/{id}/change-pin` (cambio de PIN verificando el actual).
 - Frontend: donut circular de progreso (reemplaza a la mini progressbar) y diálogo de cambio de PIN.
 - Endpoints `PATCH`/`DELETE /api/time-entries/active/{workerId}` (editar inicio / eliminar último fichaje activo).
-- Frontend: edición/borrado del último fichaje activo y botón "+ Añadir marcaje" (visual).
+- Frontend: edición/borrado del último fichaje activo y botón "+ Añadir marcaje".
+- Endpoint `POST /api/time-entries/manual` (marcaje manual con tipo `start`/`pause`/`end`, fecha pasada o de hoy
+  y hora de inicio/final según tipo) con validación FluentValidation y tests.
+- Frontend: botón "Añadir marcaje" funcional en la card del trabajador (`AddMarkingDialog` con tipo,
+  fecha con tope hoy, hora de inicio/final según tipo y validación de hora final > hora inicial).
 - Campo `DailyHours` en `Worker` (horas diarias objetivo, seed inicial 8h) expuesto en `WorkerStatus`.
 - Endpoint `GET /api/time-entries/monthly` (resumen mensual por día: trabajado/pausado por día + tramos + objetivo diario).
 - Frontend: panel "Control Horario" (`TimeControlPanel`) con select de mes/año, listado diario con progressbar
@@ -184,8 +188,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consultan con `GET /api/workers/manage`.
 - `POST /api/workers/login` y `POST /api/time-entries/quick-clock` rechazan a los
   trabajadores inactivos (`403`).
+- `DailySummaryResponse`/`DailySummary` añaden `hasOpenEntry` (indica si el día tiene una
+  jornada abierta).
+- Control Horario: las barras segmentadas del listado mensual ahora tienen ancho uniforme
+  (columnas de texto con ancho fijo + barra con `flex: 1 1 0%`).
 
 ### Fixed
+- Detalle del día (`DayDetailDialog`): ahora muestra la hora de salida — "Finalizado HH:mm"
+  para jornadas terminadas y "En curso" para la jornada abierta (antes solo se veía el inicio).
 - Login del centro: la tecla Enter ahora envía el formulario (`OnEnterPressed` en
   `CenterLoginForm`); antes solo respondía al clic en "Entrar".
 - Layout `/app`: el nombre del centro ("Peluquería Sol") se muestra en blanco, heredando el

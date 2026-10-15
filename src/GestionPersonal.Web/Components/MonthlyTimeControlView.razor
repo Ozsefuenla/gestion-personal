@@ -37,12 +37,12 @@ else
                 }
                 else
                 {
-                    <div class="flex-grow-1">
+                    <div class="flex-grow-1" style="flex-basis: 0; min-width: 0;">
                         <SegmentedBar Worked="day.WorkedTime" Paused="day.PausedTime" Target="DailyHours" />
                     </div>
-                    <MudText Typo="Typo.body2" Style="min-width: 90px;">Previstas: @TimeFormatting.FormatHours(DailyHours)</MudText>
-                    <MudText Typo="Typo.body2" Style="min-width: 110px;">Trabajadas: @TimeFormatting.FormatHours(day.WorkedTime)</MudText>
-                    <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(day.WorkedTime, DailyHours)" Style="min-width: 110px; font-weight: 600;">Diferencia: @TimeFormatting.FormatDelta(day.WorkedTime, DailyHours)</MudText>
+                    <MudText Typo="Typo.body2" Style="width: 110px; flex: none; white-space: nowrap;">Previstas: @TimeFormatting.FormatHours(DailyHours)</MudText>
+                    <MudText Typo="Typo.body2" Style="width: 140px; flex: none; white-space: nowrap;">Trabajadas: @TimeFormatting.FormatHours(day.WorkedTime)</MudText>
+                    <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(day.WorkedTime, DailyHours)" Style="width: 130px; flex: none; white-space: nowrap; font-weight: 600;">Diferencia: @TimeFormatting.FormatDelta(day.WorkedTime, DailyHours)</MudText>
 
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary"
                                    OnClick="@(() => OpenDetailAsync(date, day))" />

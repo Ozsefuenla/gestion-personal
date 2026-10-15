@@ -50,6 +50,23 @@ public sealed class MonthlySummaryTests : AuthenticatedApiTest, IClassFixture<We
         Assert.NotNull(summary);
         var activeDay = summary.Days.Single(d => d.HasEntries);
         Assert.True(activeDay.WorkedTime > TimeSpan.Zero);
+        Assert.False(activeDay.HasOpenEntry);
+    }
+
+    [Fact]
+    public async Task GetMonthly_AfterStartOnly_TodayHasOpenEntry()
+    {
+        var workerId = await CreateWorkerAsync();
+        var (year, month) = MadridNow();
+
+        await _client.PostAsJsonAsync("/api/time-entries/start", new { workerId });
+
+        var summary = await _client.GetFromJsonAsync<MonthlySummaryResponse>(
+            $"/api/time-entries/monthly?workerId={workerId}&year={year}&month={month}");
+
+        Assert.NotNull(summary);
+        var activeDay = summary.Days.Single(d => d.HasEntries);
+        Assert.True(activeDay.HasOpenEntry);
     }
 
     [Fact]
