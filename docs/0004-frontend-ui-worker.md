@@ -53,6 +53,30 @@ Todo visible por defecto (sin click-para-expandir):
   Llama `PATCH /api/time-entries/active/{workerId}` con `{ start }`.
 - Tras cada cambio se refresca el estado del worker.
 
+## Añadir marcaje manual (`AddMarkingDialog.razor`)
+
+- El botón **"Añadir marcaje"** (icono `Add`) está en la fila de acciones de la card personal
+  (`WorkerCard`), a la derecha del todo, siempre habilitado. Abre el modal **"Añadir marcaje"**.
+- El modal tiene:
+  - **Tipo** (`MudSelect`): Iniciar / Pausa / Finalizar.
+  - **Fecha** (`MudDatePicker`): por defecto hoy, con `MaxDate = hoy` (no se permiten fechas futuras).
+  - **Hora de inicio** / **Hora de final** (`MudTimePicker`), mostradas según el tipo:
+
+    | Tipo | Hora inicio | Hora final |
+    |------|-------------|------------|
+    | Iniciar | requerida | oculta |
+    | Pausa | requerida | opcional |
+    | Finalizar | oculta | requerida |
+
+- Validación en el front: tipo y fecha obligatorios, hora requerida según tipo, y para Pausa
+  con hora final → **hora final > hora inicio**.
+- Al **Añadir** → `POST /api/time-entries/manual` con `{ workerId, type, date, startTime?, endTime? }`.
+  Reusa la máquina de estados (Iniciar abre jornada, Pausa pausa la abierta, Finalizar la cierra):
+  - `start` → 409 si ya hay una jornada abierta o si el horario solapa con un marcaje existente.
+  - `pause` → 409 si no hay jornada en curso o ya está en pausa.
+  - `end` → 409 si no hay jornada abierta; 400 si la hora de final no es posterior al inicio.
+- Tras añadir el marcaje se refresca la card (estado y timeline).
+
 ## Control Horario (`TimeControlPanel.razor`)
 
 Panel que se muestra **debajo de la card personal** al pulsar "Control Horario" (toggle).
@@ -86,12 +110,18 @@ Panel que se muestra **debajo de la card personal** al pulsar "Control Horario" 
   - **Ámbar** `#fb8c00` = pausado.
   - **Gris** `#e0e0e0` = tiempo no consumido (`max(0, 8h − trabajado − pausado)`).
 - Si trabajado + pausado supera las 8h se recorta (sin gris).
+- Todas las barras del listado tienen el **mismo ancho**: las columnas de texto (`Previstas`,
+  `Trabajadas`, `Diferencia`) usan ancho fijo (`flex: none` + `white-space: nowrap`) y la barra
+  ocupa el hueco restante (`flex: 1 1 0%` + `min-width: 0`).
 
 ### Detalle del día (`DayDetailDialog.razor`)
 
 - El **ojo** abre un `MudDialog` con el título "Detalle — dd/MM/yyyy" y:
   - La `SegmentedBar` del día.
   - La **lista de tramos** (como debajo del donut): "Trabajando HH:mm" / "Pausa HH:mm".
+  - La línea final de estado:
+    - Jornada **abierta** (`HasOpenEntry`) → "En curso" (verde, sin hora).
+    - Jornada **terminada** → "Finalizado HH:mm" (azul) con la hora de salida.
   - `Previstas`, `Trabajadas` y `Diferencia`.
 
 ### Horas diarias y delta

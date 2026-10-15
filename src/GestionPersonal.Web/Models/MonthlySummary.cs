@@ -13,4 +13,5 @@ public sealed record DailySummary(
     bool HasEntries,
     bool IsAbsence,
     string? AbsenceType,
-    IReadOnlyList<TimelineSegment> Timeline);
+    IReadOnlyList<TimelineSegment> Timeline,
+    bool HasOpenEntry = false);

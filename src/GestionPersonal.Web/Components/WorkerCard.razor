@@ -20,6 +20,10 @@
         <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled="!CanEnd" OnClick="@(() => ExecuteAsync("end"))">
             Finalizar
         </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenAddMarkingAsync">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+            Añadir marcaje
+        </MudButton>
     </MudCardActions>
 
     @if (ShowProfileButtons)
@@ -115,6 +119,19 @@
         "finished" => "Finalizado",
         _ => "Sin iniciar"
     };
+
+    private async Task OpenAddMarkingAsync()
+    {
+        var parameters = new DialogParameters { ["WorkerId"] = Worker.Id };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddMarkingDialog>("Añadir marcaje", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await RefreshAsync.InvokeAsync();
+        }
+    }
 
     private async Task OpenChangePinAsync()
     {

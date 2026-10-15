@@ -20,6 +20,22 @@
                     <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(segment.From)</MudText>
                 </div>
             }
+
+            @if (Day.HasOpenEntry)
+            {
+                <div class="d-flex align-center" style="gap: 8px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Success" Size="Size.Small" />
+                    <MudText Typo="Typo.body2">En curso</MudText>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-center" style="gap: 8px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Circle" Color="Color.Info" Size="Size.Small" />
+                    <MudText Typo="Typo.body2">Finalizado</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@MadridTime.Format(Day.Timeline[^1].To)</MudText>
+                </div>
+            }
         }
 
         <MudDivider Class="my-4" />

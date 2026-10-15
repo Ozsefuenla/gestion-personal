@@ -13,4 +13,5 @@ public sealed record DailySummaryResponse(
     bool HasEntries,
     bool IsAbsence,
     string? AbsenceType,
-    IReadOnlyList<TimelineSegmentResponse> Timeline);
+    IReadOnlyList<TimelineSegmentResponse> Timeline,
+    bool HasOpenEntry);

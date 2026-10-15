@@ -57,6 +57,7 @@ public sealed class MonthlySummaryQueryHandler
             var paused = TimeSpan.Zero;
             var timeline = new List<TimelineSegmentResponse>();
             var hasEntries = false;
+            var hasOpenEntry = false;
 
             foreach (var entry in entries)
             {
@@ -65,6 +66,11 @@ public sealed class MonthlySummaryQueryHandler
                 if (entry.StartedAt < dayTo && entryEnd > dayFrom)
                 {
                     hasEntries = true;
+
+                    if (entry.EndedAt is null)
+                    {
+                        hasOpenEntry = true;
+                    }
                 }
 
                 foreach (var segment in MonthlySummaryHelper.GetDayTimeline(entry, dayFrom, dayTo, now))
@@ -85,7 +91,7 @@ public sealed class MonthlySummaryQueryHandler
             var date = new DateOnly(query.Year, query.Month, day);
             var isAbsence = absenceByDay.TryGetValue(date, out var absenceType);
 
-            days.Add(new DailySummaryResponse(day, worked, paused, hasEntries, isAbsence, absenceType, timeline));
+            days.Add(new DailySummaryResponse(day, worked, paused, hasEntries, isAbsence, absenceType, timeline, hasOpenEntry));
         }
 
         return new MonthlySummaryResponse(query.Year, query.Month, worker.DailyHours, days);
