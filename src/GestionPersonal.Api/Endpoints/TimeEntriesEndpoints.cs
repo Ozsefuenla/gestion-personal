@@ -175,6 +175,29 @@ public static class TimeEntriesEndpoints
                 : result.ToProblemDetails();
         }).RequireAuthorization();
 
+        app.MapPost("/api/time-entries/manual", async (
+            AddManualTimeEntryCommand command,
+            IValidator<AddManualTimeEntryCommand> validator,
+            AddManualTimeEntryCommandHandler handler,
+            CancellationToken cancellationToken) =>
+        {
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
+                        .ToDictionary(g => g.Key, g => g.ToArray()));
+            }
+
+            var result = await handler.Handle(command, cancellationToken);
+
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : result.ToProblemDetails();
+        }).RequireAuthorization();
+
         app.MapPatch("/api/time-entries/active/{workerId:int}", async (
             int workerId,
             EditActiveTimeEntryCommand command,

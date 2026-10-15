@@ -129,4 +129,3 @@ PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana 
 - JWT para la API y hash BCrypt del PIN de trabajador (hoy el PIN se guarda en claro en `PinHash`).
 - Persistencia SQL real (hoy en memoria, sin ORM).
 - Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
-- Botón "+ Añadir marcaje" (solo visual por ahora).

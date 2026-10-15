@@ -177,6 +177,16 @@ public sealed class ApiClient
     public Task EndAsync(int workerId, CancellationToken cancellationToken = default) =>
         PostAsync("/api/time-entries/end", workerId, cancellationToken);
 
+    public async Task AddManualTimeEntryAsync(int workerId, string type, DateOnly date, TimeOnly? startTime, TimeOnly? endTime, CancellationToken cancellationToken = default)
+    {
+        using var response = await SendAsync(HttpMethod.Post, "/api/time-entries/manual", new { workerId, type, date, startTime, endTime }, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(await ReadErrorMessageAsync(response, cancellationToken));
+        }
+    }
+
     public async Task<QuickClockResult> QuickClockAsync(int workerId, string pin, string action, CancellationToken cancellationToken = default)
     {
         using var response = await SendAsync(HttpMethod.Post, "/api/time-entries/quick-clock", new { workerId, pin, action }, cancellationToken);

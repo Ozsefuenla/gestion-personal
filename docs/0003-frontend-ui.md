@@ -24,6 +24,8 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 - Endpoint de centros: `GET /api/centers` (lista de centros; por ahora se usa el primero como demo).
 - Endpoint del selector de trabajadores: `GET /api/centers/{centerId}/workers`.
 - Endpoint de fichaje rápido: `POST /api/time-entries/quick-clock` (`{ workerId, pin, action }`).
+- Endpoint de marcaje manual: `POST /api/time-entries/manual`
+  (`{ workerId, type, date, startTime?, endTime? }`, con `type` = `start`/`pause`/`end`).
 
 ## Máquina de estados → acciones habilitadas
 
