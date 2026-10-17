@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -94,22 +94,21 @@
             return;
         }
 
-        try
-        {
-            await Api.AddManualTimeEntryAsync(
-                WorkerId,
-                _type,
-                DateOnly.FromDateTime(_date.Value),
-                _startTime is null ? null : TimeOnly.FromTimeSpan(_startTime.Value),
-                _endTime is null ? null : TimeOnly.FromTimeSpan(_endTime.Value));
+        var result = await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            WorkerId,
+            _type,
+            DateOnly.FromDateTime(_date.Value),
+            _startTime is null ? null : TimeOnly.FromTimeSpan(_startTime.Value),
+            _endTime is null ? null : TimeOnly.FromTimeSpan(_endTime.Value)));
 
-            Snackbar.Add("Marcaje añadido correctamente", Severity.Success);
-            DialogInstance.Close(DialogResult.Ok(true));
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
-            _error = ex.Message;
+            _error = result.Error.Message;
+            return;
         }
+
+        Snackbar.Add("Marcaje añadido correctamente", Severity.Success);
+        DialogInstance.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => DialogInstance.Cancel();

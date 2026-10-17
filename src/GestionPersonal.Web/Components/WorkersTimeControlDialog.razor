@@ -1,4 +1,5 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject TimeControlPdfExporter Exporter
 @inject IJSRuntime Js
@@ -72,8 +73,8 @@
     [CascadingParameter]
     private IMudDialogInstance DialogInstance { get; set; } = default!;
 
-    private List<WorkerStatus> _workers = [];
-    private readonly Dictionary<int, MonthlySummary> _summaries = [];
+    private List<WorkerStatusResponse> _workers = [];
+    private readonly Dictionary<int, MonthlySummaryResponse> _summaries = [];
     private bool _loading = true;
     private bool _loaded;
     private int _year;
@@ -109,19 +110,27 @@
 
         try
         {
-            var all = await Api.GetWorkersStatusAsync();
-            _workers = all.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            var statusesResult = await Workers.GetStatusesAsync();
+
+            if (statusesResult.IsFailure)
+            {
+                Snackbar.Add(statusesResult.Error.Message, Severity.Error);
+                return;
+            }
+
+            _workers = statusesResult.Value.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
 
             foreach (var worker in _workers)
             {
-                _summaries[worker.Id] = await Api.GetMonthlySummaryAsync(worker.Id, _year, _month);
+                var summaryResult = await TimeEntries.GetMonthlyAsync(new MonthlySummaryQuery(worker.Id, _year, _month));
+
+                if (summaryResult.IsSuccess)
+                {
+                    _summaries[worker.Id] = summaryResult.Value;
+                }
             }
 
             _loaded = true;
-        }
-        catch (Exception)
-        {
-            Snackbar.Add("No se pudieron cargar los horarios", Severity.Error);
         }
         finally
         {

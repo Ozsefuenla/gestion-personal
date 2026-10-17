@@ -148,11 +148,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fichaje rápido y cambio de PIN, y se hashea en el alta.
 
 ### Removed
+- Proyecto `GestionPersonal.Api` (Minimal APIs, Swagger, middleware de excepciones y
+  `ResultExtensions`): la API se fusionó en `GestionPersonal.Web`.
+- Autenticación JWT de la API y piezas asociadas (`IJwtTokenGenerator`, `JwtTokenGenerator`,
+  `CenterLoginResponse`, `JwtBearer`, `Jwt:Key`). La sesión del centro se apoya solo en la cookie.
+- `ApiClient`, `CenterTokenStore` y la claim `jwt` del Web; la UI llama a los servicios de
+  aplicación en proceso.
+- Capa `GestionPersonal.Web/Models` (DTOs duplicados); se reutilizan los `record` de `Application`.
 - Landing v2 (`/v2`, `LandingPageV2.razor` + `landing-v2.js`): eliminada en favor de la landing
   principal (`/`).
 - Menú lateral "Panel" (`MudDrawer`) del layout `/app` (`AppLayout.razor`).
 
 ### Changed
+- Fusión de `GestionPersonal.Api` en `GestionPersonal.Web` (monolito modular). Nuevos servicios
+  de aplicación `ICentersService`, `IWorkersService`, `ITimeEntriesService` e `IVacationsService`
+  en `Application/Services`; la validación FluentValidation se movió del endpoint a `IRequestValidator`.
+- `ICurrentCenter` pasa a implementarse en el Web con `CookieCurrentCenter` (claim `centerId`
+  de la cookie).
+- Tests migrados de integración HTTP (`WebApplicationFactory`) a tests de servicios de aplicación
+  (`GestionPersonal.Tests/Services`), con repositorios en memoria y `ICurrentCenter` falso.
+- Documentación actualizada (`0002`, `0003`, `0005`, `0006`, `0007`, `0008`, `0009`, `README`).
+  `docs/0001` se conserva como contrato histórico para una futura re-extracción.
 - Framework backend actualizado a .NET 10 / ASP.NET Core 10.
 - Eliminado EF Core; la persistencia es en memoria hasta implementar acceso SQL directo.
 - Fichajes: historial de pausas (cada pausa guarda `pausedAt`/`resumedAt`); `end` ahora es válido estando en pausa.

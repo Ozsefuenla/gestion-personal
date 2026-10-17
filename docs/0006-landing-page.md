@@ -5,6 +5,10 @@ peluquerías, clínicas estéticas y centros de belleza. Incluye el copy listo p
 publicar, los bloques de diseño sugeridos, las propuestas adicionales de venta y
 el detalle técnico del componente de acceso (`CenterLoginDialog`).
 
+> **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
+> Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
+> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process.
+
 > **Marcas y placeholders.** El nombre de trabajo es **GestionPersonal**. Los
 > textos usan `[placeholders]` que hay que reemplazar por datos reales antes de
 > publicar (cifras de ahorro, precios, testimonios, logotipos). Recomiendo un
@@ -336,13 +340,13 @@ contraseña?", cierre por botón X, tecla Escape y clic fuera, foco atrapado y A
 ### Nota de estado (implementación)
 
 El formulario de acceso (modal en la landing o página `/login`) valida contra el
-endpoint `POST /api/centers/login` y firma una cookie HttpOnly en el Web. Mapeo
+servicio `ICentersService.LoginAsync` y firma una cookie HttpOnly en el Web. Mapeo
 copy → estado actual:
 
 | Afirmación de la landing | Estado actual en el código |
 |--------------------------|----------------------------|
-| PIN cifrado | Pendiente: el PIN se guarda en claro en `PinHash` (BCrypt diferido) |
+| PIN cifrado | Implementado: BCrypt en `PinHash` |
 | Registro inalterable | Parcial: hay edición/borrado del último fichaje activo, trazable pero no append-only |
-| Login del centro (usuario/contraseña) | Implementado: `POST /api/centers/login` + cookie HttpOnly en el Web |
-| Vacaciones y ausencias | Pendiente: sin endpoint de solicitud/aprobación |
+| Login del centro (usuario/contraseña) | Implementado: `ICentersService.LoginAsync` + cookie HttpOnly en el Web |
+| Vacaciones y ausencias | Implementado: solicitud/aprobación/denegación |
 | Integración con nóminas / informes exportables / app con notificaciones | No implementado (propuesta comercial) |

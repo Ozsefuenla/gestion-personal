@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject IVacationsService Vacations
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -68,7 +68,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required WorkerStatus Worker { get; set; }
+    public required WorkerStatusResponse Worker { get; set; }
 
     [Parameter]
     public int CenterId { get; set; }
@@ -79,7 +79,7 @@
     [Parameter]
     public EventCallback Changed { get; set; }
 
-    private IReadOnlyList<VacationSummary> _vacations = [];
+    private IReadOnlyList<VacationResponse> _vacations = [];
     private bool _loading = true;
 
     private bool IsAdmin => Worker.Role == "admin";
@@ -95,11 +95,15 @@
 
         try
         {
-            _vacations = await Api.GetVacationsAsync(Worker.Id);
-        }
-        catch (Exception)
-        {
-            Snackbar.Add("No se pudieron cargar las ausencias", Severity.Error);
+            var result = await Vacations.ListAsync(new ListVacationsQuery(Worker.Id));
+
+            if (result.IsFailure)
+            {
+                Snackbar.Add(result.Error.Message, Severity.Error);
+                return;
+            }
+
+            _vacations = result.Value;
         }
         finally
         {
@@ -132,7 +136,7 @@
         await Changed.InvokeAsync();
     }
 
-    private async Task DeleteAsync(VacationSummary vacation)
+    private async Task DeleteAsync(VacationResponse vacation)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Eliminar ausencia",
@@ -145,20 +149,20 @@
             return;
         }
 
-        try
+        var result = await Vacations.DeleteAsync(vacation.Id);
+
+        if (result.IsFailure)
         {
-            await Api.DeleteVacationAsync(vacation.Id);
-            Snackbar.Add("Ausencia eliminada", Severity.Success);
-            await LoadAsync();
-            await Changed.InvokeAsync();
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+
+        Snackbar.Add("Ausencia eliminada", Severity.Success);
+        await LoadAsync();
+        await Changed.InvokeAsync();
     }
 
-    private bool CanDelete(VacationSummary vacation) => vacation.Status switch
+    private bool CanDelete(VacationResponse vacation) => vacation.Status switch
     {
         "pending" => true,
         "approved" => Worker.Role == "admin",
@@ -188,7 +192,7 @@
         _ => "Otro"
     };
 
-    private static string FormatRange(VacationSummary vacation) =>
+    private static string FormatRange(VacationResponse vacation) =>
         vacation.StartDate == vacation.EndDate
             ? vacation.StartDate.ToString("dd/MM/yyyy")
             : $"{vacation.StartDate:dd/MM/yyyy} – {vacation.EndDate:dd/MM/yyyy}";

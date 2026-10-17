@@ -2,7 +2,11 @@
 
 Documenta la funcionalidad de gestión de trabajadores del centro, disponible solo
 para el rol `admin`. Complementa `docs/0008-frontend-ui-admin.md` (reglas de UI) y
-`docs/0001-api-design.md` (endpoints).
+`docs/0001-api-design.md` (contrato HTTP histórico).
+
+> **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
+> Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
+> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process.
 
 ## Motivación
 
@@ -79,11 +83,11 @@ rápido también debería exigirlo.
   (`GetByIdAndCenterAsync`), de modo que no se puede operar sobre trabajadores de otro
   centro (BOLA).
 - La restricción "solo admin" es de frontend, igual que el resto de funciones admin
-  actuales: el JWT autentica por centro, no por trabajador (pendiente en `0007`/`0008`).
+  actuales: la sesión autentica el centro vía cookie, no por trabajador (pendiente en `0007`/`0008`).
 
 ## Tests
 
-`GestionPersonal.Tests/Endpoints/WorkerManagementTests.cs` cubre: renombrar (éxito y
+`GestionPersonal.Tests/Services/WorkerManagementTests.cs` cubre: renombrar (éxito y
 nombre vacío), reset de PIN (fuerza cambio y lo limpia al cambiar), formato de PIN,
 dar de baja (login `403` y exclusión de listados activos), reactivación y no poder dar
 de baja a un admin.

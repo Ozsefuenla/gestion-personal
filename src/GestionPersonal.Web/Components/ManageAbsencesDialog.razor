@@ -1,4 +1,5 @@
-@inject ApiClient Api
+@inject IVacationsService Vacations
+@inject IWorkersService Workers
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -61,8 +62,8 @@
     [Parameter, EditorRequired]
     public required int CenterId { get; set; }
 
-    private List<WorkerSummary> _workers = [];
-    private IReadOnlyList<VacationSummary> _vacations = [];
+    private List<WorkerResponse> _workers = [];
+    private IReadOnlyList<VacationResponse> _vacations = [];
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
@@ -76,13 +77,24 @@
 
         try
         {
-            var workers = await Api.ListCenterWorkersAsync(CenterId);
-            _workers = workers.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
-            _vacations = await Api.GetCenterVacationsAsync();
-        }
-        catch (Exception)
-        {
-            Snackbar.Add("No se pudieron cargar las ausencias", Severity.Error);
+            var workersResult = await Workers.ListByCenterAsync(CenterId);
+
+            if (workersResult.IsFailure)
+            {
+                Snackbar.Add(workersResult.Error.Message, Severity.Error);
+                return;
+            }
+
+            var vacationsResult = await Vacations.ListCenterAsync();
+
+            if (vacationsResult.IsFailure)
+            {
+                Snackbar.Add(vacationsResult.Error.Message, Severity.Error);
+                return;
+            }
+
+            _workers = workersResult.Value.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            _vacations = vacationsResult.Value;
         }
         finally
         {
@@ -90,27 +102,20 @@
         }
     }
 
-    private async Task DecideAsync(VacationSummary vacation, bool approve)
+    private async Task DecideAsync(VacationResponse vacation, bool approve)
     {
-        try
-        {
-            if (approve)
-            {
-                await Api.ApproveVacationAsync(vacation.Id);
-                Snackbar.Add("Ausencia aprobada", Severity.Success);
-            }
-            else
-            {
-                await Api.RejectVacationAsync(vacation.Id);
-                Snackbar.Add("Ausencia denegada", Severity.Success);
-            }
+        var result = approve
+            ? await Vacations.ApproveAsync(vacation.Id)
+            : await Vacations.RejectAsync(vacation.Id);
 
-            await LoadAsync();
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
+
+        Snackbar.Add(approve ? "Ausencia aprobada" : "Ausencia denegada", Severity.Success);
+        await LoadAsync();
     }
 
     private void Cancel() => DialogInstance.Cancel();
@@ -138,7 +143,7 @@
         _ => "Otro"
     };
 
-    private static string FormatRange(VacationSummary vacation) =>
+    private static string FormatRange(VacationResponse vacation) =>
         vacation.StartDate == vacation.EndDate
             ? vacation.StartDate.ToString("dd/MM/yyyy")
             : $"{vacation.StartDate:dd/MM/yyyy} – {vacation.EndDate:dd/MM/yyyy}";

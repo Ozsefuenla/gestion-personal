@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject IVacationsService Vacations
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -93,18 +93,20 @@
 
         try
         {
-            await Api.RequestVacationAsync(
+            var result = await Vacations.RequestAsync(new RequestVacationCommand(
                 WorkerId,
                 DateOnly.FromDateTime(_startDate.Value),
                 DateOnly.FromDateTime(_endDate.Value),
-                _type);
+                _type));
+
+            if (result.IsFailure)
+            {
+                _error = result.Error.Message;
+                return;
+            }
 
             Snackbar.Add("Solicitud de ausencia registrada", Severity.Success);
             DialogInstance.Close(DialogResult.Ok(true));
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
         }
         finally
         {

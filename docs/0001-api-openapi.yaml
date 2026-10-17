@@ -1,3 +1,5 @@
+# Histórico — contrato HTTP de referencia para una futura re-extracción de la API.
+# La API se fusionó en el monolito GestionPersonal.Web; estas rutas no están expuestas.
 openapi: 3.0.3
 info:
   title: Gestión de Personal por Centro

@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -80,7 +80,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required WorkerStatus Worker { get; set; }
+    public required WorkerStatusResponse Worker { get; set; }
 
     [Parameter]
     public EventCallback RefreshAsync { get; set; }
@@ -150,34 +150,32 @@
 
     private async Task ExecuteAsync(string action)
     {
-        try
-        {
-            switch (action)
-            {
-                case "start":
-                    if (Worker.CurrentStatus == "paused")
-                    {
-                        await Api.ResumeAsync(Worker.Id);
-                    }
-                    else
-                    {
-                        await Api.StartAsync(Worker.Id);
-                    }
-                    break;
-                case "pause":
-                    await Api.PauseAsync(Worker.Id);
-                    break;
-                case "end":
-                    await Api.EndAsync(Worker.Id);
-                    break;
-            }
+        Result result;
 
-            await RefreshAsync.InvokeAsync();
-            Snackbar.Add("Acción registrada correctamente", Severity.Success);
-        }
-        catch (Exception)
+        switch (action)
         {
-            Snackbar.Add("No se pudo realizar la acción", Severity.Error);
+            case "start":
+                result = Worker.CurrentStatus == "paused"
+                    ? await TimeEntries.ResumeAsync(new ResumeTimeEntryCommand(Worker.Id))
+                    : await TimeEntries.StartAsync(new StartTimeEntryCommand(Worker.Id));
+                break;
+            case "pause":
+                result = await TimeEntries.PauseAsync(new PauseTimeEntryCommand(Worker.Id));
+                break;
+            case "end":
+                result = await TimeEntries.EndAsync(new EndTimeEntryCommand(Worker.Id));
+                break;
+            default:
+                return;
         }
+
+        if (result.IsFailure)
+        {
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
+        }
+
+        await RefreshAsync.InvokeAsync();
+        Snackbar.Add("Acción registrada correctamente", Severity.Success);
     }
 }

@@ -6,20 +6,21 @@ para peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) y
 frontend en Blazor Server.
 
 ## Stack
-- Backend: ASP.NET Core 10 Web API (C#), persistencia en memoria (acceso SQL
-  directo pendiente, sin ORM).
+- Backend: ASP.NET Core 10 + Blazor Server (C#), persistencia en memoria (acceso
+  SQL directo pendiente, sin ORM).
 - Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
-- Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña).
-  Pendiente: JWT y hash BCrypt del PIN de trabajador para fichaje en tablet.
+- Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña y PIN).
+  Pendiente: JWT del trabajador para fichaje en tablet.
 
 ## Arquitectura (Clean Architecture)
-- Proyectos: `Domain`, `Application`, `Infrastructure`, `Api`, `Web` (Blazor) y
-  `Tests`.
+- Proyectos: `Domain`, `Application`, `Infrastructure`, `Web` (Blazor) y `Tests`.
 - Las dependencias apuntan siempre hacia adentro; el núcleo (Domain) no
   depende de infraestructura ni de ASP.NET.
 - Cada feature vive en una carpeta de `Application` con su request (record),
   handler, response (record) y validador FluentValidation.
-- Endpoints delgados: Minimal APIs en `Api/Endpoints` agrupadas por recurso.
+- Monolito modular: la UI consume servicios de aplicación (`Application/Services`,
+  facades por agregado) en proceso. No hay API HTTP separada; el contrato histórico
+  vive en `docs/0001-api-design.md` para una futura re-extracción.
 
 ## Convenciones de código
 - DTOs como `record` en C#. Validación de entrada con FluentValidation.
@@ -30,7 +31,9 @@ frontend en Blazor Server.
 
 ## Manejo de errores
 - Result Pattern en la capa de aplicación.
-- Middleware global de excepciones que devuelve `ProblemDetails` (RFC 7807).
+- La UI consume `Result`/`Result<T>` y muestra `Error.Message`; no usa excepciones
+  para flujos de negocio. Las excepciones no controladas las maneja
+  `UseExceptionHandler("/Error")` en el Web.
 
 ## Fechas y horas
 - Usar siempre `DateTimeOffset` en C# y UTC en base de datos.
@@ -39,7 +42,8 @@ frontend en Blazor Server.
 - Todo punto importante se documenta en `docs/` como Markdown con nombre
   `NNNN-titulo.md` (numeración secuencial ya usada en el proyecto: `0001-api-design.md`).
 - Los documentos de API se acompañan de su especificación OpenAPI (`.yaml`)
-  cuando aplique.
+  cuando aplique. `docs/0001-api-design.md` y `docs/0001-api-openapi.yaml` se
+  conservan como contrato histórico para una futura re-extracción de la API.
 - El `README.md` se mantiene actualizado ante cualquier cambio que lo afecte.
 - Las reglas de UI del frontend están en `docs/0003-frontend-ui.md` (base común:
   estados, colores, acciones, timeline) y en `docs/0004-frontend-ui-worker.md`
@@ -68,7 +72,9 @@ frontend en Blazor Server.
 
 ## Testing
 - TDD: escribir el test antes que la implementación.
-- Framework: xUnit. Comandos: `dotnet test`, `dotnet build`.
+- Framework: xUnit. Los tests ejercitan los servicios de aplicación
+  (`Application/Services`) con repositorios en memoria y un `ICurrentCenter` falso.
+- Comandos: `dotnet test`, `dotnet build`.
 
 ## Comandos útiles
 - `dotnet build` / `dotnet test` desde `src/`.

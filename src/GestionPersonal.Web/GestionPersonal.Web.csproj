@@ -12,4 +12,9 @@
     <PackageReference Include="QuestPDF" Version="2026.9.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GestionPersonal.Application\GestionPersonal.Application.csproj" />
+    <ProjectReference Include="..\GestionPersonal.Infrastructure\GestionPersonal.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

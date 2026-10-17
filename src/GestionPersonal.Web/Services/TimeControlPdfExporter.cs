@@ -1,4 +1,4 @@
-using GestionPersonal.Web.Models;
+using GestionPersonal.Application.TimeEntries;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -10,7 +10,7 @@ public sealed record TimeControlExportWorker(
     int Year,
     int Month,
     TimeSpan DailyTarget,
-    MonthlySummary Summary);
+    MonthlySummaryResponse Summary);
 
 public sealed class TimeControlPdfExporter
 {

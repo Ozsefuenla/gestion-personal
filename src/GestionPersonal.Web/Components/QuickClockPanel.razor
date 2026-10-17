@@ -35,7 +35,7 @@
         var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = CenterId }, selectorOptions);
         var selectorResult = await selector.Result;
 
-        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerSummary worker)
+        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerResponse worker)
         {
             return;
         }

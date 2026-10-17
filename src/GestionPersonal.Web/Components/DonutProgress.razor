@@ -1,5 +1,5 @@
 @using System.Globalization
-@inject ApiClient Api
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -66,7 +66,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required WorkerStatus Worker { get; set; }
+    public required WorkerStatusResponse Worker { get; set; }
 
     [Parameter]
     public EventCallback RefreshAsync { get; set; }
@@ -110,7 +110,7 @@
         return $"{duration.Seconds}s";
     }
 
-    private async Task OpenEditAsync(TimelineSegment segment)
+    private async Task OpenEditAsync(TimelineSegmentResponse segment)
     {
         var parameters = new DialogParameters
         {
@@ -128,7 +128,7 @@
         }
     }
 
-    private async Task OpenDeleteAsync(TimelineSegment segment)
+    private async Task OpenDeleteAsync(TimelineSegmentResponse segment)
     {
         var type = segment.Type == "working" ? "Trabajando" : "Pausa";
         var confirmed = await DialogService.ShowMessageBoxAsync(
@@ -142,15 +142,15 @@
             return;
         }
 
-        try
+        var result = await TimeEntries.DeleteActiveAsync(Worker.Id);
+
+        if (result.IsFailure)
         {
-            await Api.DeleteActiveAsync(Worker.Id);
-            await RefreshAsync.InvokeAsync();
-            Snackbar.Add("Marcaje eliminado correctamente", Severity.Success);
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception)
-        {
-            Snackbar.Add("No se pudo eliminar el marcaje", Severity.Error);
-        }
+
+        await RefreshAsync.InvokeAsync();
+        Snackbar.Add("Marcaje eliminado correctamente", Severity.Success);
     }
 }

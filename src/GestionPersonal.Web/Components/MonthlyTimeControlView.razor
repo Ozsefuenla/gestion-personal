@@ -57,7 +57,7 @@ else
     public required TimeSpan DailyHours { get; set; }
 
     [Parameter]
-    public MonthlySummary? Summary { get; set; }
+    public MonthlySummaryResponse? Summary { get; set; }
 
     [Parameter]
     public int Year { get; set; }
@@ -90,7 +90,7 @@ else
     private TimeSpan Trabajadas =>
         Summary?.Days.Aggregate(TimeSpan.Zero, (total, day) => total + day.WorkedTime) ?? TimeSpan.Zero;
 
-    private async Task OpenDetailAsync(DateTime date, DailySummary day)
+    private async Task OpenDetailAsync(DateTime date, DailySummaryResponse day)
     {
         var parameters = new DialogParameters
         {

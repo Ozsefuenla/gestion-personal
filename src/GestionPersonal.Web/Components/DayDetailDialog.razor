@@ -57,7 +57,7 @@
     private IMudDialogInstance DialogInstance { get; set; } = default!;
 
     [Parameter, EditorRequired]
-    public required DailySummary Day { get; set; }
+    public required DailySummaryResponse Day { get; set; }
 
     [Parameter, EditorRequired]
     public required TimeSpan DailyHours { get; set; }

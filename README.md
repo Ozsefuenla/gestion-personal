@@ -4,20 +4,20 @@
 
 Aplicación web de gestión de personal, control horario, turnos y vacaciones para
 peluquerías y clínicas estéticas en España. El software se vende por centro: cada
-centro tiene sus trabajadores y un usuario de acceso. Backend en C# (.NET 10)
-siguiendo Clean Architecture; frontend en Blazor Server (en desarrollo).
+centro tiene sus trabajadores y un usuario de acceso. Es un monolito modular en
+C# (.NET 10) con Clean Architecture: una única app Blazor Server que consume la
+capa `Application` en proceso.
 
 ## Stack tecnológico
 
 | Capa | Tecnologías |
 |------|-------------|
-| Backend | ASP.NET Core 10 Web API (C#), Minimal APIs |
+| Backend | ASP.NET Core 10 + Blazor Server (C#), monolito modular |
 | Validación de entrada | FluentValidation |
-| Documentación de API | Swagger / OpenAPI |
-| Manejo de errores | Result Pattern + `ProblemDetails` (RFC 7807) |
+| Manejo de errores | Result Pattern |
 | Persistencia | En memoria (actual). SQL directo sin ORM (pendiente) |
-| Autenticación | Cookie HTTP-Only para el centro (BCrypt en contraseña). JWT + BCrypt del PIN pendientes |
-| Testing | xUnit, `Microsoft.AspNetCore.Mvc.Testing` |
+| Autenticación | Cookie HTTP-Only para el centro; PIN de trabajador con BCrypt |
+| Testing | xUnit (tests de servicios de aplicación y casos de uso) |
 | Frontend | Blazor Web App (.NET 10, interactividad Server) + MudBlazor |
 
 ## Instalación y ejecución
@@ -33,11 +33,11 @@ siguiendo Clean Architecture; frontend en Blazor Server (en desarrollo).
    ```
    dotnet build src/GestionPersonal.slnx
    ```
-3. Ejecutar la API:
+3. Ejecutar la aplicación:
    ```
-   dotnet run --project src/GestionPersonal.Api
+   dotnet run --project src/GestionPersonal.Web
    ```
-4. Abrir Swagger: el navegador abre por defecto `/swagger`.
+4. Abrir la URL que muestra la consola: la landing está en `/` y el dashboard en `/app`.
 
 ### Tests
 
@@ -53,9 +53,8 @@ src/
 ├─ GestionPersonal.Domain/          Entidades y enums (sin dependencias)
 ├─ GestionPersonal.Application/     Casos de uso, DTOs, validadores, Result
 ├─ GestionPersonal.Infrastructure/  Persistencia (en memoria) e implementaciones
-├─ GestionPersonal.Api/             Minimal APIs, middleware, Swagger
-├─ GestionPersonal.Web/             Frontend Blazor Server + MudBlazor
-└─ GestionPersonal.Tests/           Tests de integración
+├─ GestionPersonal.Web/             App Blazor Server + MudBlazor (monolito desplegable)
+└─ GestionPersonal.Tests/           Tests de servicios de aplicación
 docs/
 ├─ 0001-api-design.md
 ├─ 0001-api-openapi.yaml
@@ -72,6 +71,10 @@ CHANGELOG.md
 ```
 
 ## Funcionalidades principales
+
+> Las rutas `/api/*` de la tabla son el contrato HTTP histórico
+> (`docs/0001-api-design.md`); hoy las operaciones se ejecutan in-process vía
+> `Application/Services`.
 
 | Funcionalidad | Estado |
 |---------------|--------|
@@ -126,6 +129,6 @@ PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana 
 
 ## Pendientes
 
-- JWT para la API y hash BCrypt del PIN de trabajador (hoy el PIN se guarda en claro en `PinHash`).
+- JWT del trabajador para fichaje en tablet.
 - Persistencia SQL real (hoy en memoria, sin ORM).
-- Scoping de endpoints admin (`GET /api/workers`, `/workers/status`) por centro.
+- CSP en el Web (diferido por la complejidad de Blazor + Tailwind CDN).

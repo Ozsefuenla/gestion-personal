@@ -1,4 +1,5 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
+@inject ICentersService Centers
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -108,8 +109,8 @@
     [CascadingParameter]
     private IMudDialogInstance DialogInstance { get; set; } = default!;
 
-    private List<WorkerSummary> _activeWorkers = [];
-    private List<WorkerSummary> _inactiveWorkers = [];
+    private List<WorkerResponse> _activeWorkers = [];
+    private List<WorkerResponse> _inactiveWorkers = [];
     private readonly Dictionary<int, string> _editNames = [];
     private readonly Dictionary<int, string> _resetPins = [];
     private bool _loading = true;
@@ -123,18 +124,18 @@
 
     private async Task LoadCenterAsync()
     {
-        try
-        {
-            var centers = await Api.GetCentersAsync();
-            var center = centers.FirstOrDefault();
+        var result = await Centers.ListAsync();
 
-            if (center is not null)
-            {
-                _centerId = center.Id;
-            }
-        }
-        catch (Exception)
+        if (result.IsFailure)
         {
+            return;
+        }
+
+        var center = result.Value.FirstOrDefault();
+
+        if (center is not null)
+        {
+            _centerId = center.Id;
         }
     }
 
@@ -163,7 +164,15 @@
 
         try
         {
-            var workers = await Api.ListAllCenterWorkersAsync();
+            var result = await Workers.ListAllAsync();
+
+            if (result.IsFailure)
+            {
+                Snackbar.Add(result.Error.Message, Severity.Error);
+                return;
+            }
+
+            var workers = result.Value;
 
             _activeWorkers = workers.Where(w => w.Active).OrderBy(w => w.FullName).ToList();
             _inactiveWorkers = workers.Where(w => !w.Active).OrderBy(w => w.FullName).ToList();
@@ -176,10 +185,6 @@
                 _editNames[worker.Id] = worker.FullName;
                 _resetPins[worker.Id] = "";
             }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally
         {
@@ -195,7 +200,7 @@
 
     private void SetResetPin(int id, string value) => _resetPins[id] = SanitizePin(value);
 
-    private async Task RenameAsync(WorkerSummary worker)
+    private async Task RenameAsync(WorkerResponse worker)
     {
         var name = _editNames.GetValueOrDefault(worker.Id, "").Trim();
 
@@ -205,21 +210,21 @@
             return;
         }
 
-        try
+        var result = await Workers.RenameAsync(worker.Id, new RenameWorkerCommand(name));
+
+        if (result.IsFailure)
         {
-            await Api.RenameWorkerAsync(worker.Id, name);
-            Snackbar.Add("Nombre actualizado correctamente", Severity.Success);
-            await LoadAsync();
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+
+        Snackbar.Add("Nombre actualizado correctamente", Severity.Success);
+        await LoadAsync();
     }
 
-    private void CancelRename(WorkerSummary worker) => _editNames[worker.Id] = worker.FullName;
+    private void CancelRename(WorkerResponse worker) => _editNames[worker.Id] = worker.FullName;
 
-    private async Task ResetPinAsync(WorkerSummary worker)
+    private async Task ResetPinAsync(WorkerResponse worker)
     {
         var pin = _resetPins.GetValueOrDefault(worker.Id, "");
 
@@ -229,19 +234,19 @@
             return;
         }
 
-        try
+        var result = await Workers.ResetPinAsync(worker.Id, new ResetWorkerPinCommand(pin));
+
+        if (result.IsFailure)
         {
-            await Api.ResetWorkerPinAsync(worker.Id, pin);
-            Snackbar.Add("PIN reseteado. El trabajador deberá cambiarlo al entrar.", Severity.Success);
-            _resetPins[worker.Id] = "";
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+
+        Snackbar.Add("PIN reseteado. El trabajador deberá cambiarlo al entrar.", Severity.Success);
+        _resetPins[worker.Id] = "";
     }
 
-    private async Task DeactivateAsync(WorkerSummary worker)
+    private async Task DeactivateAsync(WorkerResponse worker)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Dar de baja",
@@ -254,19 +259,19 @@
             return;
         }
 
-        try
+        var result = await Workers.DeactivateAsync(worker.Id);
+
+        if (result.IsFailure)
         {
-            await Api.DeactivateWorkerAsync(worker.Id);
-            Snackbar.Add("Trabajador dado de baja", Severity.Success);
-            await LoadAsync();
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+
+        Snackbar.Add("Trabajador dado de baja", Severity.Success);
+        await LoadAsync();
     }
 
-    private async Task ActivateAsync(WorkerSummary worker)
+    private async Task ActivateAsync(WorkerResponse worker)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "Reactivar",
@@ -279,16 +284,16 @@
             return;
         }
 
-        try
+        var result = await Workers.ActivateAsync(worker.Id);
+
+        if (result.IsFailure)
         {
-            await Api.ActivateWorkerAsync(worker.Id);
-            Snackbar.Add("Trabajador reactivado", Severity.Success);
-            await LoadAsync();
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
+
+        Snackbar.Add("Trabajador reactivado", Severity.Success);
+        await LoadAsync();
     }
 
     private void Cancel() => DialogInstance.Cancel();
