@@ -1,5 +1,10 @@
 # Diseño de API — Gestión de Personal por Centro
 
+> **Histórico — contrato HTTP de referencia.** La API se fusionó en el monolito
+> `GestionPersonal.Web` (la UI consume `Application/Services` en proceso). Este
+> documento se conserva como contrato objetivo para una futura re-extracción de la
+> API; las rutas no están expuestas actualmente. Ver `docs/0002-solution-structure.md`.
+
 ## Necesidades
 
 1. **Multi-centro**: el software se vende por centro (peluquería / clínica). Cada

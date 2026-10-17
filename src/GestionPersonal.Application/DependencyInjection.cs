@@ -1,5 +1,7 @@
 using FluentValidation;
 using GestionPersonal.Application.Centers;
+using GestionPersonal.Application.Common;
+using GestionPersonal.Application.Services;
 using GestionPersonal.Application.TimeEntries;
 using GestionPersonal.Application.Vacations;
 using GestionPersonal.Application.Workers;
@@ -11,6 +13,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddScoped<IRequestValidator, RequestValidator>();
+
+        services.AddScoped<ICentersService, CentersService>();
+        services.AddScoped<IWorkersService, WorkersService>();
+        services.AddScoped<ITimeEntriesService, TimeEntriesService>();
+        services.AddScoped<IVacationsService, VacationsService>();
+
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<ListWorkersByCenterQueryHandler>();
         services.AddScoped<ListWorkersForAdminQueryHandler>();

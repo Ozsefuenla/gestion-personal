@@ -5,6 +5,10 @@ Documenta las reglas de interfaz que aplican cuando un **trabajador está loguea
 Las reglas comunes (fichaje, estados, formatos, timeline) están en
 `docs/0003-frontend-ui.md`.
 
+> **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
+> Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
+> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process.
+
 ## Card personal (`WorkerCard.razor`)
 
 Todo visible por defecto (sin click-para-expandir):

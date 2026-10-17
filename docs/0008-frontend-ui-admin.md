@@ -4,6 +4,10 @@ Documenta las reglas de interfaz específicas del **admin** del centro (rol `adm
 Las reglas comunes están en `docs/0003-frontend-ui.md` y las del trabajador logueado
 en `docs/0004-frontend-ui-worker.md`.
 
+> **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
+> Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
+> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process.
+
 ## Marcajes de hoy (`TodayWorkersPanel.razor`)
 
 Panel que aparece **debajo del donut** (columna izquierda del dashboard `/app`), solo
@@ -108,7 +112,7 @@ Disponible para **todos los roles**.
 ## Permisos
 
 - La restricción "solo admin ve los marcajes de hoy, los horarios de los trabajadores y
-  la gestión de trabajadores" es de **frontend** (la API autentica por centro, no por
-  trabajador; no hay identidad de trabajador en el JWT). Documentado en `0001`/`0004`.
+  la gestión de trabajadores" es de **frontend** (la sesión autentica el centro vía cookie,
+  no por trabajador; no hay identidad de trabajador en la sesión). Documentado en `0001`/`0004`.
 - El export a PDF no tiene restricción de rol (cualquier trabajador exporta su propio
   control horario; el admin además exporta el de todos).

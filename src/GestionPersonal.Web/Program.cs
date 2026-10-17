@@ -1,6 +1,10 @@
 using System.Threading.RateLimiting;
+using GestionPersonal.Application;
+using GestionPersonal.Application.Abstractions;
+using GestionPersonal.Infrastructure;
 using GestionPersonal.Web.Components;
 using GestionPersonal.Web.Endpoints;
+using GestionPersonal.Web.Security;
 using GestionPersonal.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,13 +19,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 
-builder.Services.AddHttpClient<ApiClient>(client =>
-{
-    var baseUrl = builder.Configuration["Api:BaseUrl"]
-        ?? throw new InvalidOperationException("Falta la configuración Api:BaseUrl.");
-
-    client.BaseAddress = new Uri(baseUrl);
-});
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -37,7 +36,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<CenterTokenStore>();
+builder.Services.AddScoped<ICurrentCenter, CookieCurrentCenter>();
 builder.Services.AddSingleton<TimeControlPdfExporter>();
 
 builder.Services.AddRateLimiter(options =>

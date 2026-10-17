@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @layout MainLayout
 @inject IJSRuntime Js
-@inject CenterTokenStore TokenStore
 
 <MudLayout>
     <MudAppBar Elevation="0" Class="app-appbar">
@@ -37,7 +36,6 @@
         {
             var state = await AuthState;
             _centerName = state.User.FindFirst("centerName")?.Value;
-            TokenStore.Token = state.User.FindFirst("jwt")?.Value;
         }
     }
 

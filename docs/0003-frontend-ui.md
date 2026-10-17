@@ -7,25 +7,29 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 ## Framework y estructura
 
 - Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
-- Proyecto `GestionPersonal.Web` en `src/`.
+- Proyecto `GestionPersonal.Web` en `src/` (monolito desplegable).
 - Carpetas:
-  - `Models/` → DTOs del cliente (`WorkerStatus`, `TimelineSegment`, `QuickClockResult`, `MonthlySummary`).
-  - `Services/` → `ApiClient` (cliente HTTP tipado).
-  - `Components/` → `Pages/Home.razor` (página), `WorkerCard.razor` (card),
-    `QuickClockPanel.razor` (panel de fichaje rápido), `QuickClockDialog.razor` (modal de PIN),
-    `DonutProgress.razor` (donut), `TimeControlPanel.razor` (control horario).
+  - `Components/` → `Pages/LandingPage.razor`, `Pages/Dashboard.razor` (dashboard),
+    `WorkerCard.razor` (card), `QuickClockPanel.razor` (panel de fichaje rápido),
+    `QuickClockDialog.razor` (modal de PIN), `DonutProgress.razor` (donut),
+    `TimeControlPanel.razor` (control horario).
+  - `Services/` → utilitarios de presentación (`TimeControlPdfExporter`, formatos).
+  - Los DTOs son los `record` de respuesta de `Application` (no hay `Models/` duplicado).
 
-## Conexión con la API
+## Conexión con la capa de aplicación
 
-- `appsettings.json` → `"Api": { "BaseUrl": "http://localhost:5243" }`.
-- `Program.cs` → `AddHttpClient<ApiClient>(...)` con la base de `Api:BaseUrl`.
-- Las llamadas son server-to-server (Blazor Server), **sin CORS**.
-- Endpoint del panel: `GET /api/workers/status` (devuelve workers + estado + resumen + timeline).
-- Endpoint de centros: `GET /api/centers` (lista de centros; por ahora se usa el primero como demo).
-- Endpoint del selector de trabajadores: `GET /api/centers/{centerId}/workers`.
-- Endpoint de fichaje rápido: `POST /api/time-entries/quick-clock` (`{ workerId, pin, action }`).
-- Endpoint de marcaje manual: `POST /api/time-entries/manual`
-  (`{ workerId, type, date, startTime?, endTime? }`, con `type` = `start`/`pause`/`end`).
+- La UI inyecta los servicios de `Application`: `ICentersService`, `IWorkersService`,
+  `ITimeEntriesService` e `IVacationsService`.
+- Las llamadas son **in-process** (sin HTTP, sin CORS, sin `Api:BaseUrl`).
+- `Program.cs` registra `AddApplication()` + `AddInfrastructure()` y `ICurrentCenter`
+  (implementado por `CookieCurrentCenter` sobre la cookie del centro).
+- Operaciones usadas por el panel:
+  - `IWorkersService.GetStatusesAsync` (estado + resumen + timeline de todos los trabajadores).
+  - `ICentersService.ListAsync` (centros; se usa el primero como demo).
+  - `IWorkersService.ListByCenterAsync(centerId)` (selector de trabajadores).
+  - `IWorkersService.LoginAsync`, `ITimeEntriesService.QuickClockAsync` y
+    `ITimeEntriesService.AddManualAsync` (fichaje).
+- El contrato HTTP histórico (para una futura API) está en `docs/0001-api-design.md`.
 
 ## Máquina de estados → acciones habilitadas
 
@@ -79,9 +83,9 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 ## Selector de trabajadores (`WorkerSelectorDialog`)
 
 - Antes de pedir el PIN, se abre un **`MudDialog`** "Selecciona tu trabajador".
-- Carga la lista de trabajadores del centro (`GET /api/centers/{centerId}/workers`) y
+- Carga la lista de trabajadores del centro (`IWorkersService.ListByCenterAsync`) y
   los muestra como botones con su nombre (`Icons.Material.Filled.Person`).
-- Al pinchar un trabajador se cierra devolviendo el `WorkerSummary` (`id`, `fullName`)
+- Al pinchar un trabajador se cierra devolviendo el `WorkerResponse` (`id`, `fullName`)
   seleccionado, y se abre el dialog de PIN (`QuickClockDialog`) con ese `WorkerId`.
 
 ## Fichaje rápido (`QuickClockPanel` + `QuickClockDialog`)
@@ -93,14 +97,14 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 - El dialog tiene **2 modos** (según el parámetro `Action`):
   - **Fichaje** (`Action` = `start`/`pause`/`end`): título "Fichaje rápido"; ejecuta `quick-clock`
     con `{ workerId, pin, action }`.
-  - **Login** (`Action` = `null`): título "Logarse"; llama `POST /api/workers/login` con
-    `{ workerId, pin }` y devuelve el `WorkerStatus`.
+  - **Login** (`Action` = `null`): título "Logarse"; llama `IWorkersService.LoginAsync`
+    y devuelve el `WorkerStatusResponse`.
 - Flujo del PIN:
-  - **PIN mal formado / no coincide** (400): muestra el mensaje, **borra el input y reenfoca**.
-  - **Trabajador inexistente** (404): muestra el mensaje.
-  - **Acción inválida** (200 `success=false`): muestra el estado actual y **botones con las acciones correctas**
+  - **PIN mal formado / no coincide** (error `Validation`): muestra el mensaje, **borra el input y reenfoca**.
+  - **Trabajador inexistente** (error `NotFound`): muestra el mensaje.
+  - **Acción inválida** (`success=false`): muestra el estado actual y **botones con las acciones correctas**
     (pulsar uno reenvía `quick-clock` con el mismo `workerId` + `pin` + esa acción).
-  - **Éxito** (200 `success=true`): cierra el modal + snackbar "Fichaje realizado correctamente".
+  - **Éxito** (`success=true`): cierra el modal + snackbar "Fichaje realizado correctamente".
 - Vocabulario de 3 acciones: `start` (= iniciar/reanudar), `pause`, `end`.
 
 ## Acceso / Login
@@ -120,7 +124,6 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 
 ## Pendientes
 
-- Landing page (producto, features, login de centro) y seguridad (JWT + cookie).
-- Hash del PIN con BCrypt (hoy el PIN viaja y se guarda en claro).
-- Autenticación del centro (`CenterUser` con `username`/`password`); por ahora se opera
-  contra un único centro demo.
+- CSP (diferido por la complejidad de Blazor + Tailwind CDN).
+- JWT del trabajador para fichaje en tablet.
+- Persistencia SQL real.

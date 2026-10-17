@@ -4,16 +4,19 @@ Solución `GestionPersonal` (`.slnx`) bajo `src/`, siguiendo Clean Architecture.
 Las dependencias apuntan siempre hacia adentro; el núcleo (`Domain`) no depende
 de ninguna librería de infraestructura.
 
+La aplicación es un **monolito modular**: un único proyecto desplegable
+(`GestionPersonal.Web`, Blazor Server) que consume la capa `Application` en
+proceso. No existe un servicio HTTP de API separado.
+
 ## Proyectos
 
 | Proyecto | Referencia a | Responsabilidad |
 |----------|--------------|-----------------|
 | `GestionPersonal.Domain` | — | Entidades (`Center`, `CenterUser`, `Worker`, `TimeEntry`, `Vacation`) y enums (`Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`) |
-| `GestionPersonal.Application` | `Domain` | Casos de uso, DTOs (`record`), validadores, interfaces de repositorio, `Result` |
+| `GestionPersonal.Application` | `Domain` | Casos de uso, DTOs (`record`), validadores, interfaces de repositorio, `Result`, servicios de aplicación (facades) |
 | `GestionPersonal.Infrastructure` | `Application` | Implementaciones de persistencia (por ahora en memoria), DI |
-| `GestionPersonal.Api` | `Application`, `Infrastructure` | Minimal APIs, middleware de excepciones, `Program.cs` |
-| `GestionPersonal.Web` | — | Frontend Blazor Server + MudBlazor (consume la API vía HTTP) |
-| `GestionPersonal.Tests` | `Api` | Tests de integración (xUnit + `WebApplicationFactory`) |
+| `GestionPersonal.Web` | `Application`, `Infrastructure` | Frontend Blazor Server + MudBlazor, autenticación por cookie, implementación de `ICurrentCenter` |
+| `GestionPersonal.Tests` | `Application`, `Infrastructure` | Tests de los servicios de aplicación y casos de uso (xUnit) |
 
 ## Capas
 
@@ -27,36 +30,31 @@ de ninguna librería de infraestructura.
 - `Enums/`: `Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`.
 
 ### Application
-- `Common/`: `Error`, `Result`, `Result<T>` (Result Pattern).
-- `Abstractions/`: `ICenterRepository`, `ICenterUserRepository`, `IWorkerRepository`, `ITimeEntryRepository`, `IVacationRepository`.
-- `Centers/`: listado de centros (`ListCentersQuery`, `CenterResponse`).
-- `Workers/`: alta (`CreateWorkerCommand`), listado (`ListWorkersQuery`), listado por centro
-  (`ListWorkersByCenterQuery`), login por trabajador y PIN (`LoginCommand`), handlers, `WorkerResponse`.
-- `TimeEntries/`: `start`, `pause`, `resume`, `end`, `today` y `quick-clock` (handlers, validadores, responses).
-- `Vacations/`: solicitud (`RequestVacationCommand`), listado (`ListVacationsQuery`), borrado
-  (`DeleteVacationCommand`), decisión del admin (`ApproveVacationCommand`/`RejectVacationCommand`)
-  y listado de centro (`ListCenterVacationsQuery`), con handlers y validador.
-- `DependencyInjection.cs`: `AddApplication()` registra handlers y validadores.
+- `Common/`: `Error`, `Result`, `Result<T>` (Result Pattern) e `IRequestValidator`/`RequestValidator`
+  (ejecuta FluentValidation y devuelve el primer error como `Error.Validation`).
+- `Abstractions/`: `ICenterRepository`, `ICenterUserRepository`, `IWorkerRepository`, `ITimeEntryRepository`,
+  `IVacationRepository`, `ICurrentCenter`, `IPasswordHasher`, `ILoginAttemptTracker`.
+- `Services/`: facades de aplicación `ICentersService`, `IWorkersService`, `ITimeEntriesService` y
+  `IVacationsService`. Validan la entrada y delegan en los handlers. **Es el punto de desacoplamiento**:
+  una futura API HTTP solo tendría que exponer estas mismas operaciones.
+- `Centers/`, `Workers/`, `TimeEntries/`, `Vacations/`: commands, queries, handlers, validadores y
+  responses (`record`) por caso de uso.
+- `DependencyInjection.cs`: `AddApplication()` registra handlers, validadores, `IRequestValidator` y los servicios.
 
 ### Infrastructure
-- `Persistence/Repositories/InMemoryCenterRepository.cs`,
-  `InMemoryCenterUserRepository.cs`, `InMemoryWorkerRepository.cs` e
-  `InMemoryTimeEntryRepository.cs` (y `InMemoryVacationRepository.cs`): persistencia en
-  memoria con datos de ejemplo.
+- `Persistence/Repositories/`: repositorios en memoria con datos de ejemplo.
+- `Security/`: `BcryptPasswordHasher`, `InMemoryLoginAttemptTracker`.
 - `DependencyInjection.cs`: `AddInfrastructure()` registra las implementaciones.
 
-### Api
-- `Program.cs`: DI, Swagger (solo en desarrollo), endpoint raíz.
-- `Endpoints/CentersEndpoints.cs`, `Endpoints/WorkersEndpoints.cs`,
-  `Endpoints/TimeEntriesEndpoints.cs` y `Endpoints/VacationsEndpoints.cs`: endpoints delgados.
-- `Extensions/ResultExtensions.cs`: mapea `Result` → `ProblemDetails`.
-- `Middleware/ExceptionHandlingMiddleware.cs`: excepciones no controladas →
-  `ProblemDetails` (RFC 7807).
-
 ### Web
-- `Program.cs`: `AddRazorComponents` + interactividad Server + `AddMudServices`.
-- `Components/`: `App.razor`, `Routes.razor`, layout y páginas.
-- Consume la API vía `HttpClient` (pendiente de cablear).
+- `Program.cs`: `AddRazorComponents` + interactividad Server, `AddMudServices`, `AddApplication()`,
+  `AddInfrastructure()`, autenticación por cookie, rate limiting y `ICurrentCenter` → `CookieCurrentCenter`.
+- `Security/CookieCurrentCenter.cs`: implementa `ICurrentCenter` leyendo la claim `centerId` de la cookie.
+- `Endpoints/AuthEndpoints.cs`: login/logout del centro (cookie HttpOnly).
+- `Services/`: `TimeControlPdfExporter`, formateo de horas.
+- `Components/`: UI (páginas, layouts y diálogos). Consume los servicios de `Application` directamente,
+  sin saltos HTTP ni `ApiClient`.
+- Los `record` de respuesta de `Application` se reutilizan en la UI; no hay una capa `Models/` duplicada.
 
 ## Persistencia
 - Por ahora en memoria (sin ORM). La persistencia definitiva irá a una base de
@@ -66,7 +64,7 @@ de ninguna librería de infraestructura.
 - Usar siempre `DateTimeOffset` en C# y UTC en base de datos.
 
 ## Paquetes NuGet principales
-- `FluentValidation.DependencyInjectionExtensions`
-- `Swashbuckle.AspNetCore`
-- `MudBlazor` (solo en `GestionPersonal.Web`)
-- `Microsoft.AspNetCore.Mvc.Testing` (solo en `GestionPersonal.Tests`)
+- `FluentValidation.DependencyInjectionExtensions` (Application)
+- `BCrypt.Net-Next` (Infrastructure)
+- `MudBlazor` y `QuestPDF` (Web)
+- `xUnit`, `Microsoft.NET.Test.Sdk` y `Microsoft.Extensions.DependencyInjection` (Tests)

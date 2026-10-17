@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -78,16 +78,16 @@
             }
         }
 
-        try
+        var result = await TimeEntries.EditActiveAsync(WorkerId, new EditActiveTimeEntryCommand(newStart));
+
+        if (result.IsFailure)
         {
-            await Api.EditActiveAsync(WorkerId, newStart);
-            Snackbar.Add("Marcaje actualizado correctamente", Severity.Success);
-            DialogInstance.Close(DialogResult.Ok(true));
+            _error = result.Error.Message;
+            return;
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
+
+        Snackbar.Add("Marcaje actualizado correctamente", Severity.Success);
+        DialogInstance.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => DialogInstance.Cancel();

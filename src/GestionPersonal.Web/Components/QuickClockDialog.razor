@@ -1,4 +1,5 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -106,51 +107,52 @@
 
     private async Task LoginAsync()
     {
-        try
-        {
-            var worker = await Api.LoginAsync(WorkerId, _pin);
-            DialogInstance.Close(DialogResult.Ok(worker));
-        }
-        catch (Exception ex)
+        var result = await Workers.LoginAsync(new LoginCommand(WorkerId, _pin));
+
+        if (result.IsFailure)
         {
             _availableActions = [];
             _message = null;
-            _error = ex.Message;
+            _error = result.Error.Message;
             _pin = "";
             await _pinField.FocusAsync();
+            return;
         }
+
+        DialogInstance.Close(DialogResult.Ok(result.Value));
     }
 
     private async Task SubmitAsync(string action)
     {
         _action = action;
 
-        try
-        {
-            var result = await Api.QuickClockAsync(WorkerId, _pin, action);
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(WorkerId, _pin, action));
 
-            if (result.Success)
-            {
-                Snackbar.Add("Fichaje realizado correctamente", Severity.Success);
-                DialogInstance.Close(DialogResult.Ok(true));
-                return;
-            }
-
-            _message = result.Message;
-            _availableActions = result.AvailableActions;
-            _error = null;
-
-            if (_availableActions.Count == 0)
-            {
-                _pin = "";
-                await _pinField.FocusAsync();
-            }
-        }
-        catch (Exception ex)
+        if (result.IsFailure)
         {
             _availableActions = [];
             _message = null;
-            _error = ex.Message;
+            _error = result.Error.Message;
+            _pin = "";
+            await _pinField.FocusAsync();
+            return;
+        }
+
+        var quickClock = result.Value;
+
+        if (quickClock.Success)
+        {
+            Snackbar.Add("Fichaje realizado correctamente", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+            return;
+        }
+
+        _message = quickClock.Message;
+        _availableActions = quickClock.AvailableActions;
+        _error = null;
+
+        if (_availableActions.Count == 0)
+        {
             _pin = "";
             await _pinField.FocusAsync();
         }

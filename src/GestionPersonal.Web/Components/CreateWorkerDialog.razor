@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -100,16 +100,17 @@
             return;
         }
 
-        try
+        var result = await Workers.CreateAsync(
+            new CreateWorkerCommand(_fullName.Trim(), _pin, "worker", CenterId, MustChangePin: true));
+
+        if (result.IsFailure)
         {
-            await Api.CreateWorkerAsync(_fullName.Trim(), _pin, CenterId);
-            Snackbar.Add("Trabajador creado. Deberá cambiar el PIN al entrar.", Severity.Success);
-            DialogInstance.Close(DialogResult.Ok(true));
+            _error = result.Error.Message;
+            return;
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
+
+        Snackbar.Add("Trabajador creado. Deberá cambiar el PIN al entrar.", Severity.Success);
+        DialogInstance.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => DialogInstance.Cancel();

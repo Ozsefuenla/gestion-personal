@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
 
 <MudDialog>
     <TitleContent>
@@ -50,7 +50,7 @@
     [Parameter]
     public int CenterId { get; set; }
 
-    private readonly List<WorkerSummary> _workers = [];
+    private readonly List<WorkerResponse> _workers = [];
     private bool _loading = true;
     private string? _error;
 
@@ -58,12 +58,15 @@
     {
         try
         {
-            var workers = await Api.ListCenterWorkersAsync(CenterId);
-            _workers.AddRange(workers);
-        }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
+            var result = await Workers.ListByCenterAsync(CenterId);
+
+            if (result.IsFailure)
+            {
+                _error = result.Error.Message;
+                return;
+            }
+
+            _workers.AddRange(result.Value);
         }
         finally
         {
@@ -71,7 +74,7 @@
         }
     }
 
-    private void SelectAsync(WorkerSummary worker) => DialogInstance.Close(DialogResult.Ok(worker));
+    private void SelectAsync(WorkerResponse worker) => DialogInstance.Close(DialogResult.Ok(worker));
 
     private void Cancel() => DialogInstance.Cancel();
 }

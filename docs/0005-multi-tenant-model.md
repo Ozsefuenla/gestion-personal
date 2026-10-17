@@ -47,18 +47,20 @@ Con el modelo multi-centro:
    autentica con `CenterUser.Username`/`PasswordHash`. En esta iteración se opera
    contra un único centro demo (`id = 1`).
 2. **Selector de trabajador**: se listan los trabajadores del centro
-   (`GET /api/centers/{centerId}/workers`).
+   (`IWorkersService.ListByCenterAsync`).
 3. **PIN**: se valida el PIN del trabajador elegido (`workerId` + `pin`).
 
-## Contratos afectados
+## Operaciones afectadas
 
-- `POST /api/workers/login`: `{ workerId, pin }` (antes `{ pin }`).
-- `POST /api/time-entries/quick-clock`: `{ workerId, pin, action }` (antes `{ pin, action }`).
-- `POST /api/workers`: añade `centerId`.
-- Nuevos: `GET /api/centers`, `GET /api/centers/{id}/workers`.
+La API HTTP se fusionó en la aplicación; estas operaciones se ejecutan in-process
+vía `Application/Services`:
+
+- `IWorkersService.LoginAsync`: `{ workerId, pin }` (antes `{ pin }`).
+- `ITimeEntriesService.QuickClockAsync`: `{ workerId, pin, action }` (antes `{ pin, action }`).
+- `IWorkersService.CreateAsync`: incluye `centerId`.
+- Nuevas operaciones: `ICentersService.ListAsync`, `IWorkersService.ListByCenterAsync`.
 
 ## Pendientes
 
-- Landing page y autenticación del centro (`CenterUser`).
-- Scoping de endpoints admin por centro.
-- Hash BCrypt de `PinHash` y `PasswordHash`.
+- JWT del trabajador para fichaje en tablet (la sesión del centro hoy es solo cookie).
+- Persistencia SQL real.

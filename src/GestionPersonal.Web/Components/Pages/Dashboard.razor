@@ -2,7 +2,9 @@
 @attribute [Authorize]
 @layout AppLayout
 @inject IDialogService DialogService
-@inject ApiClient Api
+@inject ICentersService Centers
+@inject IWorkersService Workers
+@inject IVacationsService Vacations
 
 <PageTitle>Fichaje</PageTitle>
 
@@ -71,7 +73,7 @@
 </MudGrid>
 
 @code {
-    private WorkerStatus? _loggedInWorker;
+    private WorkerStatusResponse? _loggedInWorker;
     private bool _showTimeControl;
     private bool _showAbsences;
     private int _pendingAbsences;
@@ -79,8 +81,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var centers = await Api.GetCentersAsync();
-        var center = centers.FirstOrDefault();
+        var result = await Centers.ListAsync();
+
+        if (result.IsFailure)
+        {
+            return;
+        }
+
+        var center = result.Value.FirstOrDefault();
 
         if (center is not null)
         {
@@ -94,7 +102,7 @@
         var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = _centerId }, selectorOptions);
         var selectorResult = await selector.Result;
 
-        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerSummary worker)
+        if (selectorResult is null || selectorResult.Canceled || selectorResult.Data is not WorkerResponse worker)
         {
             return;
         }
@@ -103,7 +111,7 @@
         var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", new DialogParameters { ["WorkerId"] = worker.Id }, options);
         var result = await dialog.Result;
 
-        if (result?.Data is WorkerStatus loggedIn)
+        if (result?.Data is WorkerStatusResponse loggedIn)
         {
             _loggedInWorker = loggedIn;
             await RefreshPendingAsync();
@@ -131,7 +139,12 @@
             return;
         }
 
-        _loggedInWorker = await Api.GetWorkerStatusAsync(_loggedInWorker.Id);
+        var result = await Workers.GetStatusAsync(_loggedInWorker.Id);
+
+        if (result.IsSuccess)
+        {
+            _loggedInWorker = result.Value;
+        }
     }
 
     private async Task RefreshPendingAsync()
@@ -142,15 +155,15 @@
             return;
         }
 
-        try
-        {
-            var vacations = await Api.GetCenterVacationsAsync();
-            _pendingAbsences = vacations.Count(v => v.Status == "pending");
-        }
-        catch (Exception)
+        var result = await Vacations.ListCenterAsync();
+
+        if (result.IsFailure)
         {
             _pendingAbsences = 0;
+            return;
         }
+
+        _pendingAbsences = result.Value.Count(v => v.Status == "pending");
     }
 
     private Task ToggleTimeControlAsync()

@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject IWorkersService Workers
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -85,16 +85,16 @@
             return;
         }
 
-        try
+        var result = await Workers.ChangePinAsync(WorkerId, new ChangePinCommand(_currentPin, _newPin));
+
+        if (result.IsFailure)
         {
-            await Api.ChangePinAsync(WorkerId, _currentPin, _newPin);
-            Snackbar.Add("PIN actualizado correctamente", Severity.Success);
-            DialogInstance.Close(DialogResult.Ok(true));
+            _error = result.Error.Message;
+            return;
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
+
+        Snackbar.Add("PIN actualizado correctamente", Severity.Success);
+        DialogInstance.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => DialogInstance.Cancel();

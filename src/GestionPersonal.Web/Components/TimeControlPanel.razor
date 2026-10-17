@@ -1,4 +1,4 @@
-@inject ApiClient Api
+@inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject TimeControlPdfExporter Exporter
@@ -50,9 +50,9 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required WorkerStatus Worker { get; set; }
+    public required WorkerStatusResponse Worker { get; set; }
 
-    private MonthlySummary? _summary;
+    private MonthlySummaryResponse? _summary;
     private int _year;
     private int _month;
 
@@ -84,14 +84,15 @@
     {
         _summary = null;
 
-        try
+        var result = await TimeEntries.GetMonthlyAsync(new MonthlySummaryQuery(Worker.Id, _year, _month));
+
+        if (result.IsFailure)
         {
-            _summary = await Api.GetMonthlySummaryAsync(Worker.Id, _year, _month);
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
         }
-        catch (Exception)
-        {
-            Snackbar.Add("No se pudo cargar el resumen mensual", Severity.Error);
-        }
+
+        _summary = result.Value;
     }
 
     private async Task OpenWorkersAsync()
