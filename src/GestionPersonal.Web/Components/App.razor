@@ -19,18 +19,35 @@
     <ReconnectModal />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
+        window.getAntiforgeryToken = async () => {
+            const res = await fetch('/auth/csrf', {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+            if (!res.ok) {
+                throw new Error(`No se pudo obtener el token CSRF (${res.status})`);
+            }
+            const data = await res.json();
+            return data.token;
+        };
+
         window.centerLogin = async (username, password) => {
             try {
+                const token = await window.getAntiforgeryToken();
                 const res = await fetch('/auth/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
                     body: JSON.stringify({ username, password })
                 });
                 if (res.ok) {
                     return { ok: true, error: null };
                 }
                 const data = await res.json().catch(() => ({}));
-                return { ok: false, error: data.error || 'Usuario o contraseña incorrectos.' };
+                return { ok: false, error: data.error || `Error ${res.status}` };
             } catch (e) {
                 return { ok: false, error: 'No se pudo conectar. Inténtalo de nuevo.' };
             }
@@ -38,7 +55,12 @@
 
         window.centerLogout = async () => {
             try {
-                await fetch('/auth/logout', { method: 'POST' });
+                const token = await window.getAntiforgeryToken();
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'RequestVerificationToken': token }
+                });
             } catch (e) { }
             window.location.href = '/';
         };

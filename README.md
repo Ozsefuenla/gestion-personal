@@ -43,6 +43,7 @@ capa `Application` en proceso.
 
 ```
 dotnet test src/GestionPersonal.Tests/GestionPersonal.Tests.csproj
+dotnet test src/GestionPersonal.IntegrationTests/GestionPersonal.IntegrationTests.csproj
 ```
 
 ## Estructura del proyecto
@@ -54,7 +55,8 @@ src/
 ├─ GestionPersonal.Application/     Casos de uso, DTOs, validadores, Result
 ├─ GestionPersonal.Infrastructure/  Persistencia (en memoria) e implementaciones
 ├─ GestionPersonal.Web/             App Blazor Server + MudBlazor (monolito desplegable)
-└─ GestionPersonal.Tests/           Tests de servicios de aplicación
+├─ GestionPersonal.Tests/           Tests de servicios de aplicación
+└─ GestionPersonal.IntegrationTests/ Tests de integración del flujo web
 docs/
 ├─ 0001-api-design.md
 ├─ 0001-api-openapi.yaml

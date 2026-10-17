@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.Services;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,8 +12,26 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/auth/login", async (CenterLoginRequest request, ICentersService centers, ILoggerFactory loggerFactory, HttpContext httpContext) =>
+        app.MapGet("/auth/csrf", (HttpContext context, IAntiforgery antiforgery) =>
         {
+            context.Response.Headers.CacheControl = "no-store";
+
+            var tokens = antiforgery.GetAndStoreTokens(context);
+
+            return Results.Ok(new { token = tokens.RequestToken });
+        });
+
+        app.MapPost("/auth/login", async (CenterLoginRequest request, ICentersService centers, IAntiforgery antiforgery, ILoggerFactory loggerFactory, HttpContext httpContext) =>
+        {
+            try
+            {
+                await antiforgery.ValidateRequestAsync(httpContext);
+            }
+            catch (AntiforgeryValidationException)
+            {
+                return Results.Json(new { error = "Token de seguridad inválido." }, statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var result = await centers.LoginAsync(new CenterLoginCommand(request.Username, request.Password));
 
             if (result.IsFailure)
@@ -39,13 +58,22 @@ public static class AuthEndpoints
             await httpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
-                new AuthenticationProperties { IsPersistent = true });
+                new AuthenticationProperties { IsPersistent = false });
 
             return Results.Ok(new { ok = true });
         }).RequireRateLimiting("login");
 
-        app.MapPost("/auth/logout", async (HttpContext httpContext) =>
+        app.MapPost("/auth/logout", async (HttpContext httpContext, IAntiforgery antiforgery) =>
         {
+            try
+            {
+                await antiforgery.ValidateRequestAsync(httpContext);
+            }
+            catch (AntiforgeryValidationException)
+            {
+                return Results.Json(new { error = "Token de seguridad inválido." }, statusCode: StatusCodes.Status400BadRequest);
+            }
+
             await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Results.Ok(new { ok = true });
         });
