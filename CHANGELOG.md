@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-18
+
 ### Added
 - Actualización en tiempo real de los fichajes entre vistas del mismo centro:
   un bus de eventos en proceso (`ITimeEntryChangeNotifier`) notifica los cambios
