@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Autenticación del centro con token antiforgery: endpoint `GET /auth/csrf` y envío de
+  `RequestVerificationToken` en login/logout.
+- Proyecto `GestionPersonal.IntegrationTests` con pruebas del flujo de autenticación
+  (CSRF, login, logout y acceso protegido a `/app`).
+- Health check `/health`.
 - Integración continua con GitHub Actions (`.github/workflows/ci.yml`): compila y corre los
   tests en cada push/PR a `main`. Plantilla de PR en `.github/pull_request_template.md`.
 - Documento de diseño de API (`docs/0001-api-design.md`).
@@ -144,6 +149,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CreateWorkerCommand` y `Worker.Create` aceptan `MustChangePin` opcional (default `false`).
 
 ### Security
+- Cookies de autenticación y antiforgery con `Secure` en producción.
+- Claves de Data Protection persistidas en `App_Data/keys` en producción para no invalidar
+  sesiones en cada recycle del app pool.
 - El PIN del trabajador pasa a guardarse con BCrypt (antes en claro); se verifica en login,
   fichaje rápido y cambio de PIN, y se hashea en el alta.
 
@@ -160,6 +168,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Menú lateral "Panel" (`MudDrawer`) del layout `/app` (`AppLayout.razor`).
 
 ### Changed
+- Login del centro: la cookie de autenticación pasa a ser de sesión (sin `Expires`) para evitar
+  que navegadores con reloj o `Date` de servidor desfasado la descarten.
 - Fusión de `GestionPersonal.Api` en `GestionPersonal.Web` (monolito modular). Nuevos servicios
   de aplicación `ICentersService`, `IWorkersService`, `ITimeEntriesService` e `IVacationsService`
   en `Application/Services`; la validación FluentValidation se movió del endpoint a `IRequestValidator`.
@@ -210,6 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (columnas de texto con ancho fijo + barra con `flex: 1 1 0%`).
 
 ### Fixed
+- Login del centro: el formulario obtiene el token antiforgery y muestra el estado HTTP real
+  cuando la petición falla, en lugar de mostrar siempre "Usuario o contraseña incorrectos".
 - Detalle del día (`DayDetailDialog`): ahora muestra la hora de salida — "Finalizado HH:mm"
   para jornadas terminadas y "En curso" para la jornada abierta (antes solo se veía el inicio).
 - Login del centro: la tecla Enter ahora envía el formulario (`OnEnterPressed` en

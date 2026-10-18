@@ -9,3 +9,8 @@ obj/
 
 # Rider / VS Code
 .vscode/
+
+*.publishSettings
+*.pubxml
+*.pubxml.user
+App_Data/
