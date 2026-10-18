@@ -20,7 +20,6 @@ internal static class WorkerStatusBuilder
         return new WorkerStatusResponse(
             worker.Id,
             worker.FullName,
-            worker.Role.ToString().ToLowerInvariant(),
             TodayStatusHelper.GetCurrentStatus(openEntry, entries),
             openEntry?.StartedAt,
             openEntry?.CurrentPausedAt,

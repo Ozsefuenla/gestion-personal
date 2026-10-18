@@ -7,18 +7,32 @@ namespace GestionPersonal.Application.Vacations;
 
 internal static class VacationScope
 {
-    public static async Task<Result<Vacation>> GetScopedVacationAsync(
+    public static async Task<Result<Vacation>> GetAdminScopedVacationAsync(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         Guid vacationId,
         CancellationToken cancellationToken = default)
     {
-        var centerId = currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireCenterAdmin(currentUser) is { } error)
         {
-            return Error.Forbidden("No autenticado.");
+            return error;
+        }
+
+        return await GetInCenterAsync(
+            workerRepository, vacationRepository, currentUser.CenterId!.Value, vacationId, cancellationToken);
+    }
+
+    public static async Task<Result<Vacation>> GetSelfOrAdminScopedVacationAsync(
+        IWorkerRepository workerRepository,
+        IVacationRepository vacationRepository,
+        ICurrentUser currentUser,
+        Guid vacationId,
+        CancellationToken cancellationToken = default)
+    {
+        if (AccessControl.RequireCenterMember(currentUser) is { } error)
+        {
+            return error;
         }
 
         var vacation = await vacationRepository.GetByIdAsync(vacationId, cancellationToken);
@@ -28,7 +42,30 @@ internal static class VacationScope
             return Error.NotFound("La ausencia no existe.");
         }
 
-        var worker = await workerRepository.GetByIdAndCenterAsync(vacation.WorkerId, centerId.Value, cancellationToken);
+        if (AccessControl.RequireSelfOrAdmin(currentUser, vacation.WorkerId) is { } selfError)
+        {
+            return selfError;
+        }
+
+        return await GetInCenterAsync(
+            workerRepository, vacationRepository, currentUser.CenterId!.Value, vacationId, cancellationToken);
+    }
+
+    private static async Task<Result<Vacation>> GetInCenterAsync(
+        IWorkerRepository workerRepository,
+        IVacationRepository vacationRepository,
+        int centerId,
+        Guid vacationId,
+        CancellationToken cancellationToken)
+    {
+        var vacation = await vacationRepository.GetByIdAsync(vacationId, cancellationToken);
+
+        if (vacation is null || vacation.Status == VacationStatus.Deleted)
+        {
+            return Error.NotFound("La ausencia no existe.");
+        }
+
+        var worker = await workerRepository.GetByIdAndCenterAsync(vacation.WorkerId, centerId, cancellationToken);
 
         if (worker is null)
         {

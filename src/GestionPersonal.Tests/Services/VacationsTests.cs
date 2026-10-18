@@ -37,14 +37,14 @@ public sealed class VacationsTests : ApplicationTestBase, IClassFixture<Applicat
     }
 
     [Fact]
-    public async Task RequestVacation_AsAdmin_IsAutoApproved()
+    public async Task RequestVacation_AsCenterAdmin_CreatesPending()
     {
-        var workerId = await CreateWorkerAsync(role: "admin");
+        var workerId = await CreateWorkerAsync();
         var today = MadridTestTime.Today();
 
         var vacation = await RequestVacationAsync(workerId, today.AddDays(1), today.AddDays(2));
 
-        Assert.Equal("approved", vacation.Status);
+        Assert.Equal("pending", vacation.Status);
     }
 
     [Fact]
@@ -105,13 +105,15 @@ public sealed class VacationsTests : ApplicationTestBase, IClassFixture<Applicat
     [Fact]
     public async Task DeleteVacation_WhenApprovedAndNotAdmin_ReturnsForbidden()
     {
-        var workerId = await CreateWorkerAsync(role: "worker");
+        var workerId = await CreateWorkerAsync();
         var today = MadridTestTime.Today();
 
         var vacation = await RequestVacationAsync(workerId, today.AddDays(3), today.AddDays(4));
 
         var approve = await Vacations.ApproveAsync(vacation.Id);
         AssertSuccess(approve);
+
+        User.ActAsWorker(workerId);
 
         var result = await Vacations.DeleteAsync(vacation.Id);
 
@@ -121,11 +123,13 @@ public sealed class VacationsTests : ApplicationTestBase, IClassFixture<Applicat
     [Fact]
     public async Task DeleteVacation_WhenApprovedAndAdmin_Succeeds()
     {
-        var workerId = await CreateWorkerAsync(role: "admin");
+        var workerId = await CreateWorkerAsync();
         var today = MadridTestTime.Today();
 
         var vacation = await RequestVacationAsync(workerId, today.AddDays(3), today.AddDays(4));
-        Assert.Equal("approved", vacation.Status);
+
+        var approve = await Vacations.ApproveAsync(vacation.Id);
+        AssertSuccess(approve);
 
         var result = await Vacations.DeleteAsync(vacation.Id);
 

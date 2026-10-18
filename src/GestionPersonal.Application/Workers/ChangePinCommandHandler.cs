@@ -7,16 +7,16 @@ public sealed class ChangePinCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ChangePinCommandHandler(
         IWorkerRepository workerRepository,
         IPasswordHasher passwordHasher,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _passwordHasher = passwordHasher;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result> Handle(
@@ -24,19 +24,15 @@ public sealed class ChangePinCommandHandler
         ChangePinCommand command,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
+        var scoped = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, workerId, cancellationToken);
 
-        if (centerId is null)
+        if (scoped.IsFailure)
         {
-            return Error.Forbidden("No autenticado.");
+            return scoped.Error;
         }
 
-        var worker = await _workerRepository.GetByIdAndCenterAsync(workerId, centerId.Value, cancellationToken);
-
-        if (worker is null)
-        {
-            return Error.NotFound("El trabajador no existe.");
-        }
+        var worker = scoped.Value;
 
         if (!_passwordHasher.Verify(command.CurrentPin, worker.PinHash))
         {

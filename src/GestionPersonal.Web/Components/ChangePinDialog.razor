@@ -24,7 +24,10 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        @if (AllowCancel)
+        {
+            <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+        }
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmAsync">Confirmar</MudButton>
     </DialogActions>
 </MudDialog>
@@ -35,6 +38,9 @@
 
     [Parameter, EditorRequired]
     public required int WorkerId { get; set; }
+
+    [Parameter]
+    public bool AllowCancel { get; set; } = true;
 
     private MudTextField<string> _currentPinField = default!;
     private string _currentPin = "";

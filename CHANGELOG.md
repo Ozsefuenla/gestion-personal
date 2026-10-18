@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Modelo de roles de cuatro niveles: `SuperAdmin` (global), `CenterAdmin`
+  (administra el centro), `Center` (usuario kiosco de la tablet) y
+  `CenterWorker` (trabajador con PIN).
+- Área `/admin` para el `SuperAdmin`: alta y baja de centros, alta y baja de sus
+  administradores y consulta de usuarios por centro.
+- Centros en `/admin` en dos tabs (**Activos** / **Desactivados**) y cada centro
+  **colapsado por defecto**; los usuarios se cargan al expandir el centro.
+- Reset de contraseña de usuarios del centro (`CenterAdmin` y `Center`) desde
+  `/admin`, y de usuarios de tablet desde la gestión del `CenterAdmin`, con
+  validación de permisos y confirmación de la nueva contraseña.
+- El listado de usuarios de `/admin` se limita a `CenterAdmin` y `Center`
+  (nunca `SuperAdmin`).
+- Cambio forzado de contraseña: cualquier **reset** y el **alta** de
+  `CenterAdmin`/`Center` marcan `MustChangePassword`; al entrar se muestra un
+  **popup bloqueante** para cambiarla (sin página intermedia).
+- `ChangePasswordDialog` (popup) y endpoint `POST /auth/change-password`, que
+  valida la contraseña actual, guarda la nueva y re-emite la cookie sin la claim
+  `mustChangePassword`. Si se accede directo a `/app` o `/admin` con el flag, el
+  `AppLayout` abre el mismo popup.
+- Migración `0003_center_user_must_change_password.sql`
+  (`center_users.must_change_password`).
+- Gestión de usuarios de tablet (`Center`) desde el panel del `CenterAdmin`.
+- Autorización en el servidor (`ICurrentUser`, `AccessControl`, `WorkerScope`,
+  `VacationScope`): el `CenterWorker` solo accede a sus propios datos y las
+  acciones de administración exigen `CenterAdmin`.
+- Doble cookie de sesión (`gp.center` y `gp.worker`) con un esquema de política
+  que resuelve la identidad activa; el login por PIN emite una sesión de worker.
+- Documento `docs/0012-modelo-roles.md`.
+
+### Changed
+- `CenterUser` incorpora `Role` y `Active`, y su `CenterId` pasa a ser nullable
+  para el `SuperAdmin`; `Center` incorpora `Active` para la baja lógica.
+- El login del centro devuelve el rol y la cookie incluye `ClaimTypes.Role`;
+  el `NameIdentifier` pasa a ser el id del usuario (antes guardaba el `centerId`).
+- El dashboard `/app` se adapta al rol: kiosco (`Center`), administración
+  (`CenterAdmin`) o espacio personal del trabajador (`CenterWorker`). El
+  `CenterAdmin` ya no ve el fichaje rápido ni el acceso de trabajador: su vista
+  es exclusivamente de administración.
+- El seed crea `superadmin`, `carlos.ruiz` (CenterAdmin) y `centro` (kiosco);
+  los trabajadores demo pasan a ser María García y Ana López.
+
+### Removed
+- El rol `Admin` de `Worker` y la columna `workers.role` (migración
+  `0002_user_roles.sql`). Carlos Ruiz deja de ser trabajador y pasa a ser el
+  `CenterAdmin` del centro.
+- La restricción de administración basada solo en el frontend (`Worker.Role`).
+- El usuario `admin` del seed anterior.
+
+### Fixed
+- El **cambio forzado de PIN** de un trabajador nuevo (`MustChangePin`) se abría
+  en `OnInitializedAsync`, también durante el prerender SSR, dejando colgada la
+  página `/app` y sin completar el acceso. Ahora se abre en
+  `OnAfterRenderAsync(firstRender)`. El diálogo forzado ya no permite cancelar.
+- El popup de cambio de contraseña ahora guarda al pulsar **Enter** en cualquier
+  campo (se envolvió en un `MudForm` con `OnEnterPressed`), sin tener que pulsar
+  el botón "Guardar contraseña".
+- El botón **"Gestionar ausencias"** del panel del `CenterAdmin` quedaba oculto
+  cuando no había pendientes: se usaba `MudBadge.Hidden` (que no existe como
+  parámetro y se renderizaba como atributo HTML `hidden`). Ahora se usa
+  `MudBadge.Visible` y el botón está siempre disponible.
+- Se cierra el acceso indebido a datos de otros trabajadores (BOLA/BFLA): las
+  operaciones de autoservicio validan el `workerId` contra la sesión.
+
 ## [1.1.0] - 2026-10-18
 
 ### Added

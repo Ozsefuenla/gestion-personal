@@ -5,20 +5,41 @@ namespace GestionPersonal.Application.Common;
 
 public static class WorkerScope
 {
-    public static async Task<Result<Worker>> GetScopedWorkerAsync(
+    public static async Task<Result<Worker>> GetAdminScopedWorkerAsync(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         int workerId,
         CancellationToken cancellationToken = default)
     {
-        var centerId = currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireCenterAdmin(currentUser) is { } error)
         {
-            return Error.Forbidden("No autenticado.");
+            return error;
         }
 
-        var worker = await workerRepository.GetByIdAndCenterAsync(workerId, centerId.Value, cancellationToken);
+        return await GetInCenterAsync(workerRepository, currentUser.CenterId!.Value, workerId, cancellationToken);
+    }
+
+    public static async Task<Result<Worker>> GetSelfScopedWorkerAsync(
+        IWorkerRepository workerRepository,
+        ICurrentUser currentUser,
+        int workerId,
+        CancellationToken cancellationToken = default)
+    {
+        if (AccessControl.RequireSelfOrAdmin(currentUser, workerId) is { } error)
+        {
+            return error;
+        }
+
+        return await GetInCenterAsync(workerRepository, currentUser.CenterId!.Value, workerId, cancellationToken);
+    }
+
+    private static async Task<Result<Worker>> GetInCenterAsync(
+        IWorkerRepository workerRepository,
+        int centerId,
+        int workerId,
+        CancellationToken cancellationToken)
+    {
+        var worker = await workerRepository.GetByIdAndCenterAsync(workerId, centerId, cancellationToken);
 
         if (worker is null)
         {

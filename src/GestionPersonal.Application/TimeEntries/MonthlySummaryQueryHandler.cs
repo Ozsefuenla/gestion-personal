@@ -10,25 +10,25 @@ public sealed class MonthlySummaryQueryHandler
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public MonthlySummaryQueryHandler(
         IWorkerRepository workerRepository,
         ITimeEntryRepository timeEntryRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<MonthlySummaryResponse>> Handle(
         MonthlySummaryQuery query,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, query.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(_workerRepository, _currentUser, query.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {

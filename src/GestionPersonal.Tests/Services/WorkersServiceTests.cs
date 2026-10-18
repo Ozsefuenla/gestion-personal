@@ -27,7 +27,6 @@ public sealed class WorkersServiceTests : ApplicationTestBase, IClassFixture<App
         {
             Assert.True(worker.Id > 0);
             Assert.False(string.IsNullOrWhiteSpace(worker.FullName));
-            Assert.False(string.IsNullOrWhiteSpace(worker.Role));
         });
     }
 
@@ -38,6 +37,6 @@ public sealed class WorkersServiceTests : ApplicationTestBase, IClassFixture<App
 
         AssertSuccess(result);
         Assert.Contains(result.Value, worker => worker.FullName == "María García");
-        Assert.Contains(result.Value, worker => worker.Role == "admin");
+        Assert.Contains(result.Value, worker => worker.FullName == "Ana López");
     }
 }

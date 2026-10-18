@@ -117,12 +117,14 @@ public sealed class WorkerManagementTests : ApplicationTestBase, IClassFixture<A
     }
 
     [Fact]
-    public async Task Deactivate_Admin_ReturnsValidationError()
+    public async Task Deactivate_AsNonAdmin_ReturnsForbidden()
     {
-        const int adminId = 3;
+        var workerId = await CreateWorkerAsync();
 
-        var result = await Workers.DeactivateAsync(adminId);
+        User.ActAsWorker(workerId);
 
-        AssertFailure(result, "Validation");
+        var result = await Workers.DeactivateAsync(workerId);
+
+        AssertFailure(result, "Forbidden");
     }
 }

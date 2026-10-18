@@ -8,7 +8,7 @@ public sealed class QuickClockCommandHandler
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
     private readonly ILoginAttemptTracker _loginAttemptTracker;
     private readonly StartTimeEntryCommandHandler _startHandler;
     private readonly PauseTimeEntryCommandHandler _pauseHandler;
@@ -19,7 +19,7 @@ public sealed class QuickClockCommandHandler
         IWorkerRepository workerRepository,
         ITimeEntryRepository timeEntryRepository,
         IPasswordHasher passwordHasher,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         ILoginAttemptTracker loginAttemptTracker,
         StartTimeEntryCommandHandler startHandler,
         PauseTimeEntryCommandHandler pauseHandler,
@@ -29,7 +29,7 @@ public sealed class QuickClockCommandHandler
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
         _passwordHasher = passwordHasher;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
         _loginAttemptTracker = loginAttemptTracker;
         _startHandler = startHandler;
         _pauseHandler = pauseHandler;
@@ -41,11 +41,9 @@ public sealed class QuickClockCommandHandler
         QuickClockCommand command,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireKiosk(_currentUser) is { } accessError)
         {
-            return Error.Forbidden("No autenticado.");
+            return accessError;
         }
 
         if (_loginAttemptTracker.IsLockedOut(command.WorkerId))
@@ -53,7 +51,7 @@ public sealed class QuickClockCommandHandler
             return Error.Forbidden("Demasiados intentos fallidos. Inténtalo de nuevo más tarde.");
         }
 
-        var worker = await _workerRepository.GetByIdAndCenterAsync(command.WorkerId, centerId.Value, cancellationToken);
+        var worker = await _workerRepository.GetByIdAndCenterAsync(command.WorkerId, _currentUser.CenterId!.Value, cancellationToken);
 
         if (worker is null)
         {
@@ -93,10 +91,10 @@ public sealed class QuickClockCommandHandler
 
         var result = command.Action switch
         {
-            "start" when currentStatus == "paused" => await _resumeHandler.Handle(new ResumeTimeEntryCommand(worker.Id), cancellationToken),
-            "start" => await _startHandler.Handle(new StartTimeEntryCommand(worker.Id), cancellationToken),
-            "pause" => await _pauseHandler.Handle(new PauseTimeEntryCommand(worker.Id), cancellationToken),
-            "end" => await _endHandler.Handle(new EndTimeEntryCommand(worker.Id), cancellationToken),
+            "start" when currentStatus == "paused" => await _resumeHandler.ResumeForWorkerAsync(worker.Id, cancellationToken),
+            "start" => await _startHandler.StartForWorkerAsync(worker.Id, cancellationToken),
+            "pause" => await _pauseHandler.PauseForWorkerAsync(worker.Id, cancellationToken),
+            "end" => await _endHandler.EndForWorkerAsync(worker.Id, cancellationToken),
             _ => throw new InvalidOperationException("Acción no soportada.")
         };
 

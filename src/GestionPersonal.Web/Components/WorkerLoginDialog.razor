@@ -1,0 +1,105 @@
+@inject IJSRuntime Js
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Acceso trabajador</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.body1">Introduce tu PIN de trabajador</MudText>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+        }
+
+        <MudTextField @ref="_pinField"
+                      T="string"
+                      Value="_pin"
+                      ValueChanged="OnPinChanged"
+                      Immediate="true"
+                      InputType="InputType.Password"
+                      InputMode="InputMode.numeric"
+                      MaxLength="4"
+                      Label="PIN"
+                      Placeholder="••••"
+                      Variant="Variant.Outlined"
+                      Class="mt-4" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancelar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter]
+    public int WorkerId { get; set; }
+
+    private MudTextField<string> _pinField = default!;
+    private string _pin = "";
+    private string? _error;
+    private bool _submitting;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(200);
+            await _pinField.FocusAsync();
+        }
+    }
+
+    private async Task OnPinChanged(string value)
+    {
+        _pin = new string(value.Where(char.IsDigit).Take(4).ToArray());
+        _error = null;
+
+        if (_pin.Length == 4)
+        {
+            await LoginAsync();
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        if (_submitting)
+        {
+            return;
+        }
+
+        _submitting = true;
+
+        try
+        {
+            var result = await Js.InvokeAsync<WorkerLoginResult>("workerLogin", WorkerId, _pin);
+
+            if (!result.Ok)
+            {
+                _error = result.Error;
+                _pin = "";
+                await _pinField.FocusAsync();
+                return;
+            }
+
+            Snackbar.Add("Sesión de trabajador iniciada", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception)
+        {
+            _error = "No se pudo iniciar sesión. Inténtalo de nuevo.";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private sealed record WorkerLoginResult(bool Ok, string? Error);
+}

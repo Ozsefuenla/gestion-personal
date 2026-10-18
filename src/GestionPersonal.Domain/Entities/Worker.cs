@@ -1,5 +1,3 @@
-using GestionPersonal.Domain.Enums;
-
 namespace GestionPersonal.Domain.Entities;
 
 public sealed class Worker
@@ -8,7 +6,6 @@ public sealed class Worker
     public int CenterId { get; private set; }
     public string FullName { get; private set; } = default!;
     public string PinHash { get; private set; } = default!;
-    public Role Role { get; private set; }
     public bool Active { get; private set; }
     public bool MustChangePin { get; private set; }
     public TimeSpan DailyHours { get; private set; }
@@ -18,14 +15,13 @@ public sealed class Worker
     {
     }
 
-    public static Worker Create(int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null, bool mustChangePin = false)
+    public static Worker Create(int centerId, string fullName, string pinHash, TimeSpan? dailyHours = null, bool mustChangePin = false)
     {
         return new Worker
         {
             CenterId = centerId,
             FullName = fullName.Trim(),
             PinHash = pinHash,
-            Role = role,
             Active = true,
             MustChangePin = mustChangePin,
             DailyHours = dailyHours ?? TimeSpan.FromHours(8),
@@ -38,7 +34,6 @@ public sealed class Worker
         int centerId,
         string fullName,
         string pinHash,
-        Role role,
         bool active,
         bool mustChangePin,
         TimeSpan dailyHours,
@@ -50,7 +45,6 @@ public sealed class Worker
             CenterId = centerId,
             FullName = fullName,
             PinHash = pinHash,
-            Role = role,
             Active = active,
             MustChangePin = mustChangePin,
             DailyHours = dailyHours,

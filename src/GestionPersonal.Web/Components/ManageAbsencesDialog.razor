@@ -1,5 +1,6 @@
 @inject IVacationsService Vacations
 @inject IWorkersService Workers
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -42,6 +43,11 @@
                                         Denegar
                                     </MudButton>
                                 }
+                                else if (vacation.Status == "approved")
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                                   OnClick="@(() => DeleteAsync(vacation))" />
+                                }
                             </div>
                         }
                     </MudTabPanel>
@@ -59,9 +65,6 @@
     [CascadingParameter]
     private IMudDialogInstance DialogInstance { get; set; } = default!;
 
-    [Parameter, EditorRequired]
-    public required int CenterId { get; set; }
-
     private List<WorkerResponse> _workers = [];
     private IReadOnlyList<VacationResponse> _vacations = [];
     private bool _loading = true;
@@ -77,7 +80,7 @@
 
         try
         {
-            var workersResult = await Workers.ListByCenterAsync(CenterId);
+            var workersResult = await Workers.ListActiveAsync();
 
             if (workersResult.IsFailure)
             {
@@ -93,7 +96,7 @@
                 return;
             }
 
-            _workers = workersResult.Value.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            _workers = workersResult.Value.OrderBy(w => w.FullName).ToList();
             _vacations = vacationsResult.Value;
         }
         finally
@@ -119,6 +122,31 @@
     }
 
     private void Cancel() => DialogInstance.Cancel();
+
+    private async Task DeleteAsync(VacationResponse vacation)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Eliminar ausencia",
+            $"¿Seguro de querer eliminar la ausencia del {FormatRange(vacation)}?",
+            "Eliminar",
+            "Cancelar");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var result = await Vacations.DeleteAsync(vacation.Id);
+
+        if (result.IsFailure)
+        {
+            Snackbar.Add(result.Error.Message, Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Ausencia eliminada", Severity.Success);
+        await LoadAsync();
+    }
 
     private static Color StatusColor(string status) => status switch
     {

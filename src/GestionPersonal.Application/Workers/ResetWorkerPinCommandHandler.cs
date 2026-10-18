@@ -7,16 +7,16 @@ public sealed class ResetWorkerPinCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ResetWorkerPinCommandHandler(
         IWorkerRepository workerRepository,
         IPasswordHasher passwordHasher,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _passwordHasher = passwordHasher;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result> Handle(
@@ -24,8 +24,8 @@ public sealed class ResetWorkerPinCommandHandler
         ResetWorkerPinCommand command,
         CancellationToken cancellationToken = default)
     {
-        var scoped = await WorkerScope.GetScopedWorkerAsync(
-            _workerRepository, _currentCenter, workerId, cancellationToken);
+        var scoped = await WorkerScope.GetAdminScopedWorkerAsync(
+            _workerRepository, _currentUser, workerId, cancellationToken);
 
         if (scoped.IsFailure)
         {

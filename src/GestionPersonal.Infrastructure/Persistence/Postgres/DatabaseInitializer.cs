@@ -9,31 +9,30 @@ public sealed class DatabaseInitializer
 {
     private const int DemoCenterId = 1;
 
-    private static readonly (string FullName, string Pin, Role Role)[] DemoWorkers =
+    private static readonly (string FullName, string Pin)[] DemoWorkers =
     [
-        ("María García", "1111", Role.Worker),
-        ("Ana López", "2222", Role.Worker),
-        ("Carlos Ruiz", "3333", Role.Admin)
+        ("María García", "1111"),
+        ("Ana López", "2222")
     ];
 
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly string _connectionString;
     private readonly IPasswordHasher _passwordHasher;
     private readonly bool _seedDemoData;
-    private readonly string _adminPassword;
+    private readonly SeedCredentials _credentials;
 
     public DatabaseInitializer(
         IDbConnectionFactory connectionFactory,
         string connectionString,
         IPasswordHasher passwordHasher,
         bool seedDemoData,
-        string adminPassword)
+        SeedCredentials credentials)
     {
         _connectionFactory = connectionFactory;
         _connectionString = connectionString;
         _passwordHasher = passwordHasher;
         _seedDemoData = seedDemoData;
-        _adminPassword = adminPassword;
+        _credentials = credentials;
     }
 
     public void Initialize()
@@ -67,7 +66,9 @@ public sealed class DatabaseInitializer
         await using var transaction = await connection.BeginTransactionAsync();
 
         await EnsureCenterAsync(connection, transaction);
-        await EnsureAdminUserAsync(connection, transaction);
+        await EnsureSuperAdminAsync(connection, transaction);
+        await EnsureCenterAdminAsync(connection, transaction);
+        await EnsureCenterKioskAsync(connection, transaction);
 
         if (_seedDemoData)
         {
@@ -84,8 +85,8 @@ public sealed class DatabaseInitializer
         await connection.ExecuteAsync(
             new CommandDefinition(
                 """
-                INSERT INTO centers (id, name)
-                VALUES (@id, @name)
+                INSERT INTO centers (id, name, active)
+                VALUES (@id, @name, TRUE)
                 ON CONFLICT (id) DO NOTHING
                 """,
                 new { id = DemoCenterId, name = "Peluquería Sol" },
@@ -97,27 +98,67 @@ public sealed class DatabaseInitializer
                 transaction: transaction));
     }
 
-    private async Task EnsureAdminUserAsync(
+    private async Task EnsureSuperAdminAsync(
         Npgsql.NpgsqlConnection connection,
         System.Data.Common.DbTransaction transaction)
     {
-        var exists = await connection.ExecuteScalarAsync<bool>(
-            new CommandDefinition(
-                "SELECT EXISTS (SELECT 1 FROM center_users WHERE username = 'admin')",
-                transaction: transaction));
+        await InsertUserAsync(
+            connection,
+            transaction,
+            centerId: null,
+            _credentials.SuperAdminUsername,
+            _credentials.SuperAdminPassword,
+            UserRole.SuperAdmin);
+    }
 
-        if (exists)
-        {
-            return;
-        }
+    private async Task EnsureCenterAdminAsync(
+        Npgsql.NpgsqlConnection connection,
+        System.Data.Common.DbTransaction transaction)
+    {
+        await InsertUserAsync(
+            connection,
+            transaction,
+            DemoCenterId,
+            _credentials.CenterAdminUsername,
+            _credentials.CenterAdminPassword,
+            UserRole.CenterAdmin);
+    }
 
+    private async Task EnsureCenterKioskAsync(
+        Npgsql.NpgsqlConnection connection,
+        System.Data.Common.DbTransaction transaction)
+    {
+        await InsertUserAsync(
+            connection,
+            transaction,
+            DemoCenterId,
+            _credentials.CenterUsername,
+            _credentials.CenterPassword,
+            UserRole.Center);
+    }
+
+    private async Task InsertUserAsync(
+        Npgsql.NpgsqlConnection connection,
+        System.Data.Common.DbTransaction transaction,
+        int? centerId,
+        string username,
+        string password,
+        UserRole role)
+    {
         await connection.ExecuteAsync(
             new CommandDefinition(
                 """
-                INSERT INTO center_users (center_id, username, password_hash)
-                VALUES (@centerId, 'admin', @passwordHash)
+                INSERT INTO center_users (center_id, username, password_hash, role, active)
+                VALUES (@centerId, @username, @passwordHash, @role, TRUE)
+                ON CONFLICT (username) DO NOTHING
                 """,
-                new { centerId = DemoCenterId, passwordHash = _passwordHasher.Hash(_adminPassword) },
+                new
+                {
+                    centerId,
+                    username,
+                    passwordHash = _passwordHasher.Hash(password),
+                    role = role.ToString()
+                },
                 transaction));
     }
 
@@ -125,34 +166,34 @@ public sealed class DatabaseInitializer
         Npgsql.NpgsqlConnection connection,
         System.Data.Common.DbTransaction transaction)
     {
-        var workerCount = await connection.ExecuteScalarAsync<int>(
-            new CommandDefinition(
-                "SELECT COUNT(*) FROM workers WHERE center_id = @centerId",
-                new { centerId = DemoCenterId },
-                transaction));
-
-        if (workerCount > 0)
-        {
-            return;
-        }
-
         var workerIds = new List<int>(DemoWorkers.Length);
 
-        foreach (var (fullName, pin, role) in DemoWorkers)
+        foreach (var (fullName, pin) in DemoWorkers)
         {
+            var existingId = await connection.ExecuteScalarAsync<int?>(
+                new CommandDefinition(
+                    "SELECT id FROM workers WHERE center_id = @centerId AND full_name = @fullName LIMIT 1",
+                    new { centerId = DemoCenterId, fullName },
+                    transaction));
+
+            if (existingId is not null)
+            {
+                workerIds.Add(existingId.Value);
+                continue;
+            }
+
             var id = await connection.ExecuteScalarAsync<int>(
                 new CommandDefinition(
                     """
-                    INSERT INTO workers (center_id, full_name, pin_hash, role)
-                    VALUES (@centerId, @fullName, @pinHash, @role)
+                    INSERT INTO workers (center_id, full_name, pin_hash)
+                    VALUES (@centerId, @fullName, @pinHash)
                     RETURNING id
                     """,
                     new
                     {
                         centerId = DemoCenterId,
                         fullName,
-                        pinHash = _passwordHasher.Hash(pin),
-                        role = role.ToString()
+                        pinHash = _passwordHasher.Hash(pin)
                     },
                     transaction));
 

@@ -16,7 +16,6 @@ public sealed class LoginTests : ApplicationTestBase, IClassFixture<ApplicationF
 
         AssertSuccess(result);
         Assert.Equal("María García", result.Value.FullName);
-        Assert.Equal("worker", result.Value.Role);
     }
 
     [Fact]

@@ -2,102 +2,219 @@
 @attribute [Authorize]
 @layout AppLayout
 @inject IDialogService DialogService
-@inject ICentersService Centers
 @inject IWorkersService Workers
 @inject IVacationsService Vacations
+@inject ICurrentUser CurrentUser
+@inject IJSRuntime Js
+@inject NavigationManager Navigation
 
 <PageTitle>Fichaje</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-1">Fichaje</MudText>
-<MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">Control de fichaje del centro</MudText>
+@if (_role == UserRole.CenterWorker)
+{
+    @if (_worker is null)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Cargando…</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.h5" Class="mb-1">Mi fichaje</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">Control de fichaje personal</MudText>
 
-<MudGrid Spacing="4">
-    <MudItem xs="12" md="4">
-        @if (_loggedInWorker is null)
-        {
+        <MudGrid Spacing="4">
+            <MudItem xs="12" md="4">
+                <DonutProgress Worker="_worker" RefreshAsync="RefreshWorkerAsync" />
+            </MudItem>
+
+            <MudItem xs="12" md="8">
+                <WorkerCard Worker="_worker"
+                            ShowProfileButtons="true"
+                            RefreshAsync="RefreshWorkerAsync"
+                            LogoutAsync="LogoutWorkerAsync"
+                            ToggleTimeControl="ToggleTimeControlAsync"
+                            ToggleAbsences="ToggleAbsencesAsync"
+                            PendingAbsences="0" />
+
+                @if (_showTimeControl)
+                {
+                    <div class="mt-4">
+                        <TimeControlPanel Worker="_worker" />
+                    </div>
+                }
+
+                @if (_showAbsences)
+                {
+                    <div class="mt-4">
+                        <AbsencesPanel Worker="_worker" Changed="RefreshWorkerAsync" />
+                    </div>
+                }
+            </MudItem>
+        </MudGrid>
+    }
+}
+else if (_role == UserRole.CenterAdmin)
+{
+    <MudText Typo="Typo.h5" Class="mb-1">Administración</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">Gestión del centro</MudText>
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Administración del centro</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        Gestiona trabajadores, ausencias, horarios y usuarios de tablet.
+                    </MudText>
+
+                    <div class="d-flex flex-column gap-2 mt-4">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenManageWorkersAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
+                            Gestión de trabajadores
+                        </MudButton>
+
+                        <MudBadge Content="@_pendingAbsences" Color="Color.Error" Bordered="true" Overlap="true" Visible="@(_pendingAbsences > 0)" Class="w-100">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" OnClick="OpenManageAbsencesAsync">
+                                <MudIcon Icon="@Icons.Material.Filled.HowToReg" Class="mr-2" />
+                                Gestionar ausencias
+                            </MudButton>
+                        </MudBadge>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenWorkersTimeControlAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-2" />
+                            Ver horarios de trabajadores
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenCenterUsersAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Tablet" Class="mr-2" />
+                            Usuarios de tablet
+                        </MudButton>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="8">
+            <TodayWorkersPanel />
+        </MudItem>
+    </MudGrid>
+}
+else
+{
+    <MudText Typo="Typo.h5" Class="mb-1">Fichaje</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">Terminal de fichaje del centro</MudText>
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="4">
             <QuickClockPanel CenterId="_centerId" />
-        }
-        else
-        {
-            <DonutProgress Worker="_loggedInWorker" RefreshAsync="RefreshWorkerAsync" />
+        </MudItem>
 
-            @if (_loggedInWorker.Role == "admin")
-            {
-                <TodayWorkersPanel />
-            }
-        }
-    </MudItem>
-
-    <MudItem xs="12" md="8">
-        @if (_loggedInWorker is null)
-        {
-            <MudCard Elevation="2" Class="h-100">
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2">
                 <MudCardContent>
                     <MudText Typo="Typo.h6">Acceso</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Identifícate para ver tus datos personales</MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenLoginAsync">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        Los trabajadores pueden fichar con su PIN o acceder a su espacio personal.
+                    </MudText>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4" OnClick="OpenWorkerLoginAsync">
                         <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
-                        Login
+                        Acceder como trabajador
                     </MudButton>
                 </MudCardContent>
             </MudCard>
-        }
-        else
-        {
-            <WorkerCard Worker="_loggedInWorker"
-                        ShowProfileButtons="true"
-                        RefreshAsync="RefreshWorkerAsync"
-                        LogoutAsync="LogoutAsync"
-                        ToggleTimeControl="ToggleTimeControlAsync"
-                        ToggleAbsences="ToggleAbsencesAsync"
-                        PendingAbsences="_pendingAbsences" />
-
-            @if (_showTimeControl)
-            {
-                <div class="mt-4">
-                    <TimeControlPanel Worker="_loggedInWorker" />
-                </div>
-            }
-
-            @if (_showAbsences)
-            {
-                <div class="mt-4">
-                    <AbsencesPanel Worker="_loggedInWorker"
-                                   CenterId="_centerId"
-                                   PendingAbsences="_pendingAbsences"
-                                   Changed="RefreshPendingAsync" />
-                </div>
-            }
-        }
-    </MudItem>
-</MudGrid>
+        </MudItem>
+    </MudGrid>
+}
 
 @code {
-    private WorkerStatusResponse? _loggedInWorker;
+    private UserRole? _role;
+    private int _centerId;
+    private int _workerId;
+    private WorkerStatusResponse? _worker;
     private bool _showTimeControl;
     private bool _showAbsences;
     private int _pendingAbsences;
-    private int _centerId;
+    private bool _forcePinShown;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await Centers.ListAsync();
+        _role = CurrentUser.Role;
+        _centerId = CurrentUser.CenterId ?? 0;
 
-        if (result.IsFailure)
+        if (_role == UserRole.SuperAdmin)
+        {
+            Navigation.NavigateTo("/admin");
+            return;
+        }
+
+        if (_role == UserRole.CenterWorker && CurrentUser.WorkerId is int workerId)
+        {
+            _workerId = workerId;
+            await RefreshWorkerAsync();
+        }
+        else if (_role == UserRole.CenterAdmin)
+        {
+            await RefreshPendingAsync();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _forcePinShown || _worker?.MustChangePin != true)
         {
             return;
         }
 
-        var center = result.Value.FirstOrDefault();
+        _forcePinShown = true;
+        await ForceChangePinAsync();
+        StateHasChanged();
+    }
 
-        if (center is not null)
+    private async Task RefreshWorkerAsync()
+    {
+        if (_workerId == 0)
         {
-            _centerId = center.Id;
+            return;
+        }
+
+        var result = await Workers.GetStatusAsync(_workerId);
+
+        if (result.IsSuccess)
+        {
+            _worker = result.Value;
         }
     }
 
-    private async Task OpenLoginAsync()
+    private async Task RefreshPendingAsync()
     {
+        var result = await Vacations.ListCenterAsync();
+
+        _pendingAbsences = result.IsSuccess
+            ? result.Value.Count(v => v.Status == "pending")
+            : 0;
+    }
+
+    private async Task ForceChangePinAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            ["WorkerId"] = _workerId,
+            ["AllowCancel"] = false
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };
+        var dialog = await DialogService.ShowAsync<ChangePinDialog>("Debes cambiar tu PIN", parameters, options);
+        await dialog.Result;
+        await RefreshWorkerAsync();
+    }
+
+    private async Task OpenWorkerLoginAsync()
+    {
+        if (_centerId <= 0)
+        {
+            return;
+        }
+
         var selectorOptions = new DialogOptions { CloseOnEscapeKey = true };
         var selector = await DialogService.ShowAsync<WorkerSelectorDialog>("Selecciona tu trabajador", new DialogParameters { ["CenterId"] = _centerId }, selectorOptions);
         var selectorResult = await selector.Result;
@@ -108,62 +225,47 @@
         }
 
         var options = new DialogOptions { CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<QuickClockDialog>("Logarse", new DialogParameters { ["WorkerId"] = worker.Id }, options);
+        var dialog = await DialogService.ShowAsync<WorkerLoginDialog>("Acceso trabajador", new DialogParameters { ["WorkerId"] = worker.Id }, options);
         var result = await dialog.Result;
 
-        if (result?.Data is WorkerStatusResponse loggedIn)
+        if (result is { Canceled: false })
         {
-            _loggedInWorker = loggedIn;
-            await RefreshPendingAsync();
-
-            if (loggedIn.MustChangePin)
-            {
-                await ForceChangePinAsync();
-            }
+            Navigation.NavigateTo("/app", forceLoad: true);
         }
     }
 
-    private async Task ForceChangePinAsync()
+    private async Task OpenManageWorkersAsync()
     {
-        var parameters = new DialogParameters { ["WorkerId"] = _loggedInWorker!.Id };
-        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };
-        var dialog = await DialogService.ShowAsync<ChangePinDialog>("Debes cambiar tu PIN", parameters, options);
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ManageWorkersDialog>("Gestión de trabajadores", options);
         await dialog.Result;
-        await RefreshWorkerAsync();
     }
 
-    private async Task RefreshWorkerAsync()
+    private async Task OpenManageAbsencesAsync()
     {
-        if (_loggedInWorker is null)
-        {
-            return;
-        }
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ManageAbsencesDialog>("Gestionar Ausencias", options);
+        await dialog.Result;
 
-        var result = await Workers.GetStatusAsync(_loggedInWorker.Id);
-
-        if (result.IsSuccess)
-        {
-            _loggedInWorker = result.Value;
-        }
+        await RefreshPendingAsync();
     }
 
-    private async Task RefreshPendingAsync()
+    private async Task OpenWorkersTimeControlAsync()
     {
-        if (_loggedInWorker is null || _loggedInWorker.Role != "admin")
-        {
-            _pendingAbsences = 0;
-            return;
-        }
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
+        await DialogService.ShowAsync<WorkersTimeControlDialog>("Horarios de trabajadores", new DialogParameters(), options);
+    }
 
-        var result = await Vacations.ListCenterAsync();
+    private async Task OpenCenterUsersAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ManageCenterUsersDialog>("Usuarios de tablet", options);
+        await dialog.Result;
+    }
 
-        if (result.IsFailure)
-        {
-            _pendingAbsences = 0;
-            return;
-        }
-
-        _pendingAbsences = result.Value.Count(v => v.Status == "pending");
+    private async Task LogoutWorkerAsync()
+    {
+        await Js.InvokeVoidAsync("workerLogout");
     }
 
     private Task ToggleTimeControlAsync()
@@ -177,15 +279,6 @@
     {
         _showAbsences = !_showAbsences;
         _showTimeControl = false;
-        return Task.CompletedTask;
-    }
-
-    private Task LogoutAsync()
-    {
-        _loggedInWorker = null;
-        _showTimeControl = false;
-        _showAbsences = false;
-        _pendingAbsences = 0;
         return Task.CompletedTask;
     }
 }

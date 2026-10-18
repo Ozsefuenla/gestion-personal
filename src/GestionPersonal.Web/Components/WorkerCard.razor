@@ -64,15 +64,6 @@
                         Cerrar sesión
                     </MudButton>
                 </MudItem>
-                @if (Worker.Role == "admin")
-                {
-                    <MudItem xs="12">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenManageWorkersAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
-                            Gestión de trabajadores
-                        </MudButton>
-                    </MudItem>
-                }
             </MudGrid>
         </MudCardContent>
     }
@@ -138,13 +129,6 @@
         var parameters = new DialogParameters { ["WorkerId"] = Worker.Id };
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<ChangePinDialog>("Cambiar PIN", parameters, options);
-        await dialog.Result;
-    }
-
-    private async Task OpenManageWorkersAsync()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ManageWorkersDialog>("Gestión de trabajadores", options);
         await dialog.Result;
     }
 

@@ -2,8 +2,8 @@ using GestionPersonal.Domain.Entities;
 
 namespace GestionPersonal.Application.Workers;
 
-public sealed record WorkerResponse(int Id, string FullName, string Role, bool Active, bool MustChangePin)
+public sealed record WorkerResponse(int Id, string FullName, bool Active, bool MustChangePin)
 {
     public static WorkerResponse From(Worker worker) =>
-        new(worker.Id, worker.FullName, worker.Role.ToString().ToLowerInvariant(), worker.Active, worker.MustChangePin);
+        new(worker.Id, worker.FullName, worker.Active, worker.MustChangePin);
 }

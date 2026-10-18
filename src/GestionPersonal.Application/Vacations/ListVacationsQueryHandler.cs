@@ -7,24 +7,24 @@ public sealed class ListVacationsQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ListVacationsQueryHandler(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<IReadOnlyList<VacationResponse>>> Handle(
         ListVacationsQuery query,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(
-            _workerRepository, _currentCenter, query.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, query.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {

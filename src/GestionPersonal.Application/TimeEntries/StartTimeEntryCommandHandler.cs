@@ -7,16 +7,16 @@ namespace GestionPersonal.Application.TimeEntries;
 public sealed class StartTimeEntryCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
     private readonly ITimeEntryRepository _timeEntryRepository;
 
     public StartTimeEntryCommandHandler(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         ITimeEntryRepository timeEntryRepository)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
         _timeEntryRepository = timeEntryRepository;
     }
 
@@ -24,21 +24,29 @@ public sealed class StartTimeEntryCommandHandler
         StartTimeEntryCommand command,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, command.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, command.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {
             return workerResult.Error;
         }
 
-        var existing = await _timeEntryRepository.GetOpenEntryByWorkerAsync(command.WorkerId, cancellationToken);
+        return await StartForWorkerAsync(command.WorkerId, cancellationToken);
+    }
+
+    internal async Task<Result<TimeEntryResponse>> StartForWorkerAsync(
+        int workerId,
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await _timeEntryRepository.GetOpenEntryByWorkerAsync(workerId, cancellationToken);
 
         if (existing is not null)
         {
             return Error.Conflict("La jornada ya está iniciada.");
         }
 
-        var timeEntry = TimeEntry.Start(command.WorkerId, DateTimeOffset.UtcNow);
+        var timeEntry = TimeEntry.Start(workerId, DateTimeOffset.UtcNow);
 
         await _timeEntryRepository.AddAsync(timeEntry, cancellationToken);
 

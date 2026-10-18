@@ -12,6 +12,9 @@ public partial class CenterLoginForm
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
+
     [Parameter]
     public EventCallback OnLoggedInAsync { get; set; }
 
@@ -47,14 +50,18 @@ public partial class CenterLoginForm
         {
             var result = await Js.InvokeAsync<BrowserLoginResult>("centerLogin", _username.Trim(), _password);
 
-            if (result.Ok)
-            {
-                await OnLoggedInAsync.InvokeAsync();
-            }
-            else
+            if (!result.Ok)
             {
                 _error = result.Error;
+                return;
             }
+
+            if (result.MustChangePassword && !await ForceChangePasswordAsync())
+            {
+                return;
+            }
+
+            await OnLoggedInAsync.InvokeAsync();
         }
         catch (Exception)
         {
@@ -66,8 +73,19 @@ public partial class CenterLoginForm
         }
     }
 
+    private async Task<bool> ForceChangePasswordAsync()
+    {
+        var parameters = new DialogParameters { ["CurrentPassword"] = _password };
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false, CloseButton = false };
+
+        var dialog = await DialogService.ShowAsync<ChangePasswordDialog>("Debes cambiar tu contraseña", parameters, options);
+        var result = await dialog.Result;
+
+        return result is not null && !result.Canceled;
+    }
+
     private void ForgotPassword() =>
         Snackbar.Add("Para recuperar tu contraseña, ponte en contacto con soporte.", Severity.Info);
 
-    private sealed record BrowserLoginResult(bool Ok, string? Error);
+    private sealed record BrowserLoginResult(bool Ok, string? Error, bool MustChangePassword);
 }

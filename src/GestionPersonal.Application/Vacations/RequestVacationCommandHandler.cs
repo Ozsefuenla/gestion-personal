@@ -9,31 +9,29 @@ public sealed class RequestVacationCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public RequestVacationCommandHandler(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<VacationResponse>> Handle(
         RequestVacationCommand command,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(
-            _workerRepository, _currentCenter, command.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, command.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {
             return workerResult.Error;
         }
-
-        var worker = workerResult.Value;
 
         var type = VacationTypeHelper.Parse(command.Type);
 
@@ -63,11 +61,6 @@ public sealed class RequestVacationCommandHandler
             command.EndDate,
             type.Value,
             now);
-
-        if (worker.Role == Role.Admin)
-        {
-            vacation.Approve(now);
-        }
 
         await _vacationRepository.AddAsync(vacation, cancellationToken);
 
