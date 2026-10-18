@@ -8,13 +8,14 @@ frontend en Blazor Server.
 ## Stack
 - Backend: ASP.NET Core 10 + Blazor Server (C#).
 - Persistencia: PostgreSQL con Dapper (SQL directo) y migraciones DbUp
-  (sin ORM). En tests se usan repositorios in-memory como dobles.
+  (sin ORM). En tests se usan fakes in-memory de `GestionPersonal.TestSupport`.
 - Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
 - Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña y PIN).
   Pendiente: JWT del trabajador para fichaje en tablet.
 
 ## Arquitectura (Clean Architecture)
-- Proyectos: `Domain`, `Application`, `Infrastructure`, `Web` (Blazor) y `Tests`.
+- Proyectos: `Domain`, `Application`, `Infrastructure`, `Web` (Blazor), `Tests` y
+  `TestSupport` (dobles in-memory, solo para tests).
 - Las dependencias apuntan siempre hacia adentro; el núcleo (Domain) no
   depende de infraestructura ni de ASP.NET.
 - Cada feature vive en una carpeta de `Application` con su request (record),
@@ -76,8 +77,9 @@ frontend en Blazor Server.
 ## Testing
 - TDD: escribir el test antes que la implementación.
 - Framework: xUnit. Los tests ejercitan los servicios de aplicación
-  (`Application/Services`) con repositorios en memoria (`AddInMemoryInfrastructure`)
-  y un `ICurrentCenter` falso. Los tests de integración también usan in-memory.
+  (`Application/Services`) con los fakes in-memory de `GestionPersonal.TestSupport`
+  (`AddInMemoryTestInfrastructure`) y un `ICurrentCenter` falso. Los tests de
+  integración también usan esos fakes.
 - Comandos: `dotnet test`, `dotnet build`.
 
 ## Comandos útiles

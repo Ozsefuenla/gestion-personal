@@ -1,6 +1,6 @@
 using GestionPersonal.Application.Abstractions;
-using GestionPersonal.Infrastructure;
 using GestionPersonal.Infrastructure.Persistence.Postgres;
+using GestionPersonal.TestSupport;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -25,7 +25,7 @@ public sealed class GestionPersonalWebAppFactory : WebApplicationFactory<Program
             services.RemoveAll<IDbConnectionFactory>();
             services.RemoveAll<DatabaseInitializer>();
 
-            services.AddInMemoryInfrastructure();
+            services.AddInMemoryTestInfrastructure();
         });
     }
 }

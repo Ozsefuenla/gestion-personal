@@ -1,7 +1,6 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Infrastructure.Persistence.Postgres;
 using GestionPersonal.Infrastructure.Persistence.Postgres.Repositories;
-using GestionPersonal.Infrastructure.Persistence.Repositories;
 using GestionPersonal.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,13 +13,6 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var provider = configuration["Persistence:Provider"] ?? "Postgres";
-
-        if (string.Equals(provider, "InMemory", StringComparison.OrdinalIgnoreCase))
-        {
-            return services.AddInMemoryInfrastructure();
-        }
-
         var connectionString = configuration.GetConnectionString("Default");
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -49,19 +41,6 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<IPasswordHasher>(),
             seedDemoData,
             adminPassword));
-
-        return services;
-    }
-
-    public static IServiceCollection AddInMemoryInfrastructure(this IServiceCollection services)
-    {
-        services.AddSingleton<IWorkerRepository, InMemoryWorkerRepository>();
-        services.AddSingleton<ITimeEntryRepository, InMemoryTimeEntryRepository>();
-        services.AddSingleton<IVacationRepository, InMemoryVacationRepository>();
-        services.AddSingleton<ICenterRepository, InMemoryCenterRepository>();
-        services.AddSingleton<ICenterUserRepository, InMemoryCenterUserRepository>();
-        services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
-        services.AddSingleton<ILoginAttemptTracker, InMemoryLoginAttemptTracker>();
 
         return services;
     }

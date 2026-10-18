@@ -58,14 +58,13 @@ ORM completo.
     "Default": "Host=localhost;Port=5432;Database=gestionpersonal;Username=gestionpersonal;Password=gestionpersonal"
   },
   "Persistence": {
-    "Provider": "Postgres",
     "SeedDemoData": true,
     "AdminPassword": "admin"
   }
 }
 ```
 
-- `Persistence:Provider`: `Postgres` (por defecto) o `InMemory`.
+- La persistencia es siempre PostgreSQL; no hay proveedor in-memory en producción.
 - `Persistence:SeedDemoData`: datos demo. Solo en `appsettings.Development.json`.
 - `Persistence:AdminPassword`: contraseña inicial del usuario `admin` (solo se usa
   si el usuario aún no existe). En producción se define con
@@ -118,8 +117,9 @@ dotnet run --project src/GestionPersonal.Web
 
 ## Tests
 
-- Los tests unitarios usan los repositorios in-memory como dobles
-  (`AddInMemoryInfrastructure()`).
-- Los tests de integración reemplazan la infraestructura Postgres por in-memory
+- Los dobles de test viven en `GestionPersonal.TestSupport` y se registran con
+  `AddInMemoryTestInfrastructure()`; no forman parte de la infraestructura de
+  producción.
+- Los tests de integración reemplazan la infraestructura Postgres por esos fakes
   (`ConfigureTestServices`), por lo que el CI no necesita un servidor PostgreSQL.
 - Una futura suite de integración contra PostgreSQL real puede usar Testcontainers.

@@ -1,7 +1,7 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
 
-namespace GestionPersonal.Infrastructure.Persistence.Repositories;
+namespace GestionPersonal.TestSupport.Fakes;
 
 public sealed class InMemoryCenterUserRepository : ICenterUserRepository
 {

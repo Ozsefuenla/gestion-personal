@@ -80,7 +80,8 @@ src/
 ├─ GestionPersonal.slnx
 ├─ GestionPersonal.Domain/          Entidades y enums (sin dependencias)
 ├─ GestionPersonal.Application/     Casos de uso, DTOs, validadores, Result
-├─ GestionPersonal.Infrastructure/  Persistencia (PostgreSQL + Dapper/DbUp) e implementaciones
+├─ GestionPersonal.Infrastructure/  Persistencia PostgreSQL (Dapper + DbUp) e implementaciones
+├─ GestionPersonal.TestSupport/     Dobles in-memory para tests
 ├─ GestionPersonal.Web/             App Blazor Server + MudBlazor (monolito desplegable)
 ├─ GestionPersonal.Tests/           Tests de servicios de aplicación
 └─ GestionPersonal.IntegrationTests/ Tests de integración del flujo web

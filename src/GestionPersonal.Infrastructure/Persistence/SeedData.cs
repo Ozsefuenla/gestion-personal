@@ -2,7 +2,7 @@ using GestionPersonal.Domain.Entities;
 
 namespace GestionPersonal.Infrastructure.Persistence;
 
-internal static class SeedData
+public static class SeedData
 {
     private static readonly TimeZoneInfo Madrid = ResolveMadrid();
 

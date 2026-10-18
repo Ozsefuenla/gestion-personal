@@ -2,7 +2,7 @@ using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
 using GestionPersonal.Domain.Enums;
 
-namespace GestionPersonal.Infrastructure.Persistence.Repositories;
+namespace GestionPersonal.TestSupport.Fakes;
 
 public sealed class InMemoryVacationRepository : IVacationRepository
 {

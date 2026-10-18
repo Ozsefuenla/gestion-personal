@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GestionPersonal.Application\GestionPersonal.Application.csproj" />
     <ProjectReference Include="..\GestionPersonal.Infrastructure\GestionPersonal.Infrastructure.csproj" />
+    <ProjectReference Include="..\GestionPersonal.TestSupport\GestionPersonal.TestSupport.csproj" />
   </ItemGroup>
 
 </Project>

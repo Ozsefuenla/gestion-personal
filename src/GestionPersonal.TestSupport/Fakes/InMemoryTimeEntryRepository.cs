@@ -1,8 +1,9 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
 using GestionPersonal.Domain.Enums;
+using GestionPersonal.Infrastructure.Persistence;
 
-namespace GestionPersonal.Infrastructure.Persistence.Repositories;
+namespace GestionPersonal.TestSupport.Fakes;
 
 public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
 {

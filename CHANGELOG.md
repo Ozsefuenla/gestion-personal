@@ -28,10 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Los identificadores de trabajadores y centros los asigna PostgreSQL
   (`INSERT ... RETURNING id`); se elimina el cálculo manual `max(Id)+1`.
 - `AddInfrastructure(IConfiguration)` registra la infraestructura PostgreSQL con
-  repositorios scoped; `AddInMemoryInfrastructure()` queda como doble de test.
-- Configuración de persistencia mediante `Persistence:Provider` y
+  repositorios scoped; los dobles in-memory viven en `GestionPersonal.TestSupport`
+  (`AddInMemoryTestInfrastructure`).
+- La persistencia es siempre PostgreSQL; la cadena se configura con
   `ConnectionStrings:Default` (variable de entorno en producción).
 - README y AGENTS.md actualizados con los pasos de Docker y PostgreSQL.
+
+### Removed
+- Persistencia in-memory de producción (`InMemory*Repository`,
+  `AddInMemoryInfrastructure`) y la clave `Persistence:Provider`; los dobles de
+  test se movieron a `GestionPersonal.TestSupport`.
 
 ## [1.0.0] - 2026-10-18
 

@@ -14,9 +14,10 @@ proceso. No existe un servicio HTTP de API separado.
 |----------|--------------|-----------------|
 | `GestionPersonal.Domain` | — | Entidades (`Center`, `CenterUser`, `Worker`, `TimeEntry`, `Vacation`) y enums (`Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`) |
 | `GestionPersonal.Application` | `Domain` | Casos de uso, DTOs (`record`), validadores, interfaces de repositorio, `Result`, servicios de aplicación (facades) |
-| `GestionPersonal.Infrastructure` | `Application` | Persistencia PostgreSQL (Dapper + DbUp), repositorios in-memory para tests, DI |
+| `GestionPersonal.Infrastructure` | `Application` | Persistencia PostgreSQL (Dapper + DbUp) y DI |
+| `GestionPersonal.TestSupport` | `Application`, `Domain`, `Infrastructure` | Dobles in-memory y registro de infraestructura para tests |
 | `GestionPersonal.Web` | `Application`, `Infrastructure` | Frontend Blazor Server + MudBlazor, autenticación por cookie, implementación de `ICurrentCenter` |
-| `GestionPersonal.Tests` | `Application`, `Infrastructure` | Tests de los servicios de aplicación y casos de uso (xUnit) |
+| `GestionPersonal.Tests` | `Application`, `Infrastructure`, `TestSupport` | Tests de los servicios de aplicación y casos de uso (xUnit) |
 
 ## Capas
 
@@ -46,16 +47,20 @@ proceso. No existe un servicio HTTP de API separado.
   y repositorios Dapper (`PostgresCenterRepository`, `PostgresCenterUserRepository`,
   `PostgresWorkerRepository`, `PostgresTimeEntryRepository`, `PostgresVacationRepository`).
 - `Persistence/Migrations/`: scripts SQL versionados embebidos que aplica DbUp.
-- `Persistence/Repositories/`: repositorios in-memory usados como dobles de test
-  (seed de centro, trabajadores, fichajes y ausencias).
 - `Security/`: `BcryptPasswordHasher`, `InMemoryLoginAttemptTracker`.
 - `DependencyInjection.cs`: `AddInfrastructure(IConfiguration)` registra PostgreSQL
-  (o in-memory si `Persistence:Provider=InMemory`); `AddInMemoryInfrastructure()`
-  registra solo los dobles.
+  y exige `ConnectionStrings:Default`.
+
+### TestSupport
+- `Fakes/`: repositorios in-memory usados como dobles de test (seed de centro,
+  trabajadores, fichajes y ausencias).
+- `TestInfrastructureServiceCollectionExtensions.cs`: `AddInMemoryTestInfrastructure()`
+  registra los dobles para los tests unitarios y de integración.
 
 ### Web
 - `Program.cs`: `AddRazorComponents` + interactividad Server, `AddMudServices`, `AddApplication()`,
-  `AddInfrastructure()`, autenticación por cookie, rate limiting y `ICurrentCenter` → `CookieCurrentCenter`.
+  `AddInfrastructure(builder.Configuration)`, autenticación por cookie, rate limiting y
+  `ICurrentCenter` → `CookieCurrentCenter`.
 - `Security/CookieCurrentCenter.cs`: implementa `ICurrentCenter` leyendo la claim `centerId` de la cookie.
 - `Endpoints/AuthEndpoints.cs`: login/logout del centro (cookie HttpOnly).
 - `Services/`: `TimeControlPdfExporter`, formateo de horas.
@@ -78,3 +83,4 @@ proceso. No existe un servicio HTTP de API separado.
 - `BCrypt.Net-Next`, `Npgsql`, `Dapper` y `dbup-postgresql` (Infrastructure)
 - `MudBlazor` y `QuestPDF` (Web)
 - `xUnit`, `Microsoft.NET.Test.Sdk` y `Microsoft.Extensions.DependencyInjection` (Tests)
+- `Microsoft.Extensions.DependencyInjection.Abstractions` (TestSupport)
