@@ -9,9 +9,29 @@ MonsterASP.NET. El despliegue se hace desde GitHub Actions con aprobación manua
 - Proveedor: **MonsterASP.NET Free** (`https://gestion-personal.runasp.net`).
 - Runtime: **.NET 10**, hosting model **InProcess**.
 - Deploy: **Web Deploy** desde un runner de GitHub Actions.
-- Persistencia actual: en memoria. Las claves de Data Protection se guardan en
-  `App_Data/keys` en producción.
+- Persistencia: **PostgreSQL externo** (MonsterASP Free no incluye base de datos).
+  La cadena de conexión llega por la variable de entorno `ConnectionStrings__Default`.
+  Las claves de Data Protection se guardan en `App_Data/keys` en producción.
 - HTTPS activo. La cookie de autenticación es de sesión y `Secure`.
+
+## Base de datos en producción
+
+1. Provisionar un PostgreSQL accesible desde MonsterASP (Neon, Supabase, RDS,
+   DigitalOcean, VPS propio, etc.). El plan Free no incluye BBDD.
+2. Crear la base de datos y un usuario con permisos de DDL (DbUp crea el esquema
+   y la tabla `schemaversions`).
+3. Configurar `ConnectionStrings__Default` como secreto del environment
+   `production` (o variable del hosting). No commitear la cadena.
+4. Dejar `Persistence:SeedDemoData` en `false` y definir
+   `Persistence__AdminPassword` con una contraseña fuerte; la app siembra el
+   centro demo y el usuario `admin` de forma idempotente.
+5. Al arrancar, DbUp aplica las migraciones pendientes. La base de datos debe
+   existir antes del primer arranque.
+6. Antes de una release con cambios de esquema: backup y expand/contract. Un
+   rollback de aplicación no revierte migraciones ni datos.
+
+Los detalles de esquema, migraciones y seed están en
+[`docs/0011-persistencia-postgres.md`](0011-persistencia-postgres.md).
 
 ## Artefacto
 
@@ -95,8 +115,8 @@ access**) y nunca se commitean.
    del release indicado, pero **no** lo promueve a latest.
 5. Verificar `/health`, `/login` y `/app`.
 
-Un rollback de aplicación **no revierte** cambios de esquema ni datos. Cuando se
-migre a SQL, aplicar expand/contract y backup previo.
+Un rollback de aplicación **no revierte** cambios de esquema ni datos. Antes de
+cambiar el esquema, aplicar expand/contract y backup previo.
 
 ## Reglas de GitHub
 
@@ -112,7 +132,8 @@ migre a SQL, aplicar expand/contract y backup previo.
 
 - `GET /health` → 200.
 - `GET /login` → 200.
-- Login con el usuario demo → `/app` → 200.
+- Login con el usuario demo → `/app` → 200 (implica que la conexión a PostgreSQL
+  y el esquema están operativos).
 - Logout.
 - Export PDF.
 - En DevTools, el WebSocket de Blazor conecta.

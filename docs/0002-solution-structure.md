@@ -14,7 +14,7 @@ proceso. No existe un servicio HTTP de API separado.
 |----------|--------------|-----------------|
 | `GestionPersonal.Domain` | — | Entidades (`Center`, `CenterUser`, `Worker`, `TimeEntry`, `Vacation`) y enums (`Role`, `TimeEntryStatus`, `VacationStatus`, `VacationType`) |
 | `GestionPersonal.Application` | `Domain` | Casos de uso, DTOs (`record`), validadores, interfaces de repositorio, `Result`, servicios de aplicación (facades) |
-| `GestionPersonal.Infrastructure` | `Application` | Implementaciones de persistencia (por ahora en memoria), DI |
+| `GestionPersonal.Infrastructure` | `Application` | Persistencia PostgreSQL (Dapper + DbUp), repositorios in-memory para tests, DI |
 | `GestionPersonal.Web` | `Application`, `Infrastructure` | Frontend Blazor Server + MudBlazor, autenticación por cookie, implementación de `ICurrentCenter` |
 | `GestionPersonal.Tests` | `Application`, `Infrastructure` | Tests de los servicios de aplicación y casos de uso (xUnit) |
 
@@ -42,9 +42,16 @@ proceso. No existe un servicio HTTP de API separado.
 - `DependencyInjection.cs`: `AddApplication()` registra handlers, validadores, `IRequestValidator` y los servicios.
 
 ### Infrastructure
-- `Persistence/Repositories/`: repositorios en memoria con datos de ejemplo.
+- `Persistence/Postgres/`: `NpgsqlConnectionFactory`, `DatabaseInitializer` (DbUp + seed)
+  y repositorios Dapper (`PostgresCenterRepository`, `PostgresCenterUserRepository`,
+  `PostgresWorkerRepository`, `PostgresTimeEntryRepository`, `PostgresVacationRepository`).
+- `Persistence/Migrations/`: scripts SQL versionados embebidos que aplica DbUp.
+- `Persistence/Repositories/`: repositorios in-memory usados como dobles de test
+  (seed de centro, trabajadores, fichajes y ausencias).
 - `Security/`: `BcryptPasswordHasher`, `InMemoryLoginAttemptTracker`.
-- `DependencyInjection.cs`: `AddInfrastructure()` registra las implementaciones.
+- `DependencyInjection.cs`: `AddInfrastructure(IConfiguration)` registra PostgreSQL
+  (o in-memory si `Persistence:Provider=InMemory`); `AddInMemoryInfrastructure()`
+  registra solo los dobles.
 
 ### Web
 - `Program.cs`: `AddRazorComponents` + interactividad Server, `AddMudServices`, `AddApplication()`,
@@ -57,14 +64,17 @@ proceso. No existe un servicio HTTP de API separado.
 - Los `record` de respuesta de `Application` se reutilizan en la UI; no hay una capa `Models/` duplicada.
 
 ## Persistencia
-- Por ahora en memoria (sin ORM). La persistencia definitiva irá a una base de
-  datos SQL mediante acceso directo (sin EF Core).
+- PostgreSQL con acceso SQL directo mediante Dapper, sin ORM.
+- Migraciones versionadas con DbUp (scripts embebidos) aplicadas al arranque.
+- Seed idempotente: centro demo y `admin` siempre; datos de demostración solo en
+  desarrollo.
+- Detalle de esquema, configuración y despliegue en `docs/0011-persistencia-postgres.md`.
 
 ## Fechas y horas
 - Usar siempre `DateTimeOffset` en C# y UTC en base de datos.
 
 ## Paquetes NuGet principales
 - `FluentValidation.DependencyInjectionExtensions` (Application)
-- `BCrypt.Net-Next` (Infrastructure)
+- `BCrypt.Net-Next`, `Npgsql`, `Dapper` y `dbup-postgresql` (Infrastructure)
 - `MudBlazor` y `QuestPDF` (Web)
 - `xUnit`, `Microsoft.NET.Test.Sdk` y `Microsoft.Extensions.DependencyInjection` (Tests)

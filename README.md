@@ -15,7 +15,7 @@ capa `Application` en proceso.
 | Backend | ASP.NET Core 10 + Blazor Server (C#), monolito modular |
 | Validación de entrada | FluentValidation |
 | Manejo de errores | Result Pattern |
-| Persistencia | En memoria (actual). SQL directo sin ORM (pendiente) |
+| Persistencia | PostgreSQL + Dapper + DbUp (SQL directo, sin ORM) |
 | Autenticación | Cookie HTTP-Only para el centro; PIN de trabajador con BCrypt |
 | Testing | xUnit (tests de servicios de aplicación y casos de uso) |
 | Frontend | Blazor Web App (.NET 10, interactividad Server) + MudBlazor |
@@ -25,19 +25,39 @@ capa `Application` en proceso.
 ### Prerrequisitos
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (o Docker Engine + Compose)
 
 ### Pasos
 
 1. Clonar el repositorio.
-2. Compilar la solución:
+2. Levantar PostgreSQL en local:
+   ```
+   docker compose up -d
+   ```
+   El contenedor `gestionpersonal-postgres` expone PostgreSQL en `localhost:5432`.
+3. Compilar la solución:
    ```
    dotnet build src/GestionPersonal.slnx
    ```
-3. Ejecutar la aplicación:
+4. Ejecutar la aplicación:
    ```
    dotnet run --project src/GestionPersonal.Web
    ```
-4. Abrir la URL que muestra la consola: la landing está en `/` y el dashboard en `/app`.
+5. Abrir la URL que muestra la consola: la landing está en `/` y el dashboard en `/app`.
+
+Al arrancar, la aplicación aplica las migraciones (DbUp) y siembra el centro demo
+y el usuario `admin`. En desarrollo también crea los trabajadores y fichajes de
+ejemplo. Para reiniciar la base de datos desde cero:
+
+```
+docker compose down -v
+docker compose up -d
+```
+
+La cadena de conexión de desarrollo está en
+`src/GestionPersonal.Web/appsettings.Development.json`. En producción se
+configura con la variable de entorno `ConnectionStrings__Default`. Los detalles
+están en [`docs/0011-persistencia-postgres.md`](docs/0011-persistencia-postgres.md).
 
 ### Tests
 
@@ -60,7 +80,7 @@ src/
 ├─ GestionPersonal.slnx
 ├─ GestionPersonal.Domain/          Entidades y enums (sin dependencias)
 ├─ GestionPersonal.Application/     Casos de uso, DTOs, validadores, Result
-├─ GestionPersonal.Infrastructure/  Persistencia (en memoria) e implementaciones
+├─ GestionPersonal.Infrastructure/  Persistencia (PostgreSQL + Dapper/DbUp) e implementaciones
 ├─ GestionPersonal.Web/             App Blazor Server + MudBlazor (monolito desplegable)
 ├─ GestionPersonal.Tests/           Tests de servicios de aplicación
 └─ GestionPersonal.IntegrationTests/ Tests de integración del flujo web
@@ -75,7 +95,9 @@ docs/
 ├─ 0007-seguridad-owasp.md
 ├─ 0008-frontend-ui-admin.md
 ├─ 0009-gestion-trabajadores.md
-└─ 0010-deployment.md
+├─ 0010-deployment.md
+└─ 0011-persistencia-postgres.md
+docker-compose.yml
 AGENTS.md
 CHANGELOG.md
 ```
@@ -134,11 +156,11 @@ La contraseña se guarda hasheada con BCrypt.
 Los trabajadores se identifican por un **PIN de 4 dígitos** asociado a cada
 trabajador (no hay email y el PIN no es único global).
 
-PINs de prueba (en memoria, centro `1`): `1` María García → `1111`, `2` Ana López →
-`2222`, `3` Carlos Ruiz → `3333`.
+PINs de prueba (centro `1`, sembrados en desarrollo): María García → `1111`,
+Ana López → `2222`, Carlos Ruiz → `3333`. Los identificadores los asigna
+PostgreSQL al sembrar los datos.
 
 ## Pendientes
 
 - JWT del trabajador para fichaje en tablet.
-- Persistencia SQL real (hoy en memoria, sin ORM).
 - CSP en el Web (diferido por la complejidad de Blazor + Tailwind CDN).

@@ -6,8 +6,9 @@ para peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) y
 frontend en Blazor Server.
 
 ## Stack
-- Backend: ASP.NET Core 10 + Blazor Server (C#), persistencia en memoria (acceso
-  SQL directo pendiente, sin ORM).
+- Backend: ASP.NET Core 10 + Blazor Server (C#).
+- Persistencia: PostgreSQL con Dapper (SQL directo) y migraciones DbUp
+  (sin ORM). En tests se usan repositorios in-memory como dobles.
 - Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
 - Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña y PIN).
   Pendiente: JWT del trabajador para fichaje en tablet.
@@ -53,6 +54,8 @@ frontend en Blazor Server.
   Se implementa como página raíz en `Components/Pages/LandingPage.razor` (ruta `/`) con su
   layout `LandingLayout`. El dashboard tras login de centro está en `/app` (`Dashboard.razor`
   + `AppLayout.razor`).
+- La persistencia (esquema, migraciones DbUp, seed y configuración local/producción)
+  está en `docs/0011-persistencia-postgres.md`.
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo
@@ -73,9 +76,12 @@ frontend en Blazor Server.
 ## Testing
 - TDD: escribir el test antes que la implementación.
 - Framework: xUnit. Los tests ejercitan los servicios de aplicación
-  (`Application/Services`) con repositorios en memoria y un `ICurrentCenter` falso.
+  (`Application/Services`) con repositorios en memoria (`AddInMemoryInfrastructure`)
+  y un `ICurrentCenter` falso. Los tests de integración también usan in-memory.
 - Comandos: `dotnet test`, `dotnet build`.
 
 ## Comandos útiles
+- `docker compose up -d` (PostgreSQL local; necesario para `dotnet run`).
+- `docker compose down -v` (reinicia la base de datos desde cero).
 - `dotnet build` / `dotnet test` desde `src/`.
 - Frontend: `dotnet run --project src/GestionPersonal.Web`.

@@ -63,4 +63,4 @@ vía `Application/Services`:
 ## Pendientes
 
 - JWT del trabajador para fichaje en tablet (la sesión del centro hoy es solo cookie).
-- Persistencia SQL real.
+- Resolución real del centro en el login (hoy se opera contra el centro demo `1`).
