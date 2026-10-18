@@ -46,6 +46,13 @@ dotnet test src/GestionPersonal.Tests/GestionPersonal.Tests.csproj
 dotnet test src/GestionPersonal.IntegrationTests/GestionPersonal.IntegrationTests.csproj
 ```
 
+## Despliegue
+
+El despliegue de producción se hace desde GitHub Actions con aprobación manual.
+Las ramas `release/vX.Y.Z` generan un tag y un artefacto; `deploy.yml` publica
+en MonsterASP y `rollback.yml` permite volver a un tag anterior. El runbook
+completo está en [`docs/0010-deployment.md`](docs/0010-deployment.md).
+
 ## Estructura del proyecto
 
 ```
@@ -67,7 +74,8 @@ docs/
 ├─ 0006-landing-page.md
 ├─ 0007-seguridad-owasp.md
 ├─ 0008-frontend-ui-admin.md
-└─ 0009-gestion-trabajadores.md
+├─ 0009-gestion-trabajadores.md
+└─ 0010-deployment.md
 AGENTS.md
 CHANGELOG.md
 ```
