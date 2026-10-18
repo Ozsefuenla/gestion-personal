@@ -1,0 +1,185 @@
+name: Deploy production
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag de release a desplegar (vX.Y.Z)'
+        required: true
+        type: string
+      mode:
+        description: 'release promueve el release; rollback no lo promueve'
+        required: false
+        type: string
+        default: release
+      reason:
+        description: 'Motivo del despliegue'
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag de release a desplegar (vX.Y.Z)'
+        required: true
+        type: string
+      mode:
+        description: 'release o rollback'
+        required: true
+        type: choice
+        options:
+          - release
+          - rollback
+        default: release
+      reason:
+        description: 'Motivo del despliegue'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.tag }} to production
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Validate inputs
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Tag inválido: $TAG"
+            exit 1
+          fi
+          if [[ "$MODE" != "release" && "$MODE" != "rollback" ]]; then
+            echo "::error::Modo inválido: $MODE"
+            exit 1
+          fi
+
+      - name: Check deployment configuration
+        shell: pwsh
+        env:
+          WEBSITE_NAME: ${{ secrets.WEBSITE_NAME }}
+          SERVER_COMPUTER_NAME: ${{ secrets.SERVER_COMPUTER_NAME }}
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          $missing = @()
+          foreach ($name in @('WEBSITE_NAME','SERVER_COMPUTER_NAME','SERVER_USERNAME','SERVER_PASSWORD','PRODUCTION_URL')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              $missing += $name
+            }
+          }
+          if ($missing.Count -gt 0) {
+            throw "Faltan secretos/variables de production: $($missing -join ', ')"
+          }
+
+      - name: Download release asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+          ASSET: GestionPersonal-${{ inputs.tag }}.zip
+        run: |
+          New-Item -ItemType Directory -Force -Path download | Out-Null
+          gh release download $env:TAG --pattern $env:ASSET --dir download
+          if (-not (Test-Path (Join-Path download $env:ASSET))) {
+            throw "No se encontró el asset $env:ASSET en el release $env:TAG"
+          }
+
+      - name: Extract artifact
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "download/GestionPersonal-${{ inputs.tag }}.zip" -DestinationPath publish -Force
+
+      - name: Verify artifact
+        shell: pwsh
+        run: |
+          foreach ($file in @('web.config','GestionPersonal.Web.dll')) {
+            if (-not (Test-Path (Join-Path 'publish' $file))) {
+              throw "El artefacto no contiene $file"
+            }
+          }
+
+      - name: Deploy with Web Deploy
+        uses: rasmusbuchholdt/simply-web-deploy@cf9160163099a3b6b8ddf3978ed26b348221bbb8
+        with:
+          website-name: ${{ secrets.WEBSITE_NAME }}
+          server-computer-name: ${{ secrets.SERVER_COMPUTER_NAME }}
+          server-username: ${{ secrets.SERVER_USERNAME }}
+          server-password: ${{ secrets.SERVER_PASSWORD }}
+          source-path: '\publish\'
+          target-delete: 'false'
+          skip-directory-paths: '\App_Data'
+
+      - name: Smoke test
+        shell: pwsh
+        env:
+          BASE_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          $base = $env:BASE_URL.TrimEnd('/')
+          $urls = @("$base/health", "$base/login")
+          foreach ($url in $urls) {
+            $ok = $false
+            for ($attempt = 1; $attempt -le 12; $attempt++) {
+              try {
+                $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 -MaximumRedirection 5
+                if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
+                  $ok = $true
+                  break
+                }
+              } catch {
+                Start-Sleep -Seconds 10
+              }
+            }
+            if (-not $ok) {
+              throw "Smoke test falló para $url"
+            }
+          }
+
+      - name: Promote release to latest
+        if: ${{ inputs.mode == 'release' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" --prerelease=false --latest
+
+      - name: Write deployment summary
+        if: always()
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          MODE: ${{ inputs.mode }}
+          REASON: ${{ inputs.reason }}
+          URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          {
+            echo "## Deployment production"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "| --- | --- |"
+            echo "| Tag | \`$TAG\` |"
+            echo "| Modo | \`$MODE\` |"
+            echo "| URL | $URL |"
+            echo "| Actor | @${{ github.actor }} |"
+            echo "| Motivo | ${REASON:-—} |"
+          } >> "$GITHUB_STEP_SUMMARY"

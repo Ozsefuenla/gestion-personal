@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Workflows `release.yml`, `deploy.yml` y `rollback.yml`: release por rama
+  `release/vX.Y.Z`, despliegue con aprobación manual del environment `production`
+  y rollback manual por tag.
+- Runbook de despliegue (`docs/0010-deployment.md`).
 - Autenticación del centro con token antiforgery: endpoint `GET /auth/csrf` y envío de
   `RequestVerificationToken` en login/logout.
 - Proyecto `GestionPersonal.IntegrationTests` con pruebas del flujo de autenticación

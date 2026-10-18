@@ -1,0 +1,26 @@
+name: Rollback production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag de release al que volver (vX.Y.Z)'
+        required: true
+        type: string
+      reason:
+        description: 'Motivo del rollback'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    name: Rollback to ${{ inputs.tag }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      tag: ${{ inputs.tag }}
+      mode: rollback
+      reason: ${{ inputs.reason }}
+    secrets: inherit
