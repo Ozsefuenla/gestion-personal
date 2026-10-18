@@ -34,6 +34,8 @@ public sealed class ResetWorkerPinCommandHandler
 
         scoped.Value.ResetPin(_passwordHasher.Hash(command.Pin));
 
+        await _workerRepository.UpdateAsync(scoped.Value, cancellationToken);
+
         return Result.Success();
     }
 }

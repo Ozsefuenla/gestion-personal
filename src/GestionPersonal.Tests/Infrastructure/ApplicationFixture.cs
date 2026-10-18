@@ -13,7 +13,7 @@ public sealed class ApplicationFixture : IDisposable
     {
         var services = new ServiceCollection();
         services.AddApplication();
-        services.AddInfrastructure();
+        services.AddInMemoryInfrastructure();
         services.AddSingleton<ICurrentCenter>(new FakeCurrentCenter(TestCenterId));
 
         Provider = services.BuildServiceProvider();

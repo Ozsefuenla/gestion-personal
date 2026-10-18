@@ -7,44 +7,92 @@ namespace GestionPersonal.Infrastructure.Persistence.Repositories;
 public sealed class InMemoryWorkerRepository : IWorkerRepository
 {
     private readonly List<Worker> _workers;
+    private readonly Lock _gate = new();
 
     public InMemoryWorkerRepository(IPasswordHasher passwordHasher)
     {
+        var now = DateTimeOffset.UtcNow;
+
         _workers =
         [
-            Worker.Create(1, 1, "María García", passwordHasher.Hash("1111"), Role.Worker),
-            Worker.Create(2, 1, "Ana López", passwordHasher.Hash("2222"), Role.Worker),
-            Worker.Create(3, 1, "Carlos Ruiz", passwordHasher.Hash("3333"), Role.Admin)
+            Worker.Rehydrate(1, 1, "María García", passwordHasher.Hash("1111"), Role.Worker, true, false, TimeSpan.FromHours(8), now),
+            Worker.Rehydrate(2, 1, "Ana López", passwordHasher.Hash("2222"), Role.Worker, true, false, TimeSpan.FromHours(8), now),
+            Worker.Rehydrate(3, 1, "Carlos Ruiz", passwordHasher.Hash("3333"), Role.Admin, true, false, TimeSpan.FromHours(8), now)
         ];
     }
 
     public Task<Worker?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_workers.FirstOrDefault(w => w.Id == id));
+        lock (_gate)
+        {
+            return Task.FromResult(_workers.FirstOrDefault(w => w.Id == id));
+        }
     }
 
     public Task<Worker?> GetByIdAndCenterAsync(int id, int centerId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_workers.FirstOrDefault(w => w.Id == id && w.CenterId == centerId));
+        lock (_gate)
+        {
+            return Task.FromResult(_workers.FirstOrDefault(w => w.Id == id && w.CenterId == centerId));
+        }
     }
 
     public Task<IReadOnlyList<Worker>> GetByCenterAsync(int centerId, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<Worker> result = _workers
-            .Where(w => w.CenterId == centerId)
-            .ToList();
+        lock (_gate)
+        {
+            IReadOnlyList<Worker> result = _workers
+                .Where(w => w.CenterId == centerId)
+                .ToList();
 
-        return Task.FromResult(result);
+            return Task.FromResult(result);
+        }
     }
 
     public Task<IReadOnlyList<Worker>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<Worker> result = _workers.ToList();
-        return Task.FromResult(result);
+        lock (_gate)
+        {
+            IReadOnlyList<Worker> result = _workers.ToList();
+            return Task.FromResult(result);
+        }
     }
 
-    public void Add(Worker worker)
+    public Task<Worker> AddAsync(Worker worker, CancellationToken cancellationToken = default)
     {
-        _workers.Add(worker);
+        lock (_gate)
+        {
+            var id = _workers.Count == 0 ? 1 : _workers.Max(w => w.Id) + 1;
+
+            var persisted = Worker.Rehydrate(
+                id,
+                worker.CenterId,
+                worker.FullName,
+                worker.PinHash,
+                worker.Role,
+                worker.Active,
+                worker.MustChangePin,
+                worker.DailyHours,
+                worker.CreatedAt);
+
+            _workers.Add(persisted);
+
+            return Task.FromResult(persisted);
+        }
+    }
+
+    public Task UpdateAsync(Worker worker, CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            var index = _workers.FindIndex(w => w.Id == worker.Id);
+
+            if (index >= 0)
+            {
+                _workers[index] = worker;
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

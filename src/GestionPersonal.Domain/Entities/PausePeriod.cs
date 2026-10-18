@@ -11,6 +11,14 @@ public sealed class PausePeriod
         PausedAt = pausedAt;
     }
 
+    public static PausePeriod Rehydrate(DateTimeOffset pausedAt, DateTimeOffset? resumedAt)
+    {
+        return new PausePeriod(pausedAt)
+        {
+            ResumedAt = resumedAt
+        };
+    }
+
     internal void Close(DateTimeOffset now)
     {
         ResumedAt = now;

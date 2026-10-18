@@ -47,6 +47,8 @@ public sealed class EditActiveTimeEntryCommandHandler
             return Error.Validation(ex.Message);
         }
 
+        await _timeEntryRepository.UpdateAsync(entry, cancellationToken);
+
         return Result.Success();
     }
 }

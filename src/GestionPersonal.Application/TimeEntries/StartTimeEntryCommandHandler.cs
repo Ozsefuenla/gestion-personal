@@ -40,7 +40,7 @@ public sealed class StartTimeEntryCommandHandler
 
         var timeEntry = TimeEntry.Start(command.WorkerId, DateTimeOffset.UtcNow);
 
-        _timeEntryRepository.Add(timeEntry);
+        await _timeEntryRepository.AddAsync(timeEntry, cancellationToken);
 
         return TimeEntryResponse.From(timeEntry);
     }

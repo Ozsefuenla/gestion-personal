@@ -18,11 +18,10 @@ public sealed class Worker
     {
     }
 
-    public static Worker Create(int id, int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null, bool mustChangePin = false)
+    public static Worker Create(int centerId, string fullName, string pinHash, Role role, TimeSpan? dailyHours = null, bool mustChangePin = false)
     {
         return new Worker
         {
-            Id = id,
             CenterId = centerId,
             FullName = fullName.Trim(),
             PinHash = pinHash,
@@ -31,6 +30,31 @@ public sealed class Worker
             MustChangePin = mustChangePin,
             DailyHours = dailyHours ?? TimeSpan.FromHours(8),
             CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
+
+    public static Worker Rehydrate(
+        int id,
+        int centerId,
+        string fullName,
+        string pinHash,
+        Role role,
+        bool active,
+        bool mustChangePin,
+        TimeSpan dailyHours,
+        DateTimeOffset createdAt)
+    {
+        return new Worker
+        {
+            Id = id,
+            CenterId = centerId,
+            FullName = fullName,
+            PinHash = pinHash,
+            Role = role,
+            Active = active,
+            MustChangePin = mustChangePin,
+            DailyHours = dailyHours,
+            CreatedAt = createdAt
         };
     }
 

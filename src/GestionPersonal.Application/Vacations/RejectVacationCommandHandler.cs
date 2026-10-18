@@ -41,6 +41,8 @@ public sealed class RejectVacationCommandHandler
 
         vacation.Reject(DateTimeOffset.UtcNow);
 
+        await _vacationRepository.UpdateAsync(vacation, cancellationToken);
+
         return VacationResponse.From(vacation);
     }
 }

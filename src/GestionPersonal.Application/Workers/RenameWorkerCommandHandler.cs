@@ -31,6 +31,8 @@ public sealed class RenameWorkerCommandHandler
 
         scoped.Value.Rename(command.FullName);
 
+        await _workerRepository.UpdateAsync(scoped.Value, cancellationToken);
+
         return Result.Success();
     }
 }

@@ -50,6 +50,8 @@ public sealed class ChangePinCommandHandler
 
         worker.ChangePin(_passwordHasher.Hash(command.NewPin));
 
+        await _workerRepository.UpdateAsync(worker, cancellationToken);
+
         return Result.Success();
     }
 }

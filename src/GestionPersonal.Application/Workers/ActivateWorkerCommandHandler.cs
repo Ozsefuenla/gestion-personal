@@ -28,6 +28,8 @@ public sealed class ActivateWorkerCommandHandler
 
         scoped.Value.Activate();
 
+        await _workerRepository.UpdateAsync(scoped.Value, cancellationToken);
+
         return Result.Success();
     }
 }
