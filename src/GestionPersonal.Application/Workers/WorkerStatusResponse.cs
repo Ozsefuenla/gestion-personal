@@ -12,4 +12,5 @@ public sealed record WorkerStatusResponse(
     TimeSpan PausedTime,
     TimeSpan DailyHours,
     bool MustChangePin,
-    IReadOnlyList<TimelineSegmentResponse> Timeline);
+    IReadOnlyList<TimelineSegmentResponse> Timeline,
+    DateTimeOffset ComputedAt);

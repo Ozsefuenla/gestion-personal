@@ -1,10 +1,12 @@
 @page "/app"
 @attribute [Authorize]
 @layout AppLayout
+@implements IAsyncDisposable
 @inject IDialogService DialogService
 @inject IWorkersService Workers
 @inject IVacationsService Vacations
 @inject ICurrentUser CurrentUser
+@inject ITimeEntryChangeNotifier ChangeNotifier
 @inject IJSRuntime Js
 @inject NavigationManager Navigation
 
@@ -67,7 +69,7 @@ else if (_role == UserRole.CenterAdmin)
                     </MudText>
 
                     <div class="d-flex flex-column gap-2 mt-4">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenManageWorkersAsync">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" OnClick="OpenManageWorkersAsync">
                             <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
                             Gestión de trabajadores
                         </MudButton>
@@ -79,12 +81,12 @@ else if (_role == UserRole.CenterAdmin)
                             </MudButton>
                         </MudBadge>
 
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenWorkersTimeControlAsync">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" OnClick="OpenWorkersTimeControlAsync">
                             <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-2" />
                             Ver horarios de trabajadores
                         </MudButton>
 
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" OnClick="OpenCenterUsersAsync">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" FullWidth="true" OnClick="OpenCenterUsersAsync">
                             <MudIcon Icon="@Icons.Material.Filled.Tablet" Class="mr-2" />
                             Usuarios de tablet
                         </MudButton>
@@ -135,6 +137,7 @@ else
     private bool _showAbsences;
     private int _pendingAbsences;
     private bool _forcePinShown;
+    private IDisposable? _subscription;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,6 +153,7 @@ else
         if (_role == UserRole.CenterWorker && CurrentUser.WorkerId is int workerId)
         {
             _workerId = workerId;
+            _subscription = ChangeNotifier.Subscribe(OnTimeEntryChanged);
             await RefreshWorkerAsync();
         }
         else if (_role == UserRole.CenterAdmin)
@@ -168,6 +172,20 @@ else
         _forcePinShown = true;
         await ForceChangePinAsync();
         StateHasChanged();
+    }
+
+    private void OnTimeEntryChanged(int centerId)
+    {
+        if (centerId != _centerId)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            await RefreshWorkerAsync();
+            StateHasChanged();
+        });
     }
 
     private async Task RefreshWorkerAsync()
@@ -280,5 +298,11 @@ else
         _showAbsences = !_showAbsences;
         _showTimeControl = false;
         return Task.CompletedTask;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _subscription?.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

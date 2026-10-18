@@ -38,7 +38,7 @@ else
                 else
                 {
                     <div class="flex-grow-1" style="flex-basis: 0; min-width: 0;">
-                        <SegmentedBar Worked="day.WorkedTime" Paused="day.PausedTime" Target="DailyHours" />
+                        <SegmentedBar Worked="day.WorkedTime" Target="DailyHours" />
                     </div>
                     <MudText Typo="Typo.body2" Style="width: 110px; flex: none; white-space: nowrap;">Previstas: @TimeFormatting.FormatHours(DailyHours)</MudText>
                     <MudText Typo="Typo.body2" Style="width: 140px; flex: none; white-space: nowrap;">Trabajadas: @TimeFormatting.FormatHours(day.WorkedTime)</MudText>

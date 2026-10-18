@@ -1,4 +1,5 @@
 using FluentValidation;
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Account;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.Common;
@@ -16,6 +17,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IRequestValidator, RequestValidator>();
+
+        services.AddSingleton<ITimeEntryChangeNotifier, TimeEntryChangeNotifier>();
 
         services.AddScoped<ICentersService, CentersService>();
         services.AddScoped<IWorkersService, WorkersService>();

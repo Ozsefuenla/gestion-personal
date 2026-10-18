@@ -1,4 +1,5 @@
 @using System.Globalization
+@implements IAsyncDisposable
 @inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -12,16 +13,23 @@
             <circle cx="50" cy="50" r="40" fill="none" stroke="#43a047" stroke-width="12"
                     stroke-dasharray="@WorkedDashArray"
                     transform="rotate(-90 50 50)" />
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#fb8c00" stroke-width="12"
-                    stroke-dasharray="@PausedDashArray"
-                    stroke-dashoffset="@PausedDashOffset"
-                    transform="rotate(-90 50 50)" />
-            <text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#616161">@StatusLabel</text>
+            <text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="18" font-weight="600" fill="#1F1B2E">@PercentLabel</text>
         </svg>
 
-        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">
-            Trabajado: <b>@FormatDuration(Worker.WorkedTime)</b> &nbsp;·&nbsp; Pausado: <b>@FormatDuration(Worker.PausedTime)</b>
-        </MudText>
+        <div class="donut-stats">
+            <div class="donut-stat">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Trabajando</MudText>
+                <MudText Typo="Typo.body2" Class="tabular-nums"><b>@TimeFormatting.FormatLiveDuration(Live.Worked)</b></MudText>
+            </div>
+            <div class="donut-stat">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Pausado</MudText>
+                <MudText Typo="Typo.body2" Class="tabular-nums"><b>@TimeFormatting.FormatLiveDuration(Live.Paused)</b></MudText>
+            </div>
+            <div class="donut-stat">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Restante</MudText>
+                <MudText Typo="Typo.body2" Class="tabular-nums"><b>@TimeFormatting.FormatRemaining(Remaining)</b></MudText>
+            </div>
+        </div>
 
         @if (Worker.Timeline.Count == 0)
         {
@@ -71,44 +79,52 @@
     [Parameter]
     public EventCallback RefreshAsync { get; set; }
 
+    private readonly PeriodicTimer _clock = new(TimeSpan.FromSeconds(1));
+
+    protected override void OnInitialized() => _ = RunClockAsync();
+
+    private async Task RunClockAsync()
+    {
+        while (true)
+        {
+            try
+            {
+                if (!await _clock.WaitForNextTickAsync())
+                {
+                    return;
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+    }
+
     private bool IsActive => Worker.CurrentStatus is "in-progress" or "paused";
 
-    private double Circumference => 2 * Math.PI * 40;
-    private double TotalSeconds => (Worker.WorkedTime + Worker.PausedTime).TotalSeconds;
-    private double WorkedLength => TotalSeconds > 0 ? Worker.WorkedTime.TotalSeconds / TotalSeconds * Circumference : 0;
-    private double PausedLength => TotalSeconds > 0 ? Worker.PausedTime.TotalSeconds / TotalSeconds * Circumference : 0;
+    private (TimeSpan Worked, TimeSpan Paused) Live => LiveTime.Compute(Worker, DateTimeOffset.UtcNow);
+    private TimeSpan Remaining => Worker.DailyHours - Live.Worked;
+
+    private static double Circumference => 2 * Math.PI * 40;
+
+    private double CompletionRatio =>
+        Worker.DailyHours <= TimeSpan.Zero
+            ? 0
+            : Math.Clamp(Live.Worked.TotalSeconds / Worker.DailyHours.TotalSeconds, 0, 1);
+
+    private double WorkedLength => CompletionRatio * Circumference;
 
     private string WorkedDashArray => $"{WorkedLength.ToString("F2", CultureInfo.InvariantCulture)} {Circumference.ToString("F2", CultureInfo.InvariantCulture)}";
-    private string PausedDashArray => $"{PausedLength.ToString("F2", CultureInfo.InvariantCulture)} {Circumference.ToString("F2", CultureInfo.InvariantCulture)}";
-    private string PausedDashOffset => (-WorkedLength).ToString("F2", CultureInfo.InvariantCulture);
+
+    private string PercentLabel => $"{(int)Math.Round(CompletionRatio * 100)}%";
 
     private DateTimeOffset? EndedAt =>
         Worker.CurrentStatus == "finished" && Worker.Timeline.Count > 0
             ? Worker.Timeline[^1].To
             : null;
-
-    private string StatusLabel => Worker.CurrentStatus switch
-    {
-        "in-progress" => "En curso",
-        "paused" => "En pausa",
-        "finished" => "Finalizado",
-        _ => "Sin iniciar"
-    };
-
-    private static string FormatDuration(TimeSpan duration)
-    {
-        if (duration.TotalHours >= 1)
-        {
-            return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
-        }
-
-        if (duration.TotalMinutes >= 1)
-        {
-            return $"{duration.Minutes}m {duration.Seconds}s";
-        }
-
-        return $"{duration.Seconds}s";
-    }
 
     private async Task OpenEditAsync(TimelineSegmentResponse segment)
     {
@@ -152,5 +168,11 @@
 
         await RefreshAsync.InvokeAsync();
         Snackbar.Add("Marcaje eliminado correctamente", Severity.Success);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _clock.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

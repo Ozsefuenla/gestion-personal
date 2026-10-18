@@ -53,3 +53,50 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.donut-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+.donut-stat {
+    min-width: 0;
+}
+
+.today-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.today-grid th,
+.today-grid td {
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid var(--brand-border);
+}
+
+.today-grid th {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brand-muted);
+}
+
+.today-grid .cell-status {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
