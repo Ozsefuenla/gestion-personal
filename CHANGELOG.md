@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-18
+
 ### Added
 - Workflows `release.yml`, `deploy.yml` y `rollback.yml`: release por rama
   `release/vX.Y.Z`, despliegue con aprobación manual del environment `production`
