@@ -6,26 +6,24 @@ namespace GestionPersonal.Application.Workers;
 public sealed class ListWorkersQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
-    public ListWorkersQueryHandler(IWorkerRepository workerRepository, ICurrentCenter currentCenter)
+    public ListWorkersQueryHandler(IWorkerRepository workerRepository, ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<IReadOnlyList<WorkerResponse>>> Handle(
         ListWorkersQuery query,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireCenterMember(_currentUser) is { } error)
         {
-            return Error.Forbidden("No autenticado.");
+            return error;
         }
 
-        var workers = await _workerRepository.GetByCenterAsync(centerId.Value, cancellationToken);
+        var workers = await _workerRepository.GetByCenterAsync(_currentUser.CenterId!.Value, cancellationToken);
 
         IReadOnlyList<WorkerResponse> response = workers
             .Where(w => w.Active)

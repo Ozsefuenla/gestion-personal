@@ -4,8 +4,6 @@ namespace GestionPersonal.Application.Workers;
 
 public sealed class CreateWorkerCommandValidator : AbstractValidator<CreateWorkerCommand>
 {
-    private static readonly string[] AllowedRoles = ["admin", "worker"];
-
     public CreateWorkerCommandValidator()
     {
         RuleFor(x => x.FullName)
@@ -16,14 +14,7 @@ public sealed class CreateWorkerCommandValidator : AbstractValidator<CreateWorke
             .NotEmpty().WithMessage("El PIN es obligatorio.")
             .Matches(@"^\d{4}$").WithMessage("El PIN debe tener exactamente 4 dígitos.");
 
-        RuleFor(x => x.Role)
-            .NotEmpty().WithMessage("El rol es obligatorio.")
-            .Must(IsAllowedRole).WithMessage("El rol debe ser 'admin' o 'worker'.");
-
         RuleFor(x => x.CenterId)
             .GreaterThan(0).WithMessage("El centro es obligatorio.");
     }
-
-    private static bool IsAllowedRole(string? role) =>
-        role is not null && AllowedRoles.Contains(role.Trim().ToLowerInvariant());
 }

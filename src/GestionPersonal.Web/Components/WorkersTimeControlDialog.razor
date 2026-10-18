@@ -118,7 +118,7 @@
                 return;
             }
 
-            _workers = statusesResult.Value.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            _workers = statusesResult.Value.OrderBy(w => w.FullName).ToList();
 
             foreach (var worker in _workers)
             {

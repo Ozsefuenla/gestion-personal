@@ -7,30 +7,28 @@ public sealed class ListCenterVacationsQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ListCenterVacationsQueryHandler(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<IReadOnlyList<VacationResponse>>> Handle(
         ListCenterVacationsQuery query,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireCenterAdmin(_currentUser) is { } error)
         {
-            return Error.Forbidden("No autenticado.");
+            return error;
         }
 
-        var workers = await _workerRepository.GetByCenterAsync(centerId.Value, cancellationToken);
+        var workers = await _workerRepository.GetByCenterAsync(_currentUser.CenterId!.Value, cancellationToken);
         var workerIds = workers.Select(w => w.Id).ToList();
 
         var vacations = await _vacationRepository.GetByWorkerIdsAsync(workerIds, cancellationToken);

@@ -6,20 +6,20 @@ namespace GestionPersonal.Application.Workers;
 public sealed class ActivateWorkerCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ActivateWorkerCommandHandler(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result> Handle(int workerId, CancellationToken cancellationToken = default)
     {
-        var scoped = await WorkerScope.GetScopedWorkerAsync(
-            _workerRepository, _currentCenter, workerId, cancellationToken);
+        var scoped = await WorkerScope.GetAdminScopedWorkerAsync(
+            _workerRepository, _currentUser, workerId, cancellationToken);
 
         if (scoped.IsFailure)
         {

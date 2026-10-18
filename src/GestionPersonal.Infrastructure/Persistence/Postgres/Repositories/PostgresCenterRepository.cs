@@ -19,11 +19,11 @@ public sealed class PostgresCenterRepository : ICenterRepository
 
         var row = await connection.QuerySingleOrDefaultAsync<CenterRow>(
             new CommandDefinition(
-                "SELECT id, name FROM centers WHERE id = @id",
+                "SELECT id, name, active FROM centers WHERE id = @id",
                 new { id },
                 cancellationToken: cancellationToken));
 
-        return row is null ? null : Center.Create(row.Id, row.Name);
+        return row is null ? null : Map(row);
     }
 
     public async Task<IReadOnlyList<Center>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -32,9 +32,45 @@ public sealed class PostgresCenterRepository : ICenterRepository
 
         var rows = await connection.QueryAsync<CenterRow>(
             new CommandDefinition(
-                "SELECT id, name FROM centers ORDER BY id",
+                "SELECT id, name, active FROM centers ORDER BY id",
                 cancellationToken: cancellationToken));
 
-        return rows.Select(row => Center.Create(row.Id, row.Name)).ToList();
+        return rows.Select(Map).ToList();
     }
+
+    public async Task<Center> AddAsync(Center center, CancellationToken cancellationToken = default)
+    {
+        await using var connection = _connectionFactory.Create();
+
+        var id = await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                """
+                INSERT INTO centers (name, active)
+                VALUES (@Name, @Active)
+                RETURNING id
+                """,
+                new { center.Name, center.Active },
+                cancellationToken: cancellationToken));
+
+        return Center.Rehydrate(id, center.Name, center.Active);
+    }
+
+    public async Task UpdateAsync(Center center, CancellationToken cancellationToken = default)
+    {
+        await using var connection = _connectionFactory.Create();
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                """
+                UPDATE centers
+                SET name = @Name,
+                    active = @Active
+                WHERE id = @Id
+                """,
+                new { center.Id, center.Name, center.Active },
+                cancellationToken: cancellationToken));
+    }
+
+    private static Center Map(CenterRow row) =>
+        Center.Rehydrate(row.Id, row.Name, row.Active);
 }

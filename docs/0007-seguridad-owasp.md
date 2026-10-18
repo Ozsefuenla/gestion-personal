@@ -19,11 +19,16 @@ referencia para una futura re-extracción, está en `docs/0001-api-design.md` y
   El PIN del trabajador es de 4 dígitos (entropía baja: 10.000 combinaciones); BCrypt
   ralentiza el ataque offline, pero la protección real ante fuerza bruta es el rate
   limiting + el lockout.
-- **Sesión del centro**: cookie HttpOnly (`SameSite=Lax`, `SecurePolicy=SameAsRequest`,
-  7 días con `SlidingExpiration`). Es la **única fuente de identidad**; no hay JWT.
-- **Autorización de casos de uso**: los handlers resuelven el centro con `ICurrentCenter`,
-  implementado por `CookieCurrentCenter` sobre la claim `centerId` de la cookie. Cada
-  handler verifica que el recurso pertenezca al centro autenticado.
+- **Sesión**: dos cookies HttpOnly (`SameSite=Lax`, `SecurePolicy=SameAsRequest`):
+  `gp.center` (usuarios del centro y SuperAdmin; 7 días deslizantes) y `gp.worker`
+  (sesión efímera de 8 h del trabajador). Un esquema de política (`AppScheme`)
+  resuelve la identidad activa: si existe `gp.worker` se evalúa esa; si no, la del
+  centro. No hay JWT.
+- **Autorización de casos de uso**: los handlers resuelven centro y rol con
+  `ICurrentUser` (`CookieCurrentUser`, que también implementa `ICurrentCenter`).
+  `AccessControl` aplica `RequireSuperAdmin`, `RequireCenterAdmin`,
+  `RequireKiosk` y `RequireSelfOrAdmin`; un `CenterWorker` solo opera sobre su
+  propio `workerId`. Ver `0012-modelo-roles.md`.
 - **Validación de entrada**: FluentValidation en los servicios de aplicación
   (`IRequestValidator`), antes de invocar el handler.
 - **Rate limiting**: `AddRateLimiter` (fixed window por IP) en `/auth/login`.
@@ -44,13 +49,15 @@ referencia para una futura re-extracción, está en `docs/0001-api-design.md` y
 | Headers de seguridad básicos | ✅ |
 | Logging de intentos de login fallidos | ✅ |
 | Scoping por centro (BOLA/IDOR) | ✅ |
+| Autorización por rol en servidor (BFLA) | ✅ |
+| Scoping por worker en autoservicio | ✅ |
 | CSP | ❌ |
 
 ## Mapeo OWASP Top 10 (2021) — Web
 
 | # | Riesgo | Estado | Mitigación |
 |---|--------|--------|------------|
-| A01 | Broken Access Control | ✅ | `/app` con `[Authorize]` + cookie; los handlers verifican pertenencia al centro |
+| A01 | Broken Access Control | ✅ | `/app` con `[Authorize]`, `/admin` con `[Authorize(Roles = "SuperAdmin")]`; handlers con `AccessControl` y scoping por centro/worker |
 | A02 | Cryptographic Failures | ✅ | PIN y contraseña con BCrypt; HTTPS + HSTS en prod |
 | A03 | Injection | ✅ | Dapper con SQL parametrizado; nunca concatenación de entrada |
 | A04 | Insecure Design | ✅ | Rate limiting en login + lockout del PIN por trabajador |

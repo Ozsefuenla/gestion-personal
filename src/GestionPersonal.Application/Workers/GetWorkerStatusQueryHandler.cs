@@ -8,39 +8,33 @@ public sealed class GetWorkerStatusQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public GetWorkerStatusQueryHandler(
         IWorkerRepository workerRepository,
         ITimeEntryRepository timeEntryRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<WorkerStatusResponse>> Handle(
         int workerId,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
+        var scoped = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, workerId, cancellationToken);
 
-        if (centerId is null)
+        if (scoped.IsFailure)
         {
-            return Error.Forbidden("No autenticado.");
-        }
-
-        var worker = await _workerRepository.GetByIdAndCenterAsync(workerId, centerId.Value, cancellationToken);
-
-        if (worker is null)
-        {
-            return Error.NotFound("El trabajador no existe.");
+            return scoped.Error;
         }
 
         var now = DateTimeOffset.UtcNow;
         var (from, to) = TodayStatusHelper.GetTodayRange(now);
 
-        return await WorkerStatusBuilder.BuildAsync(worker, now, from, to, _timeEntryRepository, cancellationToken);
+        return await WorkerStatusBuilder.BuildAsync(scoped.Value, now, from, to, _timeEntryRepository, cancellationToken);
     }
 }

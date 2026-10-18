@@ -4,6 +4,12 @@ Documenta el modelo de datos y las decisiones de diseño para soportar que el
 software se venda por centro (peluquería / clínica estética) y no por trabajador
 individual.
 
+> **Actualización (modelo de roles):** el modelo definitivo de identidades y
+> autorización vive en [`0012-modelo-roles.md`](0012-modelo-roles.md). `CenterUser`
+> tiene `Role` (`SuperAdmin`/`CenterAdmin`/`Center`) y `Active`, y su `CenterId`
+> es nullable para el `SuperAdmin`; `Worker` ya **no** tiene rol (todos los
+> trabajadores son `CenterWorker`).
+
 ## Motivación
 
 Antes, el PIN de 4 dígitos identificaba a un trabajador de forma **global**. Eso
@@ -31,15 +37,18 @@ Con el modelo multi-centro:
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `Id` | `int` | Identificador del usuario. |
-| `CenterId` | `int` | Centro al que pertenece el usuario. |
-| `Username` | `string` | Nombre de usuario para entrar al centro. |
-| `PasswordHash` | `string` | Contraseña (por ahora en claro; pendiente BCrypt). |
+| `CenterId` | `int?` | Centro al que pertenece el usuario (`NULL` para `SuperAdmin`). |
+| `Username` | `string` | Nombre de usuario único. |
+| `PasswordHash` | `string` | Contraseña con BCrypt. |
+| `Role` | `UserRole` | `SuperAdmin`, `CenterAdmin` o `Center` (kiosco). |
+| `Active` | `bool` | Baja lógica del usuario. |
 
 ### `Worker` (extendido)
 
-- Añade `CenterId` a los campos existentes (`Id`, `FullName`, `PinHash`, `Role`, `Active`, `DailyHours`).
+- Añade `CenterId` a los campos existentes (`Id`, `FullName`, `PinHash`, `Active`, `DailyHours`).
 - `MustChangePin` (bool): marca que el trabajador debe cambiar su PIN en el próximo
   acceso (activado por el admin al resetear el PIN; se apaga al cambiarlo).
+- No tiene `Role`: todos los trabajadores son `CenterWorker`.
 
 ## Flujo de identificación
 
@@ -62,5 +71,5 @@ vía `Application/Services`:
 
 ## Pendientes
 
-- JWT del trabajador para fichaje en tablet (la sesión del centro hoy es solo cookie).
 - Resolución real del centro en el login (hoy se opera contra el centro demo `1`).
+- La sesión del worker es una cookie efímera (`gp.worker`), no un JWT.

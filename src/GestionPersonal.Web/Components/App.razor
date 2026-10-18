@@ -65,6 +65,62 @@
             window.location.href = '/';
         };
 
+        window.changeCenterPassword = async (currentPassword, newPassword) => {
+            try {
+                const token = await window.getAntiforgeryToken();
+                const res = await fetch('/auth/change-password', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                if (res.ok) {
+                    return { ok: true, error: null };
+                }
+                const data = await res.json().catch(() => ({}));
+                return { ok: false, error: data.error || `Error ${res.status}` };
+            } catch (e) {
+                return { ok: false, error: 'No se pudo conectar. Inténtalo de nuevo.' };
+            }
+        };
+
+        window.workerLogin = async (workerId, pin) => {
+            try {
+                const token = await window.getAntiforgeryToken();
+                const res = await fetch('/auth/worker-login', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ workerId, pin })
+                });
+                if (res.ok) {
+                    return { ok: true, error: null };
+                }
+                const data = await res.json().catch(() => ({}));
+                return { ok: false, error: data.error || `Error ${res.status}` };
+            } catch (e) {
+                return { ok: false, error: 'No se pudo conectar. Inténtalo de nuevo.' };
+            }
+        };
+
+        window.workerLogout = async () => {
+            try {
+                const token = await window.getAntiforgeryToken();
+                await fetch('/auth/worker-logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'RequestVerificationToken': token }
+                });
+            } catch (e) { }
+            window.location.href = '/app';
+        };
+
         window.downloadFileFromStream = async (fileName, contentStreamReference) => {
             const arrayBuffer = await contentStreamReference.arrayBuffer();
             const blob = new Blob([arrayBuffer]);

@@ -6,28 +6,26 @@ namespace GestionPersonal.Application.Centers;
 public sealed class ListCentersQueryHandler
 {
     private readonly ICenterRepository _centerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ListCentersQueryHandler(
         ICenterRepository centerRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _centerRepository = centerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<IReadOnlyList<CenterResponse>>> Handle(
         ListCentersQuery query,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
-
-        if (centerId is null)
+        if (_currentUser.CenterId is not { } centerId)
         {
-            return Error.Forbidden("No autenticado.");
+            return Result<IReadOnlyList<CenterResponse>>.Success([]);
         }
 
-        var center = await _centerRepository.GetByIdAsync(centerId.Value, cancellationToken);
+        var center = await _centerRepository.GetByIdAsync(centerId, cancellationToken);
 
         if (center is null)
         {

@@ -13,28 +13,18 @@ public sealed class CreateWorkerTests : ApplicationTestBase, IClassFixture<Appli
     public async Task Create_WithValidRequest_ReturnsWorker()
     {
         var result = await Workers.CreateAsync(
-            new CreateWorkerCommand("Laura Pérez", "0421", "worker", ApplicationFixture.TestCenterId));
+            new CreateWorkerCommand("Laura Pérez", "0421", ApplicationFixture.TestCenterId));
 
         AssertSuccess(result);
         Assert.True(result.Value.Id > 0);
         Assert.Equal("Laura Pérez", result.Value.FullName);
-        Assert.Equal("worker", result.Value.Role);
     }
 
     [Fact]
     public async Task Create_WithEmptyName_ReturnsValidationError()
     {
         var result = await Workers.CreateAsync(
-            new CreateWorkerCommand("", "0421", "worker", ApplicationFixture.TestCenterId));
-
-        AssertFailure(result, "Validation");
-    }
-
-    [Fact]
-    public async Task Create_WithInvalidRole_ReturnsValidationError()
-    {
-        var result = await Workers.CreateAsync(
-            new CreateWorkerCommand("Laura", "0421", "supervisor", ApplicationFixture.TestCenterId));
+            new CreateWorkerCommand("", "0421", ApplicationFixture.TestCenterId));
 
         AssertFailure(result, "Validation");
     }
@@ -43,7 +33,7 @@ public sealed class CreateWorkerTests : ApplicationTestBase, IClassFixture<Appli
     public async Task Create_WithInvalidPin_ReturnsValidationError()
     {
         var result = await Workers.CreateAsync(
-            new CreateWorkerCommand("Laura", "12ab", "worker", ApplicationFixture.TestCenterId));
+            new CreateWorkerCommand("Laura", "12ab", ApplicationFixture.TestCenterId));
 
         AssertFailure(result, "Validation");
     }
@@ -52,7 +42,18 @@ public sealed class CreateWorkerTests : ApplicationTestBase, IClassFixture<Appli
     public async Task Create_WithOtherCenter_ReturnsForbidden()
     {
         var result = await Workers.CreateAsync(
-            new CreateWorkerCommand("Laura", "0421", "worker", TestWorkerIds.New()));
+            new CreateWorkerCommand("Laura", "0421", TestWorkerIds.New()));
+
+        AssertFailure(result, "Forbidden");
+    }
+
+    [Fact]
+    public async Task Create_AsNonAdmin_ReturnsForbidden()
+    {
+        User.ActAsWorker(1);
+
+        var result = await Workers.CreateAsync(
+            new CreateWorkerCommand("Laura", "0421", ApplicationFixture.TestCenterId));
 
         AssertFailure(result, "Forbidden");
     }
@@ -63,7 +64,7 @@ public sealed class CreateWorkerTests : ApplicationTestBase, IClassFixture<Appli
         const string fullName = "Nueva Trabajadora";
 
         await Workers.CreateAsync(
-            new CreateWorkerCommand(fullName, "1111", "worker", ApplicationFixture.TestCenterId));
+            new CreateWorkerCommand(fullName, "1111", ApplicationFixture.TestCenterId));
 
         var result = await Workers.ListActiveAsync();
 
@@ -75,7 +76,7 @@ public sealed class CreateWorkerTests : ApplicationTestBase, IClassFixture<Appli
     public async Task Create_WithMustChangePin_ForcesChangeOnFirstLogin()
     {
         var created = await Workers.CreateAsync(
-            new CreateWorkerCommand("Nuevo Con Cambio", "7001", "worker", ApplicationFixture.TestCenterId, MustChangePin: true));
+            new CreateWorkerCommand("Nuevo Con Cambio", "7001", ApplicationFixture.TestCenterId, MustChangePin: true));
 
         AssertSuccess(created);
         Assert.True(created.Value.MustChangePin);

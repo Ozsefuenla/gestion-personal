@@ -33,14 +33,14 @@ public static class DependencyInjection
         services.AddSingleton<ILoginAttemptTracker, InMemoryLoginAttemptTracker>();
 
         var seedDemoData = bool.TryParse(configuration["Persistence:SeedDemoData"], out var seed) && seed;
-        var adminPassword = configuration["Persistence:AdminPassword"] ?? "admin";
+        var credentials = SeedCredentials.FromConfiguration(key => configuration[key]);
 
         services.AddSingleton(serviceProvider => new DatabaseInitializer(
             connectionFactory,
             connectionString,
             serviceProvider.GetRequiredService<IPasswordHasher>(),
             seedDemoData,
-            adminPassword));
+            credentials));
 
         return services;
     }

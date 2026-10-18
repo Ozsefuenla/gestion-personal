@@ -8,32 +8,30 @@ public sealed class GetWorkersStatusQueryHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly ITimeEntryRepository _timeEntryRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public GetWorkersStatusQueryHandler(
         IWorkerRepository workerRepository,
         ITimeEntryRepository timeEntryRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _timeEntryRepository = timeEntryRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<IReadOnlyList<WorkerStatusResponse>>> Handle(
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
-
-        if (centerId is null)
+        if (AccessControl.RequireCenterAdmin(_currentUser) is { } error)
         {
-            return Error.Forbidden("No autenticado.");
+            return error;
         }
 
         var now = DateTimeOffset.UtcNow;
         var (from, to) = TodayStatusHelper.GetTodayRange(now);
 
-        var workers = await _workerRepository.GetByCenterAsync(centerId.Value, cancellationToken);
+        var workers = await _workerRepository.GetByCenterAsync(_currentUser.CenterId!.Value, cancellationToken);
 
         var result = new List<WorkerStatusResponse>();
 

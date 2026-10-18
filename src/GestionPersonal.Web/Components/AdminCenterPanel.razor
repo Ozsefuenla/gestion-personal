@@ -1,0 +1,249 @@
+@inject IPlatformService Platform
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudExpansionPanel ExpandedChanged="OnExpandedChangedAsync">
+    <TitleContent>
+        <div class="d-flex align-center flex-wrap" style="gap: 12px;">
+            <MudText Typo="Typo.subtitle1">@Center.Name</MudText>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(Center.Active ? Color.Success : Color.Default)">
+                @(Center.Active ? "Activo" : "Inactivo")
+            </MudChip>
+        </div>
+    </TitleContent>
+
+    <ChildContent>
+        <div class="d-flex align-center flex-wrap mb-3" style="gap: 12px;">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Gestión del centro</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Outlined"
+                       Size="Size.Small"
+                       Color="@(Center.Active ? Color.Error : Color.Success)"
+                       OnClick="ToggleCenterAsync"
+                       Disabled="_busy">
+                @(Center.Active ? "Dar de baja" : "Reactivar")
+            </MudButton>
+        </div>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        @if (Center.Active)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">Añadir administrador del centro</MudText>
+
+            <div class="d-flex align-center flex-wrap mb-4" style="gap: 12px;">
+                <MudTextField T="string"
+                              Value="_adminUsername"
+                              ValueChanged="@((string v) => _adminUsername = v ?? "")"
+                              Immediate="true"
+                              Label="Usuario"
+                              Variant="Variant.Outlined"
+                              Style="min-width: 180px;" />
+                <MudTextField T="string"
+                              Value="_adminPassword"
+                              ValueChanged="@((string v) => _adminPassword = v ?? "")"
+                              Immediate="true"
+                              InputType="InputType.Password"
+                              Label="Contraseña"
+                              Variant="Variant.Outlined"
+                              Style="min-width: 180px;" />
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CreateCenterAdminAsync" Disabled="_busy">
+                    <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                    Crear administrador
+                </MudButton>
+            </div>
+
+            <MudDivider Class="my-3" />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                Centro desactivado: reactívalo para dar de alta nuevos usuarios.
+            </MudAlert>
+        }
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">Usuarios</MudText>
+
+        @if (_loadingUsers)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Cargando…</MudText>
+        }
+        else if (_users.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Este centro no tiene usuarios.</MudText>
+        }
+        else
+        {
+            @foreach (var user in _users)
+            {
+                <div class="d-flex align-center flex-wrap" style="gap: 12px; padding: 8px 0; border-bottom: 1px solid #ECE5F1;">
+                    <MudText Typo="Typo.body2" Style="min-width: 180px;">@user.Username</MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">@RoleLabel(user.Role)</MudChip>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(user.Active ? Color.Success : Color.Default)">
+                        @(user.Active ? "Activo" : "Inactivo")
+                    </MudChip>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="@(() => ResetPasswordAsync(user))"
+                               Disabled="_busy">
+                        <MudIcon Icon="@Icons.Material.Filled.Password" Class="mr-1" />
+                        Resetear contraseña
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Color="@(user.Active ? Color.Error : Color.Success)"
+                               OnClick="@(() => ToggleUserAsync(user))"
+                               Disabled="_busy">
+                        @(user.Active ? "Desactivar" : "Activar")
+                    </MudButton>
+                </div>
+            }
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+@code {
+    [Parameter, EditorRequired]
+    public required CenterResponse Center { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private List<CenterUserResponse> _users = [];
+    private string _adminUsername = "";
+    private string _adminPassword = "";
+    private string? _error;
+    private bool _loadingUsers;
+    private bool _usersLoaded;
+    private bool _busy;
+
+    private async Task OnExpandedChangedAsync(bool expanded)
+    {
+        if (expanded && !_usersLoaded)
+        {
+            await LoadUsersAsync();
+        }
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        _loadingUsers = true;
+
+        try
+        {
+            var result = await Platform.ListCenterUsersAsync(Center.Id);
+
+            if (result.IsFailure)
+            {
+                _error = result.Error.Message;
+                return;
+            }
+
+            _users = result.Value.ToList();
+            _usersLoaded = true;
+        }
+        finally
+        {
+            _loadingUsers = false;
+        }
+    }
+
+    private async Task CreateCenterAdminAsync()
+    {
+        _error = null;
+        _busy = true;
+
+        try
+        {
+            var result = await Platform.CreateCenterAdminAsync(
+                new CreateCenterAdminCommand(Center.Id, _adminUsername, _adminPassword));
+
+            if (result.IsFailure)
+            {
+                _error = result.Error.Message;
+                return;
+            }
+
+            Snackbar.Add("Administrador creado", Severity.Success);
+            _adminUsername = "";
+            _adminPassword = "";
+            await LoadUsersAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleCenterAsync()
+    {
+        _busy = true;
+
+        try
+        {
+            var result = await Platform.SetCenterActiveAsync(
+                new SetCenterActiveCommand(Center.Id, !Center.Active));
+
+            if (result.IsFailure)
+            {
+                Snackbar.Add(result.Error.Message, Severity.Error);
+                return;
+            }
+
+            await OnChanged.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleUserAsync(CenterUserResponse user)
+    {
+        _busy = true;
+
+        try
+        {
+            var result = await Platform.SetCenterUserActiveAsync(
+                new SetCenterUserActiveCommand(user.Id, !user.Active));
+
+            if (result.IsFailure)
+            {
+                Snackbar.Add(result.Error.Message, Severity.Error);
+                return;
+            }
+
+            await LoadUsersAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ResetPasswordAsync(CenterUserResponse user)
+    {
+        var parameters = new DialogParameters
+        {
+            ["UserId"] = user.Id,
+            ["Username"] = user.Username
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ResetUserPasswordDialog>("Resetear contraseña", parameters, options);
+        await dialog.Result;
+    }
+
+    private static string RoleLabel(UserRole role) => role switch
+    {
+        UserRole.SuperAdmin => "SuperAdmin",
+        UserRole.CenterAdmin => "Administrador",
+        UserRole.Center => "Tablet",
+        _ => role.ToString()
+    };
+}

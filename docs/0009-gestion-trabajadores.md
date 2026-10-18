@@ -1,8 +1,10 @@
 # Gestión de trabajadores (admin)
 
 Documenta la funcionalidad de gestión de trabajadores del centro, disponible solo
-para el rol `admin`. Complementa `docs/0008-frontend-ui-admin.md` (reglas de UI) y
-`docs/0001-api-design.md` (contrato HTTP histórico).
+para el rol `CenterAdmin` (usuario del centro con contraseña). Ver
+[`0012-modelo-roles.md`](0012-modelo-roles.md). Complementa
+`docs/0008-frontend-ui-admin.md` (reglas de UI) y `docs/0001-api-design.md`
+(contrato HTTP histórico).
 
 > **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
 > Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
@@ -43,7 +45,7 @@ de estado o un timestamp, por simplicidad y portabilidad directa a la futura BBD
 | PATCH | `/api/workers/{id}/name` | Renombrar (`{ fullName }`). |
 | POST | `/api/workers/{id}/reset-pin` | Resetear PIN (`{ pin }` de 4 dígitos) y activar `MustChangePin`. |
 | PATCH | `/api/workers/{id}/activate` | Reactivar. |
-| PATCH | `/api/workers/{id}/deactivate` | Dar de baja (rechazado con `400` si el trabajador es `admin`). |
+| PATCH | `/api/workers/{id}/deactivate` | Dar de baja. |
 
 ## Comportamiento
 
@@ -75,15 +77,15 @@ rápido también debería exigirlo.
   `GET /api/centers/{id}/workers` (selector) y `GET /api/workers/status` (panel de hoy).
 - `GET /api/workers/manage` devuelve todos para que el admin vea también los inactivos.
 - El login y el fichaje rápido rechazan a los inactivos (`403`).
-- No se puede dar de baja a un `admin` (evita que el centro se quede sin acceso).
+- No hay "trabajadores admin": el administrador es un `CenterAdmin` (usuario del
+  centro), por lo que cualquier trabajador puede darse de baja.
 
 ## Seguridad
 
-- Scoping por centro: todos los handlers usan `WorkerScope.GetScopedWorkerAsync`
-  (`GetByIdAndCenterAsync`), de modo que no se puede operar sobre trabajadores de otro
-  centro (BOLA).
-- La restricción "solo admin" es de frontend, igual que el resto de funciones admin
-  actuales: la sesión autentica el centro vía cookie, no por trabajador (pendiente en `0007`/`0008`).
+- Scoping por centro: todos los handlers usan `WorkerScope` (`GetByIdAndCenterAsync`),
+  de modo que no se puede operar sobre trabajadores de otro centro (BOLA).
+- La restricción "solo admin" se aplica en el servidor: `AccessControl.RequireCenterAdmin`
+  en los handlers de gestión (ver `0012-modelo-roles.md`). La UI solo la refleja.
 
 ## Tests
 

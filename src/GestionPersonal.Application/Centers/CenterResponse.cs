@@ -2,7 +2,7 @@ using GestionPersonal.Domain.Entities;
 
 namespace GestionPersonal.Application.Centers;
 
-public sealed record CenterResponse(int Id, string Name)
+public sealed record CenterResponse(int Id, string Name, bool Active)
 {
-    public static CenterResponse From(Center center) => new(center.Id, center.Name);
+    public static CenterResponse From(Center center) => new(center.Id, center.Name, center.Active);
 }

@@ -6,16 +6,16 @@ namespace GestionPersonal.Application.TimeEntries;
 public sealed class EditActiveTimeEntryCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
     private readonly ITimeEntryRepository _timeEntryRepository;
 
     public EditActiveTimeEntryCommandHandler(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         ITimeEntryRepository timeEntryRepository)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
         _timeEntryRepository = timeEntryRepository;
     }
 
@@ -24,7 +24,8 @@ public sealed class EditActiveTimeEntryCommandHandler
         EditActiveTimeEntryCommand command,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, workerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, workerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {

@@ -8,44 +8,33 @@ public sealed class DeleteVacationCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public DeleteVacationCommandHandler(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result> Handle(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var centerId = _currentCenter.CenterId;
+        var scoped = await VacationScope.GetSelfOrAdminScopedVacationAsync(
+            _workerRepository, _vacationRepository, _currentUser, id, cancellationToken);
 
-        if (centerId is null)
+        if (scoped.IsFailure)
         {
-            return Error.Forbidden("No autenticado.");
+            return scoped.Error;
         }
 
-        var vacation = await _vacationRepository.GetByIdAsync(id, cancellationToken);
+        var vacation = scoped.Value;
 
-        if (vacation is null || vacation.Status == VacationStatus.Deleted)
-        {
-            return Error.NotFound("La ausencia no existe.");
-        }
-
-        var worker = await _workerRepository.GetByIdAndCenterAsync(vacation.WorkerId, centerId.Value, cancellationToken);
-
-        if (worker is null)
-        {
-            return Error.NotFound("La ausencia no existe.");
-        }
-
-        if (vacation.Status == VacationStatus.Approved && worker.Role != Role.Admin)
+        if (vacation.Status == VacationStatus.Approved && _currentUser.Role != UserRole.CenterAdmin)
         {
             return Error.Forbidden("Solo un administrador puede eliminar una ausencia aprobada.");
         }

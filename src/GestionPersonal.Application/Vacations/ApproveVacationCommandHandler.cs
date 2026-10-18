@@ -8,24 +8,24 @@ public sealed class ApproveVacationCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
     private readonly IVacationRepository _vacationRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
 
     public ApproveVacationCommandHandler(
         IWorkerRepository workerRepository,
         IVacationRepository vacationRepository,
-        ICurrentCenter currentCenter)
+        ICurrentUser currentUser)
     {
         _workerRepository = workerRepository;
         _vacationRepository = vacationRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<VacationResponse>> Handle(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var scoped = await VacationScope.GetScopedVacationAsync(
-            _workerRepository, _vacationRepository, _currentCenter, id, cancellationToken);
+        var scoped = await VacationScope.GetAdminScopedVacationAsync(
+            _workerRepository, _vacationRepository, _currentUser, id, cancellationToken);
 
         if (scoped.IsFailure)
         {

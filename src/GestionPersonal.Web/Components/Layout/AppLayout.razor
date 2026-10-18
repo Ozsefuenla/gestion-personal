@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
 @layout MainLayout
 @inject IJSRuntime Js
+@inject ICurrentUser CurrentUser
+@inject IDialogService DialogService
 
 <MudLayout>
     <MudAppBar Elevation="0" Class="app-appbar">
@@ -29,6 +31,7 @@
     private Task<AuthenticationState>? AuthState { get; set; }
 
     private string? _centerName;
+    private bool _forceChangeShown;
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,5 +42,28 @@
         }
     }
 
-    private async Task LogoutAsync() => await Js.InvokeVoidAsync("centerLogout");
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _forceChangeShown || !CurrentUser.MustChangePassword)
+        {
+            return;
+        }
+
+        _forceChangeShown = true;
+
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false, CloseButton = false };
+        var dialog = await DialogService.ShowAsync<ChangePasswordDialog>("Debes cambiar tu contraseña", options);
+        await dialog.Result;
+    }
+
+    private async Task LogoutAsync()
+    {
+        if (CurrentUser.Role == UserRole.CenterWorker)
+        {
+            await Js.InvokeVoidAsync("workerLogout");
+            return;
+        }
+
+        await Js.InvokeVoidAsync("centerLogout");
+    }
 }

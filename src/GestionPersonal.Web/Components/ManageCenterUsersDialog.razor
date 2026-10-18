@@ -1,0 +1,177 @@
+@inject IPlatformService Platform
+@inject ICurrentUser CurrentUser
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Usuarios de tablet</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-4">
+            Son los usuarios generales que se dejan abiertos en la tablet del centro.
+        </MudText>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        <div class="d-flex align-center flex-wrap mb-4" style="gap: 12px;">
+            <MudTextField T="string"
+                          Value="_username"
+                          ValueChanged="@((string v) => _username = v ?? "")"
+                          Immediate="true"
+                          Label="Usuario"
+                          Variant="Variant.Outlined"
+                          Style="min-width: 160px;" />
+            <MudTextField T="string"
+                          Value="_password"
+                          ValueChanged="@((string v) => _password = v ?? "")"
+                          Immediate="true"
+                          InputType="InputType.Password"
+                          Label="Contraseña"
+                          Variant="Variant.Outlined"
+                          Style="min-width: 160px;" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateAsync" Disabled="_busy">
+                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                Crear
+            </MudButton>
+        </div>
+
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (_users.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay usuarios de tablet.</MudText>
+        }
+        else
+        {
+            @foreach (var user in _users)
+            {
+                <div class="d-flex align-center flex-wrap" style="gap: 12px; padding: 8px 0; border-bottom: 1px solid #ECE5F1;">
+                    <MudText Typo="Typo.body2" Style="min-width: 160px;">@user.Username</MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@(user.Active ? Color.Success : Color.Default)">
+                        @(user.Active ? "Activo" : "Inactivo")
+                    </MudChip>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="@(() => ResetPasswordAsync(user))"
+                               Disabled="_busy">
+                        <MudIcon Icon="@Icons.Material.Filled.Password" Class="mr-1" />
+                        Resetear contraseña
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Color="@(user.Active ? Color.Error : Color.Success)"
+                               OnClick="@(() => ToggleAsync(user))"
+                               Disabled="_busy">
+                        @(user.Active ? "Desactivar" : "Activar")
+                    </MudButton>
+                </div>
+            }
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    private List<CenterUserResponse> _users = [];
+    private string _username = "";
+    private string _password = "";
+    private string? _error;
+    private bool _loading = true;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var centerId = CurrentUser.CenterId ?? 0;
+            var result = await Platform.ListCenterUsersAsync(centerId);
+            _users = result.IsSuccess ? result.Value.ToList() : [];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        _error = null;
+        _busy = true;
+
+        try
+        {
+            var result = await Platform.CreateCenterUserAsync(new CreateCenterUserCommand(_username, _password));
+
+            if (result.IsFailure)
+            {
+                _error = result.Error.Message;
+                return;
+            }
+
+            Snackbar.Add("Usuario de tablet creado", Severity.Success);
+            _username = "";
+            _password = "";
+            await LoadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleAsync(CenterUserResponse user)
+    {
+        _busy = true;
+
+        try
+        {
+            var result = await Platform.SetCenterUserActiveAsync(new SetCenterUserActiveCommand(user.Id, !user.Active));
+
+            if (result.IsSuccess)
+            {
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+
+    private async Task ResetPasswordAsync(CenterUserResponse user)
+    {
+        var parameters = new DialogParameters
+        {
+            ["UserId"] = user.Id,
+            ["Username"] = user.Username
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ResetUserPasswordDialog>("Resetear contraseña", parameters, options);
+        await dialog.Result;
+    }
+}

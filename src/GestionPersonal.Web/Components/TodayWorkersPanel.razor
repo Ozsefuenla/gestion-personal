@@ -2,7 +2,7 @@
 @inject IVacationsService Vacations
 @implements IAsyncDisposable
 
-<MudCard Elevation="2" Class="mt-4">
+<MudCard Elevation="2">
     <MudCardContent>
         <div class="d-flex align-center justify-space-between">
             <MudText Typo="Typo.h6">Marcajes de hoy</MudText>
@@ -101,7 +101,7 @@
                 return;
             }
 
-            _workers = statusesResult.Value.Where(w => w.Role != "admin").OrderBy(w => w.FullName).ToList();
+            _workers = statusesResult.Value.OrderBy(w => w.FullName).ToList();
 
             var today = DateOnly.FromDateTime(DateTime.Today);
             var vacationsResult = await Vacations.ListCenterAsync();

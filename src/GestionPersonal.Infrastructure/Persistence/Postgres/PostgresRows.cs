@@ -1,15 +1,21 @@
 namespace GestionPersonal.Infrastructure.Persistence.Postgres;
 
-internal sealed record CenterRow(int Id, string Name);
+internal sealed record CenterRow(int Id, string Name, bool Active);
 
-internal sealed record CenterUserRow(int Id, int CenterId, string Username, string PasswordHash);
+internal sealed record CenterUserRow(
+    int Id,
+    int? CenterId,
+    string Username,
+    string PasswordHash,
+    string Role,
+    bool Active,
+    bool MustChangePassword);
 
 internal sealed record WorkerRow(
     int Id,
     int CenterId,
     string FullName,
     string PinHash,
-    string Role,
     bool Active,
     bool MustChangePin,
     TimeSpan DailyHours,

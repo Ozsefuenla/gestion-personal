@@ -8,16 +8,16 @@ namespace GestionPersonal.Application.TimeEntries;
 public sealed class AddManualTimeEntryCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
     private readonly ITimeEntryRepository _timeEntryRepository;
 
     public AddManualTimeEntryCommandHandler(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         ITimeEntryRepository timeEntryRepository)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
         _timeEntryRepository = timeEntryRepository;
     }
 
@@ -25,7 +25,7 @@ public sealed class AddManualTimeEntryCommandHandler
         AddManualTimeEntryCommand command,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, command.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(_workerRepository, _currentUser, command.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {

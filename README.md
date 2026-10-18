@@ -4,9 +4,13 @@
 
 Aplicación web de gestión de personal, control horario, turnos y vacaciones para
 peluquerías y clínicas estéticas en España. El software se vende por centro: cada
-centro tiene sus trabajadores y un usuario de acceso. Es un monolito modular en
-C# (.NET 10) con Clean Architecture: una única app Blazor Server que consume la
-capa `Application` en proceso.
+centro tiene sus trabajadores, un administrador y un usuario de tablet (kiosco).
+Es un monolito modular en C# (.NET 10) con Clean Architecture: una única app
+Blazor Server que consume la capa `Application` en proceso.
+
+Roles: `SuperAdmin` (plataforma), `CenterAdmin` (centro), `Center` (kiosco de la
+tablet) y `CenterWorker` (trabajador con PIN). Ver
+[`docs/0012-modelo-roles.md`](docs/0012-modelo-roles.md).
 
 ## Stack tecnológico
 
@@ -16,7 +20,7 @@ capa `Application` en proceso.
 | Validación de entrada | FluentValidation |
 | Manejo de errores | Result Pattern |
 | Persistencia | PostgreSQL + Dapper + DbUp (SQL directo, sin ORM) |
-| Autenticación | Cookie HTTP-Only para el centro; PIN de trabajador con BCrypt |
+| Autenticación | Cookie HTTP-Only para usuarios del centro y del SuperAdmin; cookie de worker para autoservicio; PIN de trabajador con BCrypt |
 | Testing | xUnit (tests de servicios de aplicación y casos de uso) |
 | Frontend | Blazor Web App (.NET 10, interactividad Server) + MudBlazor |
 
@@ -45,9 +49,10 @@ capa `Application` en proceso.
    ```
 5. Abrir la URL que muestra la consola: la landing está en `/` y el dashboard en `/app`.
 
-Al arrancar, la aplicación aplica las migraciones (DbUp) y siembra el centro demo
-y el usuario `admin`. En desarrollo también crea los trabajadores y fichajes de
-ejemplo. Para reiniciar la base de datos desde cero:
+Al arrancar, la aplicación aplica las migraciones (DbUp) y siembra el centro demo,
+su `CenterAdmin`, el usuario de tablet (`centro`) y el `SuperAdmin`. En desarrollo
+también crea los trabajadores y fichajes de ejemplo. Para reiniciar la base de
+datos desde cero:
 
 ```
 docker compose down -v
@@ -97,7 +102,8 @@ docs/
 ├─ 0008-frontend-ui-admin.md
 ├─ 0009-gestion-trabajadores.md
 ├─ 0010-deployment.md
-└─ 0011-persistencia-postgres.md
+├─ 0011-persistencia-postgres.md
+└─ 0012-modelo-roles.md
 docker-compose.yml
 AGENTS.md
 CHANGELOG.md
@@ -142,26 +148,34 @@ CHANGELOG.md
 | Gestión de trabajadores del admin (renombrar, resetear PIN, dar de baja/reactivar) | Implementado |
 | Aprobación de ausencias | Implementado |
 | Login del centro (`POST /api/centers/login`) | Implementado (cookie HttpOnly) |
+| Modelo de roles (`SuperAdmin`/`CenterAdmin`/`Center`/`CenterWorker`) | Implementado (autorización en servidor) |
+| Cambio de contraseña forzado (popup al entrar) al resetear o dar de alta un usuario | Implementado |
+| Área `/admin` (centros en tabs Activos/Desactivados, usuarios y reset de contraseña) | Implementado |
+| Usuarios de tablet (`Center`) gestionados por el `CenterAdmin` | Implementado |
 | Landing page (`/`) | Implementado |
 | Dashboard del centro (`/app`) | Implementado (con layout profesional) |
 
 ## Usuario y contraseña de prueba
 
-El login del centro se hace desde la landing (`/`, botón "Acceso") o en `/login`,
-con un `CenterUser` de prueba:
+El acceso se hace desde la landing (`/`, botón "Acceso") o en `/login`. Usuarios
+sembrados por defecto (configurables con `Persistence:*`):
 
-- Centro demo `1` ("Peluquería Sol"): usuario `admin`, contraseña `admin`.
+- **SuperAdmin**: `superadmin` / `superadmin` → área `/admin`.
+- **CenterAdmin** del centro demo `1` ("Peluquería Sol"): `carlos.ruiz` / `sol` →
+  dashboard `/app`.
+- **Center** (kiosco/tablet) del centro demo `1`: `centro` / `centro` → quick-clock
+  en `/app`.
 
-La contraseña se guarda hasheada con BCrypt.
+Las contraseñas se guardan hasheadas con BCrypt.
 
 Los trabajadores se identifican por un **PIN de 4 dígitos** asociado a cada
 trabajador (no hay email y el PIN no es único global).
 
 PINs de prueba (centro `1`, sembrados en desarrollo): María García → `1111`,
-Ana López → `2222`, Carlos Ruiz → `3333`. Los identificadores los asigna
-PostgreSQL al sembrar los datos.
+Ana López → `2222`. Carlos Ruiz ya no es trabajador: su identidad es el
+`CenterAdmin` (`carlos.ruiz`). Los identificadores los asigna PostgreSQL al
+sembrar los datos.
 
 ## Pendientes
 
-- JWT del trabajador para fichaje en tablet.
 - CSP en el Web (diferido por la complejidad de Blazor + Tailwind CDN).

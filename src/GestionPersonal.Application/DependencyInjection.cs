@@ -1,6 +1,8 @@
 using FluentValidation;
+using GestionPersonal.Application.Account;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.Common;
+using GestionPersonal.Application.Platform;
 using GestionPersonal.Application.Services;
 using GestionPersonal.Application.TimeEntries;
 using GestionPersonal.Application.Vacations;
@@ -19,6 +21,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkersService, WorkersService>();
         services.AddScoped<ITimeEntriesService, TimeEntriesService>();
         services.AddScoped<IVacationsService, VacationsService>();
+        services.AddScoped<IPlatformService, PlatformService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<ListWorkersByCenterQueryHandler>();
@@ -50,6 +54,15 @@ public static class DependencyInjection
         services.AddScoped<ApproveVacationCommandHandler>();
         services.AddScoped<RejectVacationCommandHandler>();
         services.AddScoped<ListCenterVacationsQueryHandler>();
+        services.AddScoped<ListAllCentersQueryHandler>();
+        services.AddScoped<CreateCenterCommandHandler>();
+        services.AddScoped<SetCenterActiveCommandHandler>();
+        services.AddScoped<CreateCenterAdminCommandHandler>();
+        services.AddScoped<ListCenterUsersQueryHandler>();
+        services.AddScoped<CreateCenterUserCommandHandler>();
+        services.AddScoped<SetCenterUserActiveCommandHandler>();
+        services.AddScoped<ResetCenterUserPasswordCommandHandler>();
+        services.AddScoped<ChangePasswordCommandHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

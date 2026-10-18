@@ -51,9 +51,21 @@ if (builder.Environment.IsProduction())
 }
 
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+builder.Services.AddAuthentication(options =>
     {
+        options.DefaultScheme = AuthSchemes.App;
+        options.DefaultChallengeScheme = AuthSchemes.App;
+    })
+    .AddPolicyScheme(AuthSchemes.App, "App", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+            context.Request.Cookies.ContainsKey(AuthSchemes.WorkerCookieName)
+                ? AuthSchemes.Worker
+                : AuthSchemes.Center;
+    })
+    .AddCookie(AuthSchemes.Center, options =>
+    {
+        options.Cookie.Name = AuthSchemes.CenterCookieName;
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/login";
         options.Cookie.HttpOnly = true;
@@ -63,11 +75,26 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             : CookieSecurePolicy.SameAsRequest;
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
+    })
+    .AddCookie(AuthSchemes.Worker, options =>
+    {
+        options.Cookie.Name = AuthSchemes.WorkerCookieName;
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+            ? CookieSecurePolicy.Always
+            : CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = false;
     });
 builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentCenter, CookieCurrentCenter>();
+builder.Services.AddScoped<CookieCurrentUser>();
+builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CookieCurrentUser>());
+builder.Services.AddScoped<ICurrentCenter>(sp => sp.GetRequiredService<CookieCurrentUser>());
 builder.Services.AddSingleton<TimeControlPdfExporter>();
 
 builder.Services.AddRateLimiter(options =>

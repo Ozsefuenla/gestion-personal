@@ -7,16 +7,16 @@ namespace GestionPersonal.Application.TimeEntries;
 public sealed class PauseTimeEntryCommandHandler
 {
     private readonly IWorkerRepository _workerRepository;
-    private readonly ICurrentCenter _currentCenter;
+    private readonly ICurrentUser _currentUser;
     private readonly ITimeEntryRepository _timeEntryRepository;
 
     public PauseTimeEntryCommandHandler(
         IWorkerRepository workerRepository,
-        ICurrentCenter currentCenter,
+        ICurrentUser currentUser,
         ITimeEntryRepository timeEntryRepository)
     {
         _workerRepository = workerRepository;
-        _currentCenter = currentCenter;
+        _currentUser = currentUser;
         _timeEntryRepository = timeEntryRepository;
     }
 
@@ -24,14 +24,22 @@ public sealed class PauseTimeEntryCommandHandler
         PauseTimeEntryCommand command,
         CancellationToken cancellationToken = default)
     {
-        var workerResult = await WorkerScope.GetScopedWorkerAsync(_workerRepository, _currentCenter, command.WorkerId, cancellationToken);
+        var workerResult = await WorkerScope.GetSelfScopedWorkerAsync(
+            _workerRepository, _currentUser, command.WorkerId, cancellationToken);
 
         if (workerResult.IsFailure)
         {
             return workerResult.Error;
         }
 
-        var existing = await _timeEntryRepository.GetOpenEntryByWorkerAsync(command.WorkerId, cancellationToken);
+        return await PauseForWorkerAsync(command.WorkerId, cancellationToken);
+    }
+
+    internal async Task<Result<TimeEntryResponse>> PauseForWorkerAsync(
+        int workerId,
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await _timeEntryRepository.GetOpenEntryByWorkerAsync(workerId, cancellationToken);
 
         if (existing is null)
         {

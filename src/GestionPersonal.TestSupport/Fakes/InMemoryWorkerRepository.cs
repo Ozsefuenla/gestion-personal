@@ -1,6 +1,5 @@
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
-using GestionPersonal.Domain.Enums;
 
 namespace GestionPersonal.TestSupport.Fakes;
 
@@ -15,9 +14,9 @@ public sealed class InMemoryWorkerRepository : IWorkerRepository
 
         _workers =
         [
-            Worker.Rehydrate(1, 1, "María García", passwordHasher.Hash("1111"), Role.Worker, true, false, TimeSpan.FromHours(8), now),
-            Worker.Rehydrate(2, 1, "Ana López", passwordHasher.Hash("2222"), Role.Worker, true, false, TimeSpan.FromHours(8), now),
-            Worker.Rehydrate(3, 1, "Carlos Ruiz", passwordHasher.Hash("3333"), Role.Admin, true, false, TimeSpan.FromHours(8), now)
+            Worker.Rehydrate(1, 1, "María García", passwordHasher.Hash("1111"), true, false, TimeSpan.FromHours(8), now),
+            Worker.Rehydrate(2, 1, "Ana López", passwordHasher.Hash("2222"), true, false, TimeSpan.FromHours(8), now),
+            Worker.Rehydrate(3, 1, "Carlos Ruiz", passwordHasher.Hash("3333"), true, false, TimeSpan.FromHours(8), now)
         ];
     }
 
@@ -69,7 +68,6 @@ public sealed class InMemoryWorkerRepository : IWorkerRepository
                 worker.CenterId,
                 worker.FullName,
                 worker.PinHash,
-                worker.Role,
                 worker.Active,
                 worker.MustChangePin,
                 worker.DailyHours,

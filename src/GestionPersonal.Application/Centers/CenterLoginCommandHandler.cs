@@ -27,7 +27,7 @@ public sealed class CenterLoginCommandHandler
 
         if (user is null)
         {
-            return Error.NotFound("El usuario del centro no existe.");
+            return Error.NotFound("El usuario no existe.");
         }
 
         if (!_passwordHasher.Verify(command.Password, user.PasswordHash))
@@ -35,8 +35,31 @@ public sealed class CenterLoginCommandHandler
             return Error.Validation("La contraseña no es correcta.");
         }
 
-        var center = await _centerRepository.GetByIdAsync(user.CenterId, cancellationToken);
+        if (!user.Active)
+        {
+            return Error.Forbidden("El usuario está desactivado.");
+        }
 
-        return new CenterSessionResponse(user.CenterId, center?.Name ?? "", user.Username);
+        string centerName = string.Empty;
+
+        if (user.CenterId is { } centerId)
+        {
+            var center = await _centerRepository.GetByIdAsync(centerId, cancellationToken);
+
+            if (center is null || !center.Active)
+            {
+                return Error.Forbidden("El centro no está disponible.");
+            }
+
+            centerName = center.Name;
+        }
+
+        return new CenterSessionResponse(
+            user.Id,
+            user.CenterId,
+            centerName,
+            user.Username,
+            user.Role,
+            user.MustChangePassword);
     }
 }

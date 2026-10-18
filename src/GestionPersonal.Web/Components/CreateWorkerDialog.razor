@@ -101,7 +101,7 @@
         }
 
         var result = await Workers.CreateAsync(
-            new CreateWorkerCommand(_fullName.Trim(), _pin, "worker", CenterId, MustChangePin: true));
+            new CreateWorkerCommand(_fullName.Trim(), _pin, CenterId, MustChangePin: true));
 
         if (result.IsFailure)
         {

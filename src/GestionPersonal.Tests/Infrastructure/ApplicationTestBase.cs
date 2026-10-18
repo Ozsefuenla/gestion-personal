@@ -1,3 +1,4 @@
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Application.Services;
 using GestionPersonal.Application.Workers;
@@ -12,6 +13,7 @@ public abstract class ApplicationTestBase : IDisposable
     protected ApplicationTestBase(ApplicationFixture fixture)
     {
         _scope = fixture.Provider.CreateScope();
+        User.ActAsCenterAdmin();
     }
 
     protected ICentersService Centers => _scope.ServiceProvider.GetRequiredService<ICentersService>();
@@ -22,14 +24,20 @@ public abstract class ApplicationTestBase : IDisposable
 
     protected IVacationsService Vacations => _scope.ServiceProvider.GetRequiredService<IVacationsService>();
 
+    protected IPlatformService Platform => _scope.ServiceProvider.GetRequiredService<IPlatformService>();
+
+    protected IAccountService Account => _scope.ServiceProvider.GetRequiredService<IAccountService>();
+
+    protected FakeCurrentUser User => _scope.ServiceProvider.GetRequiredService<ICurrentUser>() as FakeCurrentUser
+        ?? throw new InvalidOperationException("El usuario actual de test no es FakeCurrentUser.");
+
     protected async Task<int> CreateWorkerAsync(
         string pin = "6001",
-        string role = "worker",
         string fullName = "Test Worker",
         bool mustChangePin = false,
         int centerId = ApplicationFixture.TestCenterId)
     {
-        var result = await Workers.CreateAsync(new CreateWorkerCommand(fullName, pin, role, centerId, mustChangePin));
+        var result = await Workers.CreateAsync(new CreateWorkerCommand(fullName, pin, centerId, mustChangePin));
 
         AssertSuccess(result);
 

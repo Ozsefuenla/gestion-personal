@@ -7,26 +7,6 @@
         <div class="d-flex align-center justify-space-between flex-wrap" style="gap: 12px;">
             <MudText Typo="Typo.h6">Ausencias</MudText>
             <div class="d-flex align-center flex-wrap" style="gap: 8px;">
-                @if (IsAdmin)
-                {
-                    @if (PendingAbsences > 0)
-                    {
-                        <MudBadge Content="@PendingAbsences" Color="Color.Error" Bordered="true" Overlap="true">
-                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="OpenManageAsync">
-                                <MudIcon Icon="@Icons.Material.Filled.HowToReg" Class="mr-2" />
-                                Gestionar Ausencias
-                            </MudButton>
-                        </MudBadge>
-                    }
-                    else
-                    {
-                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OpenManageAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.HowToReg" Class="mr-2" />
-                            Gestionar Ausencias
-                        </MudButton>
-                    }
-                }
-
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenRequestAsync">
                     <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
                     Solicitar nueva ausencia
@@ -71,9 +51,6 @@
     public required WorkerStatusResponse Worker { get; set; }
 
     [Parameter]
-    public int CenterId { get; set; }
-
-    [Parameter]
     public int PendingAbsences { get; set; }
 
     [Parameter]
@@ -81,8 +58,6 @@
 
     private IReadOnlyList<VacationResponse> _vacations = [];
     private bool _loading = true;
-
-    private bool IsAdmin => Worker.Role == "admin";
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,17 +100,6 @@
         }
     }
 
-    private async Task OpenManageAsync()
-    {
-        var parameters = new DialogParameters { ["CenterId"] = CenterId };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ManageAbsencesDialog>("Gestionar Ausencias", parameters, options);
-        await dialog.Result;
-
-        await LoadAsync();
-        await Changed.InvokeAsync();
-    }
-
     private async Task DeleteAsync(VacationResponse vacation)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
@@ -162,12 +126,7 @@
         await Changed.InvokeAsync();
     }
 
-    private bool CanDelete(VacationResponse vacation) => vacation.Status switch
-    {
-        "pending" => true,
-        "approved" => Worker.Role == "admin",
-        _ => false
-    };
+    private bool CanDelete(VacationResponse vacation) => vacation.Status == "pending";
 
     private static Color StatusColor(string status) => status switch
     {

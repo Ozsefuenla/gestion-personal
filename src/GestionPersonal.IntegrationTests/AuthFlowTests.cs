@@ -54,7 +54,7 @@ public sealed class AuthFlowTests : IClassFixture<GestionPersonalWebAppFactory>
     {
         using var client = CreateClient();
 
-        var response = await client.PostAsJsonAsync("/auth/login", new { username = "admin", password = "admin" });
+        var response = await client.PostAsJsonAsync("/auth/login", new { username = "carlos.ruiz", password = "sol" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -105,7 +105,7 @@ public sealed class AuthFlowTests : IClassFixture<GestionPersonalWebAppFactory>
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/auth/login")
         {
-            Content = JsonContent.Create(new { username = "admin", password = "admin" })
+            Content = JsonContent.Create(new { username = "carlos.ruiz", password = "sol" })
         };
         request.Headers.Add("RequestVerificationToken", token);
         return await client.SendAsync(request);

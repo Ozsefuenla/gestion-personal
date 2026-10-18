@@ -1,19 +1,34 @@
 # Reglas de UI del frontend — admin
 
-Documenta las reglas de interfaz específicas del **admin** del centro (rol `admin`).
-Las reglas comunes están en `docs/0003-frontend-ui.md` y las del trabajador logueado
-en `docs/0004-frontend-ui-worker.md`.
+Documenta las reglas de interfaz específicas del **administrador del centro**
+(`CenterAdmin`). Ver [`0012-modelo-roles.md`](0012-modelo-roles.md). Las reglas
+comunes están en `docs/0003-frontend-ui.md` y las del trabajador logueado en
+`docs/0004-frontend-ui-worker.md`.
 
 > **Nota de arquitectura:** la API HTTP se fusionó en el monolito `GestionPersonal.Web`.
 > Las rutas `/api/*` citadas abajo son el contrato histórico (ver `docs/0001-api-design.md`);
-> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process.
+> hoy equivalen a operaciones de `Application/Services` ejecutadas in-process y la
+> autorización se valida en el servidor.
+
+## Dashboard del administrador (`Dashboard.razor`)
+
+Cuando la sesión es `CenterAdmin`, `/app` muestra **solo la administración del
+centro**: no aparece el panel de fichaje rápido ni el botón "Acceder como
+trabajador" (esos son propios del usuario kiosco `Center`).
+
+- Columna izquierda: tarjeta con **Gestión de trabajadores**, **Gestionar
+  ausencias** (con contador de pendientes), **Ver horarios de trabajadores** y
+  **Usuarios de tablet**.
+- Columna derecha: panel **Marcajes de hoy**.
+- El botón "Gestionar ausencias" está **siempre visible**; el contador de
+  pendientes solo aparece cuando hay ausencias pendientes (`MudBadge.Visible`).
 
 ## Marcajes de hoy (`TodayWorkersPanel.razor`)
 
 Panel que aparece **debajo del donut** (columna izquierda del dashboard `/app`), solo
 cuando el trabajador logueado tiene `Role == "admin"`.
 
-- Lista una fila por cada **trabajador no-admin** del centro (el propio admin no aparece).
+- Lista una fila por cada trabajador activo del centro.
 - Por fila, sin ausencia: **nombre**, **estado actual** (chip En curso / En pausa /
   Finalizado / Sin iniciar), **Trabajadas** (`Xh Ym`) y **Diferencia** (`±N min`,
   verde/rojo) respecto al objetivo diario (`DailyHours`).
@@ -31,12 +46,11 @@ cuando el trabajador logueado tiene `Role == "admin"`.
 
 ## Ver horarios trabajadores (`WorkersTimeControlDialog.razor`)
 
-Solo disponible cuando `Worker.Role == "admin"`.
+Solo disponible para `CenterAdmin`.
 
 - En la cabecera del panel **Control Horario** (`TimeControlPanel.razor`) aparece el botón
   **"Ver horarios trabajadores"** (icono `People`).
-- Abre un `MudDialog` con `MudTabs`: una tab por cada **trabajador no-admin** del centro
-  (el admin no aparece), ordenado por nombre.
+- Abre un `MudDialog` con `MudTabs`: una tab por cada trabajador del centro, ordenado por nombre.
 - **Filtro Mes/Año a nivel de diálogo** (arriba), que aplica a todas las tabs a la vez.
 - Cada tab muestra el resumen mensual del trabajador (Previstas/Trabajadas/Diferencia) y el
   listado diario, reutilizando el componente compartido `MonthlyTimeControlView`.
@@ -53,10 +67,10 @@ Solo disponible cuando `Worker.Role == "admin"`.
 
 ## Gestión de trabajadores (`ManageWorkersDialog.razor`)
 
-Solo disponible cuando `Worker.Role == "admin"`.
+Solo disponible para `CenterAdmin`.
 
-- Botón **"Gestión de trabajadores"** (icono `People`) en el grid de acciones del perfil
-  del admin (`WorkerCard.razor`), a ancho completo debajo del bloque 2x2.
+- Botón **"Gestión de trabajadores"** (icono `People`) en la tarjeta de administración
+  del dashboard (`Dashboard.razor`), visible solo para `CenterAdmin`.
 - Abre `ManageWorkersDialog` con `MudTabs`: **Activos** y **Inactivos** (la tab
   Inactivos solo aparece si hay algún trabajador inactivo).
 - Los datos salen de `GET /api/workers/manage` (todos los trabajadores del centro,
@@ -71,8 +85,7 @@ Solo disponible cuando `Worker.Role == "admin"`.
   (`POST /api/workers/{id}/reset-pin`). Tras resetear, el trabajador deberá cambiar su
   PIN al entrar (se activa `MustChangePin`).
 - **Dar de baja**: con confirmación (`ShowMessageBoxAsync`), ejecuta
-  `PATCH /api/workers/{id}/deactivate`. No se muestra ni aplica sobre trabajadores con
-  rol `admin` (el backend lo rechaza con `400`).
+  `PATCH /api/workers/{id}/deactivate`. 
 
 ### Acciones (inactivos)
 
@@ -103,7 +116,7 @@ Disponible para **todos los roles**.
 | Dónde | Qué exporta |
 |-------|-------------|
 | Botón **"Exportar"** del Control Horario propio (`TimeControlPanel`) | PDF de un solo trabajador para el mes/año seleccionados |
-| Botón **"Exportar PDF"** del diálogo `WorkersTimeControlDialog` (admin) | PDF con todos los trabajadores no-admin del mes/año seleccionados |
+| Botón **"Exportar PDF"** del diálogo `WorkersTimeControlDialog` (admin) | PDF con todos los trabajadores del centro para el mes/año seleccionados |
 
 - El botón queda deshabilitado mientras no haya datos cargados (`Summary == null`).
 - Nombre de archivo: `control-horario-{año}-{mes}.pdf` (propio) y
@@ -111,8 +124,9 @@ Disponible para **todos los roles**.
 
 ## Permisos
 
-- La restricción "solo admin ve los marcajes de hoy, los horarios de los trabajadores y
-  la gestión de trabajadores" es de **frontend** (la sesión autentica el centro vía cookie,
-  no por trabajador; no hay identidad de trabajador en la sesión). Documentado en `0001`/`0004`.
+- La restricción "solo el administrador ve los marcajes de hoy, los horarios de los
+  trabajadores y la gestión de trabajadores" se valida en el **servidor**
+  (`AccessControl.RequireCenterAdmin`) y la UI la refleja según
+  `ICurrentUser.Role == CenterAdmin`. Ver `0012-modelo-roles.md`.
 - El export a PDF no tiene restricción de rol (cualquier trabajador exporta su propio
-  control horario; el admin además exporta el de todos).
+  control horario; el `CenterAdmin` además exporta el de todos).

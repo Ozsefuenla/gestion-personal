@@ -1,14 +1,13 @@
 using Dapper;
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Entities;
-using GestionPersonal.Domain.Enums;
 
 namespace GestionPersonal.Infrastructure.Persistence.Postgres.Repositories;
 
 public sealed class PostgresWorkerRepository : IWorkerRepository
 {
     private const string SelectColumns =
-        "id, center_id, full_name, pin_hash, role, active, must_change_pin, daily_hours, created_at";
+        "id, center_id, full_name, pin_hash, active, must_change_pin, daily_hours, created_at";
 
     private readonly IDbConnectionFactory _connectionFactory;
 
@@ -75,8 +74,8 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
         var id = await connection.ExecuteScalarAsync<int>(
             new CommandDefinition(
                 """
-                INSERT INTO workers (center_id, full_name, pin_hash, role, active, must_change_pin, daily_hours, created_at)
-                VALUES (@CenterId, @FullName, @PinHash, @Role, @Active, @MustChangePin, @DailyHours, @CreatedAt)
+                INSERT INTO workers (center_id, full_name, pin_hash, active, must_change_pin, daily_hours, created_at)
+                VALUES (@CenterId, @FullName, @PinHash, @Active, @MustChangePin, @DailyHours, @CreatedAt)
                 RETURNING id
                 """,
                 new
@@ -84,7 +83,6 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
                     worker.CenterId,
                     worker.FullName,
                     worker.PinHash,
-                    Role = worker.Role.ToString(),
                     worker.Active,
                     worker.MustChangePin,
                     worker.DailyHours,
@@ -97,7 +95,6 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
             worker.CenterId,
             worker.FullName,
             worker.PinHash,
-            worker.Role,
             worker.Active,
             worker.MustChangePin,
             worker.DailyHours,
@@ -114,7 +111,6 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
                 UPDATE workers
                 SET full_name = @FullName,
                     pin_hash = @PinHash,
-                    role = @Role,
                     active = @Active,
                     must_change_pin = @MustChangePin,
                     daily_hours = @DailyHours
@@ -125,7 +121,6 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
                     worker.Id,
                     worker.FullName,
                     worker.PinHash,
-                    Role = worker.Role.ToString(),
                     worker.Active,
                     worker.MustChangePin,
                     worker.DailyHours
@@ -139,7 +134,6 @@ public sealed class PostgresWorkerRepository : IWorkerRepository
             row.CenterId,
             row.FullName,
             row.PinHash,
-            Enum.Parse<Role>(row.Role, ignoreCase: true),
             row.Active,
             row.MustChangePin,
             row.DailyHours,
