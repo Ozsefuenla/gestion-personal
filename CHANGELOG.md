@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-18
+
 ### Added
 - Modelo de roles de cuatro niveles: `SuperAdmin` (global), `CenterAdmin`
   (administra el centro), `Center` (usuario kiosco de la tablet) y
