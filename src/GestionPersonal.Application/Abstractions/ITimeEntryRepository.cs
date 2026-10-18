@@ -18,7 +18,9 @@ public interface ITimeEntryRepository
         DateTimeOffset to,
         CancellationToken cancellationToken = default);
 
-    void Add(TimeEntry timeEntry);
+    Task AddAsync(TimeEntry timeEntry, CancellationToken cancellationToken = default);
 
-    void Remove(TimeEntry timeEntry);
+    Task UpdateAsync(TimeEntry timeEntry, CancellationToken cancellationToken = default);
+
+    Task RemoveAsync(TimeEntry timeEntry, CancellationToken cancellationToken = default);
 }

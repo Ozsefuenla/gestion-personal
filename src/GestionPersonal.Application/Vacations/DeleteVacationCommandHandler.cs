@@ -52,6 +52,8 @@ public sealed class DeleteVacationCommandHandler
 
         vacation.Delete();
 
+        await _vacationRepository.UpdateAsync(vacation, cancellationToken);
+
         return Result.Success();
     }
 }

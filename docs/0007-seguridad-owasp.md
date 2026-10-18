@@ -10,7 +10,7 @@ referencia para una futura re-extracción, está en `docs/0001-api-design.md` y
 
 - Web (`GestionPersonal.Web`): Blazor Server + MudBlazor, login del centro con cookie
   y servicios de aplicación in-process.
-- Persistencia en memoria (sin ORM/SQL aún).
+- Persistencia PostgreSQL con Dapper (SQL parametrizado, sin ORM).
 - No se cubre infraestructura (red, hosting) más allá de lo indicado.
 
 ## Decisiones de diseño
@@ -52,7 +52,7 @@ referencia para una futura re-extracción, está en `docs/0001-api-design.md` y
 |---|--------|--------|------------|
 | A01 | Broken Access Control | ✅ | `/app` con `[Authorize]` + cookie; los handlers verifican pertenencia al centro |
 | A02 | Cryptographic Failures | ✅ | PIN y contraseña con BCrypt; HTTPS + HSTS en prod |
-| A03 | Injection | ✅ | Persistencia en memoria (sin SQL). Al pasar a SQL: parámetros, nunca concatenación |
+| A03 | Injection | ✅ | Dapper con SQL parametrizado; nunca concatenación de entrada |
 | A04 | Insecure Design | ✅ | Rate limiting en login + lockout del PIN por trabajador |
 | A05 | Security Misconfiguration | ⚠️ | Headers básicos; detalle de error solo en Dev (`/Error`); CSP pendiente (→ Fase 3) |
 | A06 | Vulnerable Components | ✅ | Escaneo `dotnet list package --vulnerable --include-transitive` sin vulnerabilidades (revisar periódicamente) |

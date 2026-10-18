@@ -45,6 +45,8 @@ public sealed class PauseTimeEntryCommandHandler
 
         existing.Pause(DateTimeOffset.UtcNow);
 
+        await _timeEntryRepository.UpdateAsync(existing, cancellationToken);
+
         return TimeEntryResponse.From(existing);
     }
 }

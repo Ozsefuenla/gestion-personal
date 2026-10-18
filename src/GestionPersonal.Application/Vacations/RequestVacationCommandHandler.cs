@@ -69,7 +69,7 @@ public sealed class RequestVacationCommandHandler
             vacation.Approve(now);
         }
 
-        _vacationRepository.Add(vacation);
+        await _vacationRepository.AddAsync(vacation, cancellationToken);
 
         return VacationResponse.From(vacation);
     }

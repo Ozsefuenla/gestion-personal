@@ -28,6 +28,27 @@ public sealed class TimeEntry
         };
     }
 
+    public static TimeEntry Rehydrate(
+        Guid id,
+        int workerId,
+        TimeEntryStatus status,
+        DateTimeOffset startedAt,
+        DateTimeOffset? endedAt,
+        IEnumerable<PausePeriod> pauses)
+    {
+        var entry = new TimeEntry
+        {
+            Id = id,
+            WorkerId = workerId,
+            Status = status,
+            StartedAt = startedAt,
+            EndedAt = endedAt
+        };
+
+        entry._pauses.AddRange(pauses);
+        return entry;
+    }
+
     public void Pause(DateTimeOffset now)
     {
         if (Status != TimeEntryStatus.InProgress)

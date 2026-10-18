@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Persistencia PostgreSQL con Dapper (SQL directo, sin ORM) y migraciones
+  versionadas con DbUp sobre scripts SQL embebidos.
+- `docker-compose.yml` con PostgreSQL 17 y volumen persistente para desarrollo local.
+- `DatabaseInitializer`: aplica migraciones y siembra de forma idempotente el centro
+  demo y el usuario `admin`; los trabajadores y fichajes de ejemplo solo se siembran
+  en desarrollo (`Persistence:SeedDemoData`).
+- Documento `docs/0011-persistencia-postgres.md` (esquema, migraciones, seed y
+  configuración local/producción).
+
+### Fixed
+- Normalización a UTC de los `DateTimeOffset` antes de escribir en PostgreSQL;
+  Npgsql rechaza offsets distintos de 0 en columnas `timestamptz` (afectaba al
+  seed de demo, marcajes manuales, ediciones y rangos de consulta).
+
+### Changed
+- Las escrituras de los repositorios son asíncronas (`AddAsync`, `UpdateAsync`,
+  `RemoveAsync`) y los handlers persisten explícitamente las entidades que mutan.
+- Los identificadores de trabajadores y centros los asigna PostgreSQL
+  (`INSERT ... RETURNING id`); se elimina el cálculo manual `max(Id)+1`.
+- `AddInfrastructure(IConfiguration)` registra la infraestructura PostgreSQL con
+  repositorios scoped; los dobles in-memory viven en `GestionPersonal.TestSupport`
+  (`AddInMemoryTestInfrastructure`).
+- La persistencia es siempre PostgreSQL; la cadena se configura con
+  `ConnectionStrings:Default` (variable de entorno en producción).
+- README y AGENTS.md actualizados con los pasos de Docker y PostgreSQL.
+
+### Removed
+- Persistencia in-memory de producción (`InMemory*Repository`,
+  `AddInMemoryInfrastructure`) y la clave `Persistence:Provider`; los dobles de
+  test se movieron a `GestionPersonal.TestSupport`.
+
 ## [1.0.0] - 2026-10-18
 
 ### Added

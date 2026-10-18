@@ -34,6 +34,8 @@ public sealed class DeactivateWorkerCommandHandler
 
         scoped.Value.Deactivate();
 
+        await _workerRepository.UpdateAsync(scoped.Value, cancellationToken);
+
         return Result.Success();
     }
 }

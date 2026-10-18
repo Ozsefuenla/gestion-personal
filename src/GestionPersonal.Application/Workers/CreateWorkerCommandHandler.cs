@@ -52,14 +52,11 @@ public sealed class CreateWorkerCommandHandler
             return Error.NotFound("El centro no existe.");
         }
 
-        var workers = await _workerRepository.GetAllAsync(cancellationToken);
-        var nextId = workers.Count == 0 ? 1 : workers.Max(w => w.Id) + 1;
+        var worker = Worker.Create(command.CenterId, command.FullName, _passwordHasher.Hash(command.Pin), role.Value, mustChangePin: command.MustChangePin);
 
-        var worker = Worker.Create(nextId, command.CenterId, command.FullName, _passwordHasher.Hash(command.Pin), role.Value, mustChangePin: command.MustChangePin);
+        var persisted = await _workerRepository.AddAsync(worker, cancellationToken);
 
-        _workerRepository.Add(worker);
-
-        return WorkerResponse.From(worker);
+        return WorkerResponse.From(persisted);
     }
 
     private static Role? ParseRole(string role) =>

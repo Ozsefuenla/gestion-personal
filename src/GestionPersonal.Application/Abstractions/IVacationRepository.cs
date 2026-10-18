@@ -24,5 +24,7 @@ public interface IVacationRepository
         IReadOnlyList<int> workerIds,
         CancellationToken cancellationToken = default);
 
-    void Add(Vacation vacation);
+    Task AddAsync(Vacation vacation, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(Vacation vacation, CancellationToken cancellationToken = default);
 }

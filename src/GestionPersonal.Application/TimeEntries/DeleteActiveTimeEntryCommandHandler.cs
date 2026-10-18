@@ -38,11 +38,12 @@ public sealed class DeleteActiveTimeEntryCommandHandler
 
         if (entry.Status == TimeEntryStatus.InProgress && entry.Pauses.Count == 0)
         {
-            _timeEntryRepository.Remove(entry);
+            await _timeEntryRepository.RemoveAsync(entry, cancellationToken);
         }
         else
         {
             entry.DeleteLastActive();
+            await _timeEntryRepository.UpdateAsync(entry, cancellationToken);
         }
 
         return Result.Success();

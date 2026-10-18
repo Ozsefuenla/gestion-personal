@@ -12,5 +12,7 @@ public interface IWorkerRepository
 
     Task<IReadOnlyList<Worker>> GetAllAsync(CancellationToken cancellationToken = default);
 
-    void Add(Worker worker);
+    Task<Worker> AddAsync(Worker worker, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(Worker worker, CancellationToken cancellationToken = default);
 }

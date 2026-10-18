@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GestionPersonal.TestSupport\GestionPersonal.TestSupport.csproj" />
     <ProjectReference Include="..\GestionPersonal.Web\GestionPersonal.Web.csproj" />
   </ItemGroup>
 

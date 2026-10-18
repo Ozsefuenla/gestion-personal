@@ -2,15 +2,16 @@ using GestionPersonal.Domain.Entities;
 
 namespace GestionPersonal.Infrastructure.Persistence;
 
-internal static class SeedData
+public static class SeedData
 {
     private static readonly TimeZoneInfo Madrid = ResolveMadrid();
 
-    public static IReadOnlyList<TimeEntry> BuildTimeEntries()
+    public static IReadOnlyList<TimeEntry> BuildTimeEntries() => BuildTimeEntries([1, 2, 3]);
+
+    public static IReadOnlyList<TimeEntry> BuildTimeEntries(IReadOnlyList<int> workerIds)
     {
         var random = new Random(2026);
         var deltas = new[] { -60, -45, -30, -15, 0, 0, 15, 30, 45, 60 };
-        var workerIds = new[] { 1, 2, 3 };
         var entries = new List<TimeEntry>();
         var today = DateTime.Today;
         var deltaIndex = 0;

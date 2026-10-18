@@ -51,7 +51,7 @@ public sealed class AddManualTimeEntryCommandHandler
                 }
 
                 var started = TimeEntry.Start(command.WorkerId, startTimestamp);
-                _timeEntryRepository.Add(started);
+                await _timeEntryRepository.AddAsync(started, cancellationToken);
 
                 return TimeEntryResponse.From(started);
 
@@ -80,6 +80,8 @@ public sealed class AddManualTimeEntryCommandHandler
                     openEntry.Resume(Combine(command.Date.Value, command.EndTime.Value));
                 }
 
+                await _timeEntryRepository.UpdateAsync(openEntry, cancellationToken);
+
                 return TimeEntryResponse.From(openEntry);
 
             case "end":
@@ -96,6 +98,8 @@ public sealed class AddManualTimeEntryCommandHandler
                 }
 
                 openEntry.End(endTimestamp);
+
+                await _timeEntryRepository.UpdateAsync(openEntry, cancellationToken);
 
                 return TimeEntryResponse.From(openEntry);
 

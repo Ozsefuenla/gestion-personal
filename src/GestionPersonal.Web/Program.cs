@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using GestionPersonal.Application;
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Infrastructure;
+using GestionPersonal.Infrastructure.Persistence.Postgres;
 using GestionPersonal.Web.Components;
 using GestionPersonal.Web.Endpoints;
 using GestionPersonal.Web.Security;
@@ -29,7 +30,7 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddMudServices();
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 if (builder.Environment.IsProduction())
 {
@@ -84,6 +85,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+app.Services.GetService<DatabaseInitializer>()?.Initialize();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

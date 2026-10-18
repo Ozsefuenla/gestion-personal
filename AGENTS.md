@@ -6,14 +6,16 @@ para peluquerías y clínicas estéticas en España. Backend en C# (.NET 10) y
 frontend en Blazor Server.
 
 ## Stack
-- Backend: ASP.NET Core 10 + Blazor Server (C#), persistencia en memoria (acceso
-  SQL directo pendiente, sin ORM).
+- Backend: ASP.NET Core 10 + Blazor Server (C#).
+- Persistencia: PostgreSQL con Dapper (SQL directo) y migraciones DbUp
+  (sin ORM). En tests se usan fakes in-memory de `GestionPersonal.TestSupport`.
 - Frontend: Blazor Web App (.NET 10, interactividad Server) + MudBlazor.
 - Seguridad: login del centro con cookie HTTP-Only (BCrypt en contraseña y PIN).
   Pendiente: JWT del trabajador para fichaje en tablet.
 
 ## Arquitectura (Clean Architecture)
-- Proyectos: `Domain`, `Application`, `Infrastructure`, `Web` (Blazor) y `Tests`.
+- Proyectos: `Domain`, `Application`, `Infrastructure`, `Web` (Blazor), `Tests` y
+  `TestSupport` (dobles in-memory, solo para tests).
 - Las dependencias apuntan siempre hacia adentro; el núcleo (Domain) no
   depende de infraestructura ni de ASP.NET.
 - Cada feature vive en una carpeta de `Application` con su request (record),
@@ -53,6 +55,8 @@ frontend en Blazor Server.
   Se implementa como página raíz en `Components/Pages/LandingPage.razor` (ruta `/`) con su
   layout `LandingLayout`. El dashboard tras login de centro está en `/app` (`Dashboard.razor`
   + `AppLayout.razor`).
+- La persistencia (esquema, migraciones DbUp, seed y configuración local/producción)
+  está en `docs/0011-persistencia-postgres.md`.
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo
@@ -73,9 +77,13 @@ frontend en Blazor Server.
 ## Testing
 - TDD: escribir el test antes que la implementación.
 - Framework: xUnit. Los tests ejercitan los servicios de aplicación
-  (`Application/Services`) con repositorios en memoria y un `ICurrentCenter` falso.
+  (`Application/Services`) con los fakes in-memory de `GestionPersonal.TestSupport`
+  (`AddInMemoryTestInfrastructure`) y un `ICurrentCenter` falso. Los tests de
+  integración también usan esos fakes.
 - Comandos: `dotnet test`, `dotnet build`.
 
 ## Comandos útiles
+- `docker compose up -d` (PostgreSQL local; necesario para `dotnet run`).
+- `docker compose down -v` (reinicia la base de datos desde cero).
 - `dotnet build` / `dotnet test` desde `src/`.
 - Frontend: `dotnet run --project src/GestionPersonal.Web`.

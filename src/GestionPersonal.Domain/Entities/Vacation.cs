@@ -41,6 +41,29 @@ public sealed class Vacation
         };
     }
 
+    public static Vacation Rehydrate(
+        Guid id,
+        int workerId,
+        DateOnly startDate,
+        DateOnly endDate,
+        VacationType type,
+        VacationStatus status,
+        DateTimeOffset requestedAt,
+        DateTimeOffset? decidedAt)
+    {
+        return new Vacation
+        {
+            Id = id,
+            WorkerId = workerId,
+            StartDate = startDate,
+            EndDate = endDate,
+            Type = type,
+            Status = status,
+            RequestedAt = requestedAt,
+            DecidedAt = decidedAt
+        };
+    }
+
     public void Approve(DateTimeOffset now)
     {
         EnsurePending();

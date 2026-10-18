@@ -39,6 +39,8 @@ public sealed class EndTimeEntryCommandHandler
 
         existing.End(DateTimeOffset.UtcNow);
 
+        await _timeEntryRepository.UpdateAsync(existing, cancellationToken);
+
         return TimeEntryResponse.From(existing);
     }
 }

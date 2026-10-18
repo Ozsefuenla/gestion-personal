@@ -114,16 +114,16 @@ formatos y timeline). Las reglas específicas del **trabajador logueado** están
 - Al loguear, se **oculta el panel de Fichaje rápido** y se muestra la card personal del trabajador
   (ver `docs/0004-frontend-ui-worker.md`).
 
-## PINs de prueba (en memoria)
+## PINs de prueba (desarrollo)
 
-- Centro demo `1` ("Peluquería Sol"). Trabajadores:
-  - `1` → María García · PIN `1111`
-  - `2` → Ana López · PIN `2222`
-  - `3` → Carlos Ruiz · PIN `3333`
+- Centro demo `1` ("Peluquería Sol"). Trabajadores sembrados en desarrollo:
+  - María García · PIN `1111`
+  - Ana López · PIN `2222`
+  - Carlos Ruiz · PIN `3333`
 - El PIN es por trabajador (pueden repetirse); se valida contra el trabajador seleccionado.
+- Los identificadores los asigna PostgreSQL al sembrar los datos.
 
 ## Pendientes
 
 - CSP (diferido por la complejidad de Blazor + Tailwind CDN).
 - JWT del trabajador para fichaje en tablet.
-- Persistencia SQL real.

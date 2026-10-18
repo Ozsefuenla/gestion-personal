@@ -1,6 +1,6 @@
 using GestionPersonal.Application;
 using GestionPersonal.Application.Abstractions;
-using GestionPersonal.Infrastructure;
+using GestionPersonal.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionPersonal.Tests.Infrastructure;
@@ -13,7 +13,7 @@ public sealed class ApplicationFixture : IDisposable
     {
         var services = new ServiceCollection();
         services.AddApplication();
-        services.AddInfrastructure();
+        services.AddInMemoryTestInfrastructure();
         services.AddSingleton<ICurrentCenter>(new FakeCurrentCenter(TestCenterId));
 
         Provider = services.BuildServiceProvider();
