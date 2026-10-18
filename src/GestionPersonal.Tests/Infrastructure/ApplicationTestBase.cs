@@ -28,6 +28,8 @@ public abstract class ApplicationTestBase : IDisposable
 
     protected IAccountService Account => _scope.ServiceProvider.GetRequiredService<IAccountService>();
 
+    protected ITimeEntryChangeNotifier Notifier => _scope.ServiceProvider.GetRequiredService<ITimeEntryChangeNotifier>();
+
     protected FakeCurrentUser User => _scope.ServiceProvider.GetRequiredService<ICurrentUser>() as FakeCurrentUser
         ?? throw new InvalidOperationException("El usuario actual de test no es FakeCurrentUser.");
 

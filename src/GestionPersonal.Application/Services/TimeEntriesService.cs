@@ -1,3 +1,4 @@
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Application.TimeEntries;
 
@@ -16,6 +17,8 @@ public sealed class TimeEntriesService : ITimeEntriesService
     private readonly EditActiveTimeEntryCommandHandler _editActiveHandler;
     private readonly DeleteActiveTimeEntryCommandHandler _deleteActiveHandler;
     private readonly IRequestValidator _requestValidator;
+    private readonly ICurrentCenter _currentCenter;
+    private readonly ITimeEntryChangeNotifier _changeNotifier;
 
     public TimeEntriesService(
         TodaySummaryQueryHandler todayHandler,
@@ -28,7 +31,9 @@ public sealed class TimeEntriesService : ITimeEntriesService
         AddManualTimeEntryCommandHandler addManualHandler,
         EditActiveTimeEntryCommandHandler editActiveHandler,
         DeleteActiveTimeEntryCommandHandler deleteActiveHandler,
-        IRequestValidator requestValidator)
+        IRequestValidator requestValidator,
+        ICurrentCenter currentCenter,
+        ITimeEntryChangeNotifier changeNotifier)
     {
         _todayHandler = todayHandler;
         _monthlyHandler = monthlyHandler;
@@ -41,6 +46,8 @@ public sealed class TimeEntriesService : ITimeEntriesService
         _editActiveHandler = editActiveHandler;
         _deleteActiveHandler = deleteActiveHandler;
         _requestValidator = requestValidator;
+        _currentCenter = currentCenter;
+        _changeNotifier = changeNotifier;
     }
 
     public async Task<Result<TodaySummaryResponse>> GetTodayAsync(
@@ -82,7 +89,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _startHandler.Handle(command, cancellationToken);
+        var result = await _startHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result<TimeEntryResponse>> PauseAsync(
@@ -96,7 +110,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _pauseHandler.Handle(command, cancellationToken);
+        var result = await _pauseHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result<TimeEntryResponse>> ResumeAsync(
@@ -110,7 +131,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _resumeHandler.Handle(command, cancellationToken);
+        var result = await _resumeHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result<TimeEntryResponse>> EndAsync(
@@ -124,7 +152,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _endHandler.Handle(command, cancellationToken);
+        var result = await _endHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result<QuickClockResponse>> QuickClockAsync(
@@ -138,7 +173,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _quickClockHandler.Handle(command, cancellationToken);
+        var result = await _quickClockHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess && result.Value.Success)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result<TimeEntryResponse>> AddManualAsync(
@@ -152,7 +194,14 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _addManualHandler.Handle(command, cancellationToken);
+        var result = await _addManualHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
     public async Task<Result> EditActiveAsync(
@@ -167,9 +216,33 @@ public sealed class TimeEntriesService : ITimeEntriesService
             return validationError;
         }
 
-        return await _editActiveHandler.Handle(workerId, command, cancellationToken);
+        var result = await _editActiveHandler.Handle(workerId, command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
     }
 
-    public Task<Result> DeleteActiveAsync(int workerId, CancellationToken cancellationToken = default) =>
-        _deleteActiveHandler.Handle(workerId, cancellationToken);
+    public async Task<Result> DeleteActiveAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        var result = await _deleteActiveHandler.Handle(workerId, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
+    }
+
+    private void NotifyChanged()
+    {
+        if (_currentCenter.CenterId is { } centerId)
+        {
+            _changeNotifier.Raise(centerId);
+        }
+    }
 }

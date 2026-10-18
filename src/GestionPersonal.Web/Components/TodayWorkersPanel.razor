@@ -1,13 +1,12 @@
 @inject IWorkersService Workers
 @inject IVacationsService Vacations
+@inject ICurrentCenter CurrentCenter
+@inject ITimeEntryChangeNotifier ChangeNotifier
 @implements IAsyncDisposable
 
 <MudCard Elevation="2">
     <MudCardContent>
-        <div class="d-flex align-center justify-space-between">
-            <MudText Typo="Typo.h6">Marcajes de hoy</MudText>
-            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Color="Color.Primary" Disabled="_refreshing" OnClick="RefreshAsync" />
-        </div>
+        <MudText Typo="Typo.h6">Marcajes de hoy</MudText>
 
         @if (_loading && _workers.Count == 0)
         {
@@ -19,68 +18,84 @@
         }
         else
         {
-            <div class="mt-2">
-                @foreach (var worker in _workers)
-                {
-                    <div class="d-flex align-center flex-wrap" style="gap: 12px; padding: 8px 0; border-bottom: 1px solid #ECE5F1;">
-                        <MudText Typo="Typo.body2" Style="min-width: 140px; font-weight: 500;">@worker.FullName</MudText>
+            <table class="today-grid mt-2">
+                <colgroup>
+                    <col style="width: 30%;" />
+                    <col style="width: 18%;" />
+                    <col style="width: 18%;" />
+                    <col style="width: 17%;" />
+                    <col style="width: 17%;" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Trabajador</th>
+                        <th>Estado</th>
+                        <th>Trabajado</th>
+                        <th>Restante</th>
+                        <th>Pausado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var worker in _workers)
+                    {
+                        var worked = LiveWorked(worker);
+                        var paused = LivePaused(worker);
+                        var hasAbsence = _absencesToday.TryGetValue(worker.Id, out var absenceType);
 
-                        @if (_absencesToday.TryGetValue(worker.Id, out var absenceType))
-                        {
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
-                                Ausencia - @AbsenceLabel(absenceType)
-                            </MudChip>
-                        }
-                        else
-                        {
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@StatusColor(worker.CurrentStatus)">
-                                @StatusLabel(worker.CurrentStatus)
-                            </MudChip>
-                            <MudText Typo="Typo.body2"><b>Trabajadas:</b> @TimeFormatting.FormatHours(worker.WorkedTime)</MudText>
-                            <MudText Typo="Typo.body2" Color="@TimeFormatting.DeltaColor(worker.WorkedTime, worker.DailyHours)"><b>Diferencia:</b> @TimeFormatting.FormatDelta(worker.WorkedTime, worker.DailyHours)</MudText>
-                        }
-                    </div>
-                }
-            </div>
+                        <tr>
+                            <td>@worker.FullName</td>
+                            <td class="cell-status">
+                                @if (hasAbsence)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+                                        Ausencia - @AbsenceLabel(absenceType)
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@StatusColor(worker.CurrentStatus)">
+                                        @StatusLabel(worker.CurrentStatus)
+                                    </MudChip>
+                                }
+                            </td>
+                            <td class="tabular-nums">@(hasAbsence ? "—" : TimeFormatting.FormatLiveDuration(worked))</td>
+                            <td class="tabular-nums">@(hasAbsence ? "—" : TimeFormatting.FormatRemaining(worker.DailyHours - worked))</td>
+                            <td class="tabular-nums">@(hasAbsence ? "—" : TimeFormatting.FormatLiveDuration(paused))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         }
     </MudCardContent>
 </MudCard>
 
 @code {
-    private readonly PeriodicTimer _timer = new(TimeSpan.FromSeconds(30));
     private List<WorkerStatusResponse> _workers = [];
     private readonly Dictionary<int, string> _absencesToday = [];
     private bool _loading = true;
-    private bool _refreshing;
+    private IDisposable? _subscription;
+    private int _centerId;
+    private readonly PeriodicTimer _clock = new(TimeSpan.FromSeconds(1));
 
     protected override async Task OnInitializedAsync()
     {
+        _centerId = CurrentCenter.CenterId ?? 0;
+        _subscription = ChangeNotifier.Subscribe(OnTimeEntryChanged);
         await LoadAsync();
-        _ = RunRefreshLoopAsync();
+        _ = RunClockAsync();
     }
 
-    private async Task RefreshAsync()
+    private async Task RunClockAsync()
     {
-        _refreshing = true;
-
-        try
+        while (true)
         {
-            await LoadAsync();
-        }
-        finally
-        {
-            _refreshing = false;
-        }
-    }
-
-    private async Task RunRefreshLoopAsync()
-    {
-        while (await _timer.WaitForNextTickAsync())
-        {
-            await LoadAsync();
-
             try
             {
+                if (!await _clock.WaitForNextTickAsync())
+                {
+                    return;
+                }
+
                 await InvokeAsync(StateHasChanged);
             }
             catch (Exception)
@@ -88,6 +103,26 @@
                 return;
             }
         }
+    }
+
+    private static TimeSpan LiveWorked(WorkerStatusResponse worker) =>
+        LiveTime.Compute(worker, DateTimeOffset.UtcNow).Worked;
+
+    private static TimeSpan LivePaused(WorkerStatusResponse worker) =>
+        LiveTime.Compute(worker, DateTimeOffset.UtcNow).Paused;
+
+    private void OnTimeEntryChanged(int centerId)
+    {
+        if (centerId != _centerId)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            await LoadAsync();
+            StateHasChanged();
+        });
     }
 
     private async Task LoadAsync()
@@ -149,7 +184,8 @@
 
     public ValueTask DisposeAsync()
     {
-        _timer.Dispose();
+        _subscription?.Dispose();
+        _clock.Dispose();
         return ValueTask.CompletedTask;
     }
 }

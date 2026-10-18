@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Actualización en tiempo real de los fichajes entre vistas del mismo centro:
+  un bus de eventos en proceso (`ITimeEntryChangeNotifier`) notifica los cambios
+  tras cada mutación de fichaje y los paneles suscritos se refrescan sin polling.
+  El panel "Marcajes de hoy" del `CenterAdmin` y la vista personal del
+  `CenterWorker` se actualizan al instante; se elimina el refresco cada 30 s.
+- Tiempo trabajado en vivo: el donut del trabajador y el listado "Marcajes de
+  hoy" suman minutos y segundos cada segundo, sin consultas adicionales al
+  servidor. `WorkerStatusResponse` incluye `ComputedAt` y el cliente proyecta el
+  tiempo con `LiveTime.Compute`.
+- Panel "Marcajes de hoy" como grid de columnas fijas (Trabajador, Estado,
+  Trabajado, Restante, Pausado) con `tabular-nums`, sin botón de refresco.
+  "Restante" muestra `Xh Ym` y, si se supera la jornada, `+Xh Ym`.
+- Donut del trabajador con el **% completado** sobre la jornada (tope 100%) y
+  bloque fijo "Trabajando / Pausado / Restante" debajo.
+
+### Changed
+- Los botones del panel "Administración del centro" usan colores distintos
+  (Primary, Warning, Info y Tertiary) para diferenciarse visualmente.
+- Las barras de progreso de "Horarios de trabajadores" (admin y vista del
+  trabajador) muestran solo el porcentaje trabajado en verde y el resto en gris;
+  se elimina el tramo de pausa.
+
 ## [1.2.0] - 2026-10-18
 
 ### Added
