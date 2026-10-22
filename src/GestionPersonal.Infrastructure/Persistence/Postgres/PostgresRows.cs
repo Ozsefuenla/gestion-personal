@@ -39,3 +39,28 @@ internal sealed record VacationRow(
     string Status,
     DateTime RequestedAt,
     DateTime? DecidedAt);
+
+internal sealed record MonitoringOverviewRow(
+    int TotalCenters,
+    int ActiveCenters,
+    int ActiveWorkers,
+    int ClockInsToday,
+    int PendingAbsences,
+    int ExceptionsLast24h,
+    int RequestsLast24h,
+    int ErrorsLast24h);
+
+internal sealed record SeverityCountRow(string Severity, int Count);
+
+internal sealed record ExceptionListRow(
+    long Id,
+    DateTime OccurredAt,
+    string ExceptionType,
+    string Message,
+    string? RequestPath,
+    string? HttpMethod,
+    int? StatusCode,
+    string? ActorRole,
+    int? CenterId);
+
+internal sealed record ErrorRateRow(DateTime Hour, int Requests, int Errors);

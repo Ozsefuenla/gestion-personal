@@ -1,0 +1,266 @@
+@inject IMonitoringService Monitoring
+@implements IAsyncDisposable
+
+<MudCard Elevation="2" Class="mb-4">
+    <MudCardContent>
+        <div class="d-flex align-center mb-3">
+            <div>
+                <MudText Typo="Typo.h6">Vista general</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">Actualización automática cada 30 s</MudText>
+            </div>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Default"
+                           Disabled="_loading"
+                           OnClick="RefreshAsync" />
+        </div>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-3">@_error</MudAlert>
+        }
+
+        <div class="d-flex flex-wrap" style="gap: 12px;">
+            @foreach (var kpi in _kpis)
+            {
+                <MudPaper Elevation="1" Class="pa-3" Style="min-width: 170px; flex: 1 1 170px;">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@kpi.Label</MudText>
+                    <MudText Typo="Typo.h5">@kpi.Value</MudText>
+                </MudPaper>
+            }
+        </div>
+    </MudCardContent>
+</MudCard>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">Eventos por severidad (24 h)</MudText>
+
+                @if (_severitySeries.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Sin eventos registrados.</MudText>
+                }
+                else
+                {
+                    <MudChart ChartType="ChartType.Donut"
+                              ChartSeries="@_severitySeries"
+                              ChartLabels="@_severityLabels"
+                              Width="100%"
+                              Height="240px" />
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        <MudCard Elevation="2" Class="mb-4">
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-3">Peticiones y errores por hora (24 h)</MudText>
+
+                @if (_errorSeries.Count == 0)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">Sin peticiones registradas.</MudText>
+                }
+                else
+                {
+                    <MudChart ChartType="ChartType.Line"
+                              ChartSeries="@_errorSeries"
+                              ChartLabels="@_hourLabels"
+                              Width="100%"
+                              Height="240px" />
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudCard Elevation="2">
+    <MudCardContent>
+        <div class="d-flex align-center mb-3">
+            <MudText Typo="Typo.h6">Excepciones recientes (24 h)</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@_exceptions.Count registradas</MudText>
+        </div>
+
+        @if (_exceptions.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No hay excepciones en las últimas 24 horas.</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true" Hover="true">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Mensaje</th>
+                        <th>Ruta</th>
+                        <th>Actor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in _exceptions)
+                    {
+                        <tr>
+                            <td class="tabular-nums">@MadridTime.FormatDateTime(item.OccurredAt)</td>
+                            <td>@item.ExceptionType</td>
+                            <td>@item.Message</td>
+                            <td>@(item.HttpMethod is null ? item.RequestPath : $"{item.HttpMethod} {item.RequestPath}")</td>
+                            <td>@(item.ActorRole ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private readonly record struct KpiItem(string Label, string Value);
+
+    private readonly PeriodicTimer _timer = new(TimeSpan.FromSeconds(30));
+    private readonly CancellationTokenSource _cts = new();
+
+    private List<KpiItem> _kpis = [];
+    private List<ChartSeries<double>> _severitySeries = [];
+    private string[] _severityLabels = [];
+    private List<ChartSeries<double>> _errorSeries = [];
+    private string[] _hourLabels = [];
+    private List<ExceptionListItem> _exceptions = [];
+    private bool _loading;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _ = PollAsync();
+    }
+
+    private async Task PollAsync()
+    {
+        try
+        {
+            while (await _timer.WaitForNextTickAsync(_cts.Token))
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task RefreshAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var overviewResult = await Monitoring.GetOverviewAsync();
+
+            if (overviewResult.IsFailure)
+            {
+                _error = overviewResult.Error.Message;
+                return;
+            }
+
+            _error = null;
+            BuildKpis(overviewResult.Value);
+            BuildSeverityChart(overviewResult.Value);
+
+            var seriesResult = await Monitoring.GetErrorRateSeriesAsync();
+
+            if (seriesResult.IsSuccess)
+            {
+                BuildErrorSeries(seriesResult.Value);
+            }
+
+            var exceptionsResult = await Monitoring.ListExceptionsAsync(limit: 25);
+
+            if (exceptionsResult.IsSuccess)
+            {
+                _exceptions = exceptionsResult.Value.ToList();
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BuildKpis(PlatformOverviewResponse overview)
+    {
+        var errorRate = overview.RequestsLast24h == 0
+            ? "—"
+            : $"{overview.ErrorsLast24h * 100.0 / overview.RequestsLast24h:0.0}%";
+
+        _kpis =
+        [
+            new KpiItem("Centros activos", $"{overview.ActiveCenters}/{overview.TotalCenters}"),
+            new KpiItem("Trabajadores activos", overview.ActiveWorkers.ToString()),
+            new KpiItem("Fichajes hoy", overview.ClockInsToday.ToString()),
+            new KpiItem("Ausencias pendientes", overview.PendingAbsences.ToString()),
+            new KpiItem("Errores (24 h)", overview.ExceptionsLast24h.ToString()),
+            new KpiItem("Tasa de error (24 h)", errorRate)
+        ];
+    }
+
+    private void BuildSeverityChart(PlatformOverviewResponse overview)
+    {
+        var order = new[] { "Critical", "Error", "Warning", "Info", "Debug" };
+
+        var items = overview.SeverityBreakdown
+            .OrderBy(item =>
+            {
+                var index = Array.IndexOf(order, item.Severity);
+                return index < 0 ? order.Length : index;
+            })
+            .ToList();
+
+        if (items.Count == 0)
+        {
+            _severitySeries = [];
+            _severityLabels = [];
+            return;
+        }
+
+        _severityLabels = items.Select(item => item.Severity).ToArray();
+        _severitySeries =
+        [
+            new ChartSeries<double>(items.Select(item => (double)item.Count).ToArray())
+        ];
+    }
+
+    private void BuildErrorSeries(IReadOnlyList<ErrorRatePoint> points)
+    {
+        if (points.Count == 0)
+        {
+            _errorSeries = [];
+            _hourLabels = [];
+            return;
+        }
+
+        _hourLabels = points.Select(point => MadridTime.Format(point.Hour)[..5]).ToArray();
+        _errorSeries =
+        [
+            new ChartSeries<double>(points.Select(point => (double)point.Requests).ToArray()) { Name = "Peticiones" },
+            new ChartSeries<double>(points.Select(point => (double)point.Errors).ToArray()) { Name = "Errores" }
+        ];
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _timer.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Módulo de monitorización para el `SuperAdmin`: captura de eventos, métricas y
+  excepciones persistida en PostgreSQL (migración `0004_telemetry.sql` con
+  `app_events`, `app_exceptions` y `request_metrics`) y dashboard en una pestaña
+  "Monitorización" dentro de `/admin`.
+- `ILoggerProvider` propio (`TelemetryLoggerProvider`) y `IEventCollector`
+  (`TelemetryCollector`) que encolan en un `Channel<T>`; un
+  `TelemetryWriter` (`BackgroundService`) persiste por lotes sin bloquear el
+  request (drop-safe si la cola se llena o la BD no responde).
+- Captura de excepciones no controladas (middleware `TelemetryExceptionMiddleware`)
+  y métricas de request (`RequestMetricsMiddleware`: path, método, status y duración).
+- `IMonitoringService` + `Monitoring/*` (overview, listado de excepciones y
+  serie de errores) con autorización `RequireSuperAdmin` en el servidor.
+- Tab "Monitorización" en `/admin` con tarjetas KPI, gráficas `MudChart` (donut
+  de severidad y línea de peticiones/errores) y refresco cada 30 s.
+- Health check de PostgreSQL (custom, `SELECT 1`) sobre el `/health` existente.
+- `RetentionJob`: purga diaria de telemetría con más de 90 días.
+- Documento `docs/0014-monitorizacion.md`.
+
 ## [1.3.0] - 2026-10-18
 
 ### Added

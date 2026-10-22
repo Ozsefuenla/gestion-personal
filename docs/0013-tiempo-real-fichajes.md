@@ -83,8 +83,6 @@ sumen minutos y segundos sin golpear la base cada segundo:
 - El estado vive en memoria del proceso: es válido para el despliegue actual de
   **una instancia**. Si en el futuro se escala horizontalmente, habrá que
   reemplazar el bus por un hub de SignalR con backplane (por ejemplo Redis).
-- Cuando se migre al frontend v2 (Razor Pages + HTMX/Alpine), este bus no se
-  reutiliza; ese escenario requiere el hub dedicado.
 
 ## Pruebas
 

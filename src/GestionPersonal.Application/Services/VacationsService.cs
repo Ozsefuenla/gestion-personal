@@ -1,3 +1,4 @@
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Application.Vacations;
 
@@ -12,6 +13,8 @@ public sealed class VacationsService : IVacationsService
     private readonly ApproveVacationCommandHandler _approveHandler;
     private readonly RejectVacationCommandHandler _rejectHandler;
     private readonly IRequestValidator _requestValidator;
+    private readonly IEventCollector _events;
+    private readonly ICurrentUser _currentUser;
 
     public VacationsService(
         ListVacationsQueryHandler listHandler,
@@ -20,7 +23,9 @@ public sealed class VacationsService : IVacationsService
         DeleteVacationCommandHandler deleteHandler,
         ApproveVacationCommandHandler approveHandler,
         RejectVacationCommandHandler rejectHandler,
-        IRequestValidator requestValidator)
+        IRequestValidator requestValidator,
+        IEventCollector events,
+        ICurrentUser currentUser)
     {
         _listHandler = listHandler;
         _listCenterHandler = listCenterHandler;
@@ -29,6 +34,8 @@ public sealed class VacationsService : IVacationsService
         _approveHandler = approveHandler;
         _rejectHandler = rejectHandler;
         _requestValidator = requestValidator;
+        _events = events;
+        _currentUser = currentUser;
     }
 
     public Task<Result<IReadOnlyList<VacationResponse>>> ListAsync(
@@ -51,15 +58,62 @@ public sealed class VacationsService : IVacationsService
             return validationError;
         }
 
-        return await _requestHandler.Handle(command, cancellationToken);
+        var result = await _requestHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("business", "vacation.requested", "Ausencia solicitada", result.Value.Id);
+        }
+
+        return result;
     }
 
-    public Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _deleteHandler.Handle(id, cancellationToken);
+    public async Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await _deleteHandler.Handle(id, cancellationToken);
 
-    public Task<Result<VacationResponse>> ApproveAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _approveHandler.Handle(id, cancellationToken);
+        if (result.IsSuccess)
+        {
+            Emit("business", "vacation.deleted", $"Ausencia {id} eliminada", id);
+        }
 
-    public Task<Result<VacationResponse>> RejectAsync(Guid id, CancellationToken cancellationToken = default) =>
-        _rejectHandler.Handle(id, cancellationToken);
+        return result;
+    }
+
+    public async Task<Result<VacationResponse>> ApproveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await _approveHandler.Handle(id, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("business", "vacation.approved", $"Ausencia {id} aprobada", id);
+        }
+
+        return result;
+    }
+
+    public async Task<Result<VacationResponse>> RejectAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await _rejectHandler.Handle(id, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("business", "vacation.rejected", $"Ausencia {id} denegada", id);
+        }
+
+        return result;
+    }
+
+    private void Emit(string category, string eventType, string message, object subjectId)
+    {
+        _events.Emit(new AppEvent(
+            category,
+            eventType,
+            category == "security" ? "Warning" : "Info",
+            message,
+            ActorRole: _currentUser.Role,
+            ActorId: _currentUser.SubjectId,
+            CenterId: _currentUser.CenterId,
+            Data: new Dictionary<string, object?> { ["subjectId"] = subjectId }));
+    }
 }

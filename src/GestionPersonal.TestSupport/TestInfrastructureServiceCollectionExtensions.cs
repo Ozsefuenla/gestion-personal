@@ -17,6 +17,14 @@ public static class TestInfrastructureServiceCollectionExtensions
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<ILoginAttemptTracker, InMemoryLoginAttemptTracker>();
 
+        services.AddSingleton<FakeEventCollector>();
+        services.AddSingleton<IEventCollector>(provider => provider.GetRequiredService<FakeEventCollector>());
+        services.AddSingleton<IExceptionReporter>(provider => provider.GetRequiredService<FakeEventCollector>());
+        services.AddSingleton<IRequestMetricsRecorder>(provider => provider.GetRequiredService<FakeEventCollector>());
+
+        services.AddSingleton<FakeMonitoringRepository>();
+        services.AddSingleton<IMonitoringRepository>(provider => provider.GetRequiredService<FakeMonitoringRepository>());
+
         return services;
     }
 }

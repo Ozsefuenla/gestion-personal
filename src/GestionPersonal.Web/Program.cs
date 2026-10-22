@@ -7,6 +7,7 @@ using GestionPersonal.Web.Components;
 using GestionPersonal.Web.Endpoints;
 using GestionPersonal.Web.Security;
 using GestionPersonal.Web.Services;
+using GestionPersonal.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -90,7 +91,8 @@ builder.Services.AddAuthentication(options =>
         options.SlidingExpiration = false;
     });
 builder.Services.AddAuthorization();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<PostgresHealthCheck>("postgres");
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CookieCurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CookieCurrentUser>());
@@ -122,6 +124,9 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseMiddleware<TelemetryExceptionMiddleware>();
+app.UseMiddleware<RequestMetricsMiddleware>();
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
