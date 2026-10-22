@@ -3,6 +3,7 @@ using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Account;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.Common;
+using GestionPersonal.Application.Monitoring;
 using GestionPersonal.Application.Platform;
 using GestionPersonal.Application.Services;
 using GestionPersonal.Application.TimeEntries;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IVacationsService, VacationsService>();
         services.AddScoped<IPlatformService, PlatformService>();
         services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<IMonitoringService, MonitoringService>();
 
         services.AddScoped<ListWorkersQueryHandler>();
         services.AddScoped<ListWorkersByCenterQueryHandler>();
@@ -51,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<AddManualTimeEntryCommandHandler>();
         services.AddScoped<EditActiveTimeEntryCommandHandler>();
         services.AddScoped<DeleteActiveTimeEntryCommandHandler>();
+        services.AddScoped<CloseStaleTimeEntryCommandHandler>();
         services.AddScoped<RequestVacationCommandHandler>();
         services.AddScoped<ListVacationsQueryHandler>();
         services.AddScoped<DeleteVacationCommandHandler>();
@@ -66,6 +69,9 @@ public static class DependencyInjection
         services.AddScoped<SetCenterUserActiveCommandHandler>();
         services.AddScoped<ResetCenterUserPasswordCommandHandler>();
         services.AddScoped<ChangePasswordCommandHandler>();
+        services.AddScoped<GetPlatformOverviewQueryHandler>();
+        services.AddScoped<ListExceptionsQueryHandler>();
+        services.AddScoped<GetErrorRateSeriesQueryHandler>();
 
         services.AddValidatorsFromAssemblyContaining<CreateWorkerCommandValidator>();
 

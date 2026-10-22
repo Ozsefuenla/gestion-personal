@@ -2,6 +2,7 @@ using GestionPersonal.Application;
 using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Domain.Enums;
 using GestionPersonal.TestSupport;
+using GestionPersonal.TestSupport.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionPersonal.Tests.Infrastructure;
@@ -23,9 +24,16 @@ public sealed class ApplicationFixture : IDisposable
         services.AddSingleton<ICurrentCenter>(User);
 
         Provider = services.BuildServiceProvider();
+
+        Events = Provider.GetRequiredService<FakeEventCollector>();
+        MonitoringStore = Provider.GetRequiredService<FakeMonitoringRepository>();
     }
 
     public FakeCurrentUser User { get; }
+
+    public FakeEventCollector Events { get; }
+
+    public FakeMonitoringRepository MonitoringStore { get; }
 
     public ServiceProvider Provider { get; }
 

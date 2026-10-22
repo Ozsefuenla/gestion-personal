@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Account;
 using GestionPersonal.Application.Centers;
 using GestionPersonal.Application.Services;
 using GestionPersonal.Application.Workers;
+using GestionPersonal.Domain.Enums;
 using GestionPersonal.Web.Security;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -23,7 +25,7 @@ public static class AuthEndpoints
             return Results.Ok(new { token = tokens.RequestToken });
         });
 
-        app.MapPost("/auth/login", async (CenterLoginRequest request, ICentersService centers, IAntiforgery antiforgery, ILoggerFactory loggerFactory, HttpContext httpContext) =>
+        app.MapPost("/auth/login", async (CenterLoginRequest request, ICentersService centers, IAntiforgery antiforgery, ILoggerFactory loggerFactory, IEventCollector events, HttpContext httpContext) =>
         {
             try
             {
@@ -41,10 +43,26 @@ public static class AuthEndpoints
                 loggerFactory.CreateLogger("CentersLogin").LogWarning(
                     "Fallo de login de centro '{Username}': {Error}", request.Username, result.Error.Message);
 
+                events.Emit(new AppEvent(
+                    "security",
+                    "login.failed",
+                    "Warning",
+                    $"Fallo de login de centro '{request.Username}'",
+                    Data: new Dictionary<string, object?> { ["reason"] = result.Error.Code }));
+
                 return Results.Json(new { error = result.Error.Message }, statusCode: StatusCodes.Status400BadRequest);
             }
 
             var session = result.Value;
+
+            events.Emit(new AppEvent(
+                "security",
+                "login.succeeded",
+                "Info",
+                $"Login de centro '{session.Username}'",
+                ActorRole: session.Role,
+                ActorId: session.UserId,
+                CenterId: session.CenterId));
 
             var claims = new List<Claim>
             {
@@ -115,7 +133,7 @@ public static class AuthEndpoints
             return Results.Ok(new { ok = true });
         });
 
-        app.MapPost("/auth/worker-login", async (WorkerLoginRequest request, IWorkersService workers, IAntiforgery antiforgery, HttpContext httpContext) =>
+        app.MapPost("/auth/worker-login", async (WorkerLoginRequest request, IWorkersService workers, IAntiforgery antiforgery, IEventCollector events, HttpContext httpContext) =>
         {
             try
             {
@@ -133,14 +151,33 @@ public static class AuthEndpoints
                 return Results.Json(new { error = "No hay una sesión de centro activa." }, statusCode: StatusCodes.Status401Unauthorized);
             }
 
+            var centerIdValue = int.TryParse(centerId, out var parsedCenterId) ? parsedCenterId : (int?)null;
+
             var result = await workers.LoginAsync(new LoginCommand(request.WorkerId, request.Pin));
 
             if (result.IsFailure)
             {
+                events.Emit(new AppEvent(
+                    "security",
+                    "login.failed",
+                    "Warning",
+                    $"Fallo de login de trabajador '{request.WorkerId}'",
+                    CenterId: centerIdValue,
+                    Data: new Dictionary<string, object?> { ["reason"] = result.Error.Code }));
+
                 return Results.Json(new { error = result.Error.Message }, statusCode: StatusCodes.Status400BadRequest);
             }
 
             var worker = result.Value;
+
+            events.Emit(new AppEvent(
+                "security",
+                "login.succeeded",
+                "Info",
+                $"Login de trabajador '{worker.FullName}'",
+                ActorRole: UserRole.CenterWorker,
+                ActorId: worker.Id,
+                CenterId: centerIdValue));
 
             var claims = new List<Claim>
             {

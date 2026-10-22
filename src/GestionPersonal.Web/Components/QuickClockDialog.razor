@@ -1,6 +1,7 @@
 @inject IWorkersService Workers
 @inject ITimeEntriesService TimeEntries
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudDialog>
     <TitleContent>
@@ -147,6 +148,16 @@
             return;
         }
 
+        if (quickClock.StaleEntryDate is { } staleDate)
+        {
+            if (await OpenCloseStaleAsync(staleDate))
+            {
+                DialogInstance.Close(DialogResult.Ok(true));
+            }
+
+            return;
+        }
+
         _message = quickClock.Message;
         _availableActions = quickClock.AvailableActions;
         _error = null;
@@ -156,6 +167,24 @@
             _pin = "";
             await _pinField.FocusAsync();
         }
+    }
+
+    private async Task<bool> OpenCloseStaleAsync(DateOnly staleDate)
+    {
+        var parameters = new DialogParameters
+        {
+            ["WorkerId"] = WorkerId,
+            ["StaleDate"] = staleDate,
+            ["IsKiosk"] = true,
+            ["Pin"] = _pin
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };
+
+        var dialog = await DialogService.ShowAsync<CloseStaleDialog>("Finalizar jornada anterior", parameters, options);
+        var dialogResult = await dialog.Result;
+
+        return dialogResult is not null && !dialogResult.Canceled;
     }
 
     private void Cancel() => DialogInstance.Cancel();

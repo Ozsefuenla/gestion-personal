@@ -42,6 +42,37 @@ public sealed class PostgresTimeEntryRepository : ITimeEntryRepository
         return Map(row, pauses.GetValueOrDefault(row.Id, []));
     }
 
+    public async Task<TimeEntry?> GetOpenEntryByWorkerBetweenAsync(
+        int workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = _connectionFactory.Create();
+
+        var row = await connection.QuerySingleOrDefaultAsync<TimeEntryRow>(
+            new CommandDefinition(
+                $"""
+                SELECT {SelectColumns} FROM time_entries
+                WHERE worker_id = @workerId
+                  AND status IN ('InProgress', 'Paused')
+                  AND started_at >= @from AND started_at < @to
+                ORDER BY started_at DESC
+                LIMIT 1
+                """,
+                new { workerId, from = PgConvert.ToUtc(from), to = PgConvert.ToUtc(to) },
+                cancellationToken: cancellationToken));
+
+        if (row is null)
+        {
+            return null;
+        }
+
+        var pauses = await LoadPausesAsync(connection, [row.Id], cancellationToken);
+
+        return Map(row, pauses.GetValueOrDefault(row.Id, []));
+    }
+
     public async Task<IReadOnlyList<TimeEntry>> GetByWorkerBetweenAsync(
         int workerId,
         DateTimeOffset from,

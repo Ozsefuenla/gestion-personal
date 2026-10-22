@@ -57,6 +57,8 @@ frontend en Blazor Server.
   + `AppLayout.razor`).
 - La persistencia (esquema, migraciones DbUp, seed y configuración local/producción)
   está en `docs/0011-persistencia-postgres.md`.
+- La monitorización del `SuperAdmin` (telemetría, KPIs, excepciones, retención y
+  dashboard en `/admin`) está en `docs/0014-monitorizacion.md`.
 
 ## Changelog
 - Todo cambio se refleja en `CHANGELOG.md` siguiendo

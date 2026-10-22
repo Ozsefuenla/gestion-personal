@@ -52,6 +52,32 @@ public sealed class WorkersStatusTests : ApplicationTestBase, IClassFixture<Appl
         Assert.Equal(new[] { "working", "paused" }, status.Timeline.Select(t => t.Type));
     }
 
+    [Fact]
+    public async Task GetStatus_WithPreviousDayOpenEntry_SetsStaleEntryDate()
+    {
+        var workerId = await CreateWorkerAsync(fullName: "Stale Worker");
+        var yesterday = MadridTestTime.Today().AddDays(-1);
+
+        await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            workerId, "start", yesterday, new TimeOnly(9, 0), null));
+
+        var status = await GetStatusAsync(workerId);
+
+        Assert.Equal(yesterday, status.StaleEntryDate);
+    }
+
+    [Fact]
+    public async Task GetStatus_WithTodayOpenEntry_HasNoStaleEntryDate()
+    {
+        var workerId = await CreateWorkerAsync(fullName: "Today Worker");
+
+        await TimeEntries.StartAsync(new StartTimeEntryCommand(workerId));
+
+        var status = await GetStatusAsync(workerId);
+
+        Assert.Null(status.StaleEntryDate);
+    }
+
     private async Task<GestionPersonal.Application.Workers.WorkerStatusResponse> GetStatusAsync(int workerId)
     {
         var result = await Workers.GetStatusAsync(workerId);

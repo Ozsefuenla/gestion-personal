@@ -2,6 +2,7 @@ using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Application.Services;
 using GestionPersonal.Application.Workers;
+using GestionPersonal.TestSupport.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionPersonal.Tests.Infrastructure;
@@ -27,6 +28,13 @@ public abstract class ApplicationTestBase : IDisposable
     protected IPlatformService Platform => _scope.ServiceProvider.GetRequiredService<IPlatformService>();
 
     protected IAccountService Account => _scope.ServiceProvider.GetRequiredService<IAccountService>();
+
+    protected IMonitoringService Monitoring => _scope.ServiceProvider.GetRequiredService<IMonitoringService>();
+
+    protected FakeMonitoringRepository MonitoringStore =>
+        _scope.ServiceProvider.GetRequiredService<FakeMonitoringRepository>();
+
+    protected FakeEventCollector Events => _scope.ServiceProvider.GetRequiredService<FakeEventCollector>();
 
     protected ITimeEntryChangeNotifier Notifier => _scope.ServiceProvider.GetRequiredService<ITimeEntryChangeNotifier>();
 

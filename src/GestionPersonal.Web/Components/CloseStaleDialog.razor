@@ -1,0 +1,127 @@
+@inject ITimeEntriesService TimeEntries
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Finalizar jornada anterior</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            La jornada del día @StaleDate.ToString("dd/MM/yyyy") no se finalizó. Indica la hora de finalización.
+        </MudText>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+        }
+
+        <MudTimePicker @bind-Time="_endTime"
+                       Label="Hora de finalización"
+                       TimeEditMode="TimeEditMode.Normal"
+                       Variant="Variant.Outlined"
+                       Class="mt-4" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel" Disabled="_busy">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="FinalizeAsync" Disabled="@(_endTime is null || _busy)">Finalizar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance DialogInstance { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public required int WorkerId { get; set; }
+
+    [Parameter, EditorRequired]
+    public required DateOnly StaleDate { get; set; }
+
+    [Parameter]
+    public bool IsKiosk { get; set; }
+
+    [Parameter]
+    public string? Pin { get; set; }
+
+    private TimeSpan? _endTime;
+    private string? _error;
+    private bool _busy;
+
+    private async Task FinalizeAsync()
+    {
+        if (_endTime is null)
+        {
+            return;
+        }
+
+        _error = null;
+        _busy = true;
+
+        try
+        {
+            var endTime = TimeOnly.FromTimeSpan(_endTime.Value);
+
+            if (IsKiosk)
+            {
+                var pin = Pin ?? "";
+
+                var endResult = await TimeEntries.QuickClockAsync(new QuickClockCommand(WorkerId, pin, "end-at", StaleDate, endTime));
+
+                if (endResult.IsFailure)
+                {
+                    _error = endResult.Error.Message;
+                    return;
+                }
+
+                if (!endResult.Value.Success)
+                {
+                    _error = endResult.Value.Message;
+                    return;
+                }
+
+                var startResult = await TimeEntries.QuickClockAsync(new QuickClockCommand(WorkerId, pin, "start"));
+
+                if (startResult.IsFailure)
+                {
+                    _error = startResult.Error.Message;
+                    return;
+                }
+
+                if (!startResult.Value.Success)
+                {
+                    _error = startResult.Value.Message;
+                    return;
+                }
+            }
+            else
+            {
+                var closeResult = await TimeEntries.CloseStaleAsync(new CloseStaleTimeEntryCommand(WorkerId, StaleDate, endTime));
+
+                if (closeResult.IsFailure)
+                {
+                    _error = closeResult.Error.Message;
+                    return;
+                }
+
+                var startResult = await TimeEntries.StartAsync(new StartTimeEntryCommand(WorkerId));
+
+                if (startResult.IsFailure)
+                {
+                    _error = startResult.Error.Message;
+                    return;
+                }
+            }
+
+            Snackbar.Add("Jornada anterior finalizada y jornada de hoy iniciada", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Cancel() => DialogInstance.Cancel();
+}

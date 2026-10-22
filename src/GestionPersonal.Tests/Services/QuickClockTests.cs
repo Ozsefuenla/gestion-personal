@@ -71,4 +71,68 @@ public sealed class QuickClockTests : ApplicationTestBase, IClassFixture<Applica
         AssertSuccess(result);
         Assert.True(result.Value.Success);
     }
+
+    [Fact]
+    public async Task QuickClock_StartWithPreviousDayOpenEntry_ReturnsStaleWarning()
+    {
+        var workerId = await CreateWorkerAsync(pin: "7004");
+        var yesterday = MadridTestTime.Today().AddDays(-1);
+
+        await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            workerId, "start", yesterday, new TimeOnly(9, 0), null));
+
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7004", "start"));
+
+        AssertSuccess(result);
+        Assert.False(result.Value.Success);
+        Assert.Equal(yesterday, result.Value.StaleEntryDate);
+        Assert.Contains("no se finalizó", result.Value.Message);
+        Assert.Empty(result.Value.AvailableActions);
+    }
+
+    [Fact]
+    public async Task QuickClock_EndAt_ClosesPreviousDayEntry()
+    {
+        var workerId = await CreateWorkerAsync(pin: "7005");
+        var yesterday = MadridTestTime.Today().AddDays(-1);
+
+        await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            workerId, "start", yesterday, new TimeOnly(9, 0), null));
+
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(
+            workerId, "7005", "end-at", yesterday, new TimeOnly(18, 0)));
+
+        AssertSuccess(result);
+        Assert.True(result.Value.Success);
+
+        var startResult = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7005", "start"));
+
+        AssertSuccess(startResult);
+        Assert.True(startResult.Value.Success);
+    }
+
+    [Fact]
+    public async Task QuickClock_EndAt_BeforeStart_ReturnsValidationError()
+    {
+        var workerId = await CreateWorkerAsync(pin: "7006");
+        var yesterday = MadridTestTime.Today().AddDays(-1);
+
+        await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            workerId, "start", yesterday, new TimeOnly(9, 0), null));
+
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(
+            workerId, "7006", "end-at", yesterday, new TimeOnly(8, 0)));
+
+        AssertFailure(result, "Validation");
+    }
+
+    [Fact]
+    public async Task QuickClock_EndAt_WithoutDateOrTime_ReturnsValidationError()
+    {
+        var workerId = await CreateWorkerAsync(pin: "7007");
+
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7007", "end-at"));
+
+        AssertFailure(result, "Validation");
+    }
 }

@@ -103,7 +103,9 @@ docs/
 ├─ 0009-gestion-trabajadores.md
 ├─ 0010-deployment.md
 ├─ 0011-persistencia-postgres.md
-└─ 0012-modelo-roles.md
+├─ 0012-modelo-roles.md
+├─ 0013-tiempo-real-fichajes.md
+└─ 0014-monitorizacion.md
 docker-compose.yml
 AGENTS.md
 CHANGELOG.md
@@ -151,6 +153,7 @@ CHANGELOG.md
 | Modelo de roles (`SuperAdmin`/`CenterAdmin`/`Center`/`CenterWorker`) | Implementado (autorización en servidor) |
 | Cambio de contraseña forzado (popup al entrar) al resetear o dar de alta un usuario | Implementado |
 | Área `/admin` (centros en tabs Activos/Desactivados, usuarios y reset de contraseña) | Implementado |
+| Dashboard de monitorización del `SuperAdmin` (KPIs, excepciones y métricas en `/admin`) | Planificado (ver `docs/0014-monitorizacion.md`) |
 | Usuarios de tablet (`Center`) gestionados por el `CenterAdmin` | Implementado |
 | Landing page (`/`) | Implementado |
 | Dashboard del centro (`/app`) | Implementado (con layout profesional) |

@@ -1,3 +1,4 @@
+using GestionPersonal.Application.Abstractions;
 using GestionPersonal.Application.Common;
 using GestionPersonal.Application.Workers;
 
@@ -18,6 +19,8 @@ public sealed class WorkersService : IWorkersService
     private readonly ActivateWorkerCommandHandler _activateHandler;
     private readonly DeactivateWorkerCommandHandler _deactivateHandler;
     private readonly IRequestValidator _requestValidator;
+    private readonly IEventCollector _events;
+    private readonly ICurrentUser _currentUser;
 
     public WorkersService(
         ListWorkersQueryHandler listActiveHandler,
@@ -32,7 +35,9 @@ public sealed class WorkersService : IWorkersService
         ResetWorkerPinCommandHandler resetPinHandler,
         ActivateWorkerCommandHandler activateHandler,
         DeactivateWorkerCommandHandler deactivateHandler,
-        IRequestValidator requestValidator)
+        IRequestValidator requestValidator,
+        IEventCollector events,
+        ICurrentUser currentUser)
     {
         _listActiveHandler = listActiveHandler;
         _listByCenterHandler = listByCenterHandler;
@@ -47,6 +52,8 @@ public sealed class WorkersService : IWorkersService
         _activateHandler = activateHandler;
         _deactivateHandler = deactivateHandler;
         _requestValidator = requestValidator;
+        _events = events;
+        _currentUser = currentUser;
     }
 
     public Task<Result<IReadOnlyList<WorkerResponse>>> ListActiveAsync(CancellationToken cancellationToken = default) =>
@@ -94,7 +101,19 @@ public sealed class WorkersService : IWorkersService
             return validationError;
         }
 
-        return await _createHandler.Handle(command, cancellationToken);
+        var result = await _createHandler.Handle(command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit(
+                "business",
+                "worker.created",
+                $"Trabajador '{result.Value.FullName}' creado",
+                command.CenterId,
+                result.Value.Id);
+        }
+
+        return result;
     }
 
     public async Task<Result> ChangePinAsync(
@@ -109,7 +128,14 @@ public sealed class WorkersService : IWorkersService
             return validationError;
         }
 
-        return await _changePinHandler.Handle(workerId, command, cancellationToken);
+        var result = await _changePinHandler.Handle(workerId, command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("security", "worker.pin_changed", $"PIN del trabajador {workerId} cambiado", subjectId: workerId);
+        }
+
+        return result;
     }
 
     public async Task<Result> RenameAsync(
@@ -124,7 +150,14 @@ public sealed class WorkersService : IWorkersService
             return validationError;
         }
 
-        return await _renameHandler.Handle(workerId, command, cancellationToken);
+        var result = await _renameHandler.Handle(workerId, command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("business", "worker.renamed", $"Trabajador {workerId} renombrado a '{command.FullName}'", subjectId: workerId);
+        }
+
+        return result;
     }
 
     public async Task<Result> ResetPinAsync(
@@ -139,12 +172,57 @@ public sealed class WorkersService : IWorkersService
             return validationError;
         }
 
-        return await _resetPinHandler.Handle(workerId, command, cancellationToken);
+        var result = await _resetPinHandler.Handle(workerId, command, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("security", "worker.pin_reset", $"PIN del trabajador {workerId} reseteado", subjectId: workerId);
+        }
+
+        return result;
     }
 
-    public Task<Result> ActivateAsync(int workerId, CancellationToken cancellationToken = default) =>
-        _activateHandler.Handle(workerId, cancellationToken);
+    public async Task<Result> ActivateAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        var result = await _activateHandler.Handle(workerId, cancellationToken);
 
-    public Task<Result> DeactivateAsync(int workerId, CancellationToken cancellationToken = default) =>
-        _deactivateHandler.Handle(workerId, cancellationToken);
+        if (result.IsSuccess)
+        {
+            Emit("business", "worker.activated", $"Trabajador {workerId} reactivado", subjectId: workerId);
+        }
+
+        return result;
+    }
+
+    public async Task<Result> DeactivateAsync(int workerId, CancellationToken cancellationToken = default)
+    {
+        var result = await _deactivateHandler.Handle(workerId, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            Emit("business", "worker.deactivated", $"Trabajador {workerId} dado de baja", subjectId: workerId);
+        }
+
+        return result;
+    }
+
+    private void Emit(
+        string category,
+        string eventType,
+        string message,
+        int? centerId = null,
+        int? subjectId = null)
+    {
+        _events.Emit(new AppEvent(
+            category,
+            eventType,
+            category == "security" ? "Warning" : "Info",
+            message,
+            ActorRole: _currentUser.Role,
+            ActorId: _currentUser.SubjectId,
+            CenterId: centerId ?? _currentUser.CenterId,
+            Data: subjectId is null
+                ? null
+                : new Dictionary<string, object?> { ["subjectId"] = subjectId }));
+    }
 }

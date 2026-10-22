@@ -10,6 +10,12 @@ public static class MadridTime
         return local.ToString("HH:mm:ss");
     }
 
+    public static string FormatDateTime(DateTimeOffset value)
+    {
+        var local = TimeZoneInfo.ConvertTime(value, Zone);
+        return local.ToString("dd/MM HH:mm");
+    }
+
     public static TimeSpan TimeOfDay(DateTimeOffset value)
     {
         var local = TimeZoneInfo.ConvertTime(value, Zone);

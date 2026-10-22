@@ -16,6 +16,7 @@ public sealed class TimeEntriesService : ITimeEntriesService
     private readonly AddManualTimeEntryCommandHandler _addManualHandler;
     private readonly EditActiveTimeEntryCommandHandler _editActiveHandler;
     private readonly DeleteActiveTimeEntryCommandHandler _deleteActiveHandler;
+    private readonly CloseStaleTimeEntryCommandHandler _closeStaleHandler;
     private readonly IRequestValidator _requestValidator;
     private readonly ICurrentCenter _currentCenter;
     private readonly ITimeEntryChangeNotifier _changeNotifier;
@@ -31,6 +32,7 @@ public sealed class TimeEntriesService : ITimeEntriesService
         AddManualTimeEntryCommandHandler addManualHandler,
         EditActiveTimeEntryCommandHandler editActiveHandler,
         DeleteActiveTimeEntryCommandHandler deleteActiveHandler,
+        CloseStaleTimeEntryCommandHandler closeStaleHandler,
         IRequestValidator requestValidator,
         ICurrentCenter currentCenter,
         ITimeEntryChangeNotifier changeNotifier)
@@ -45,6 +47,7 @@ public sealed class TimeEntriesService : ITimeEntriesService
         _addManualHandler = addManualHandler;
         _editActiveHandler = editActiveHandler;
         _deleteActiveHandler = deleteActiveHandler;
+        _closeStaleHandler = closeStaleHandler;
         _requestValidator = requestValidator;
         _currentCenter = currentCenter;
         _changeNotifier = changeNotifier;
@@ -229,6 +232,20 @@ public sealed class TimeEntriesService : ITimeEntriesService
     public async Task<Result> DeleteActiveAsync(int workerId, CancellationToken cancellationToken = default)
     {
         var result = await _deleteActiveHandler.Handle(workerId, cancellationToken);
+
+        if (result.IsSuccess)
+        {
+            NotifyChanged();
+        }
+
+        return result;
+    }
+
+    public async Task<Result<TimeEntryResponse>> CloseStaleAsync(
+        CloseStaleTimeEntryCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _closeStaleHandler.Handle(command, cancellationToken);
 
         if (result.IsSuccess)
         {
