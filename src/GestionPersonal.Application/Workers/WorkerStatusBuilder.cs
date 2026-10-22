@@ -28,6 +28,7 @@ internal static class WorkerStatusBuilder
             worker.DailyHours,
             worker.MustChangePin,
             TodayStatusHelper.BuildTimeline(entries, now),
-            now);
+            now,
+            TodayStatusHelper.GetStaleEntryDate(openEntry, now));
     }
 }

@@ -33,17 +33,19 @@ public sealed class AddManualTimeEntryCommandHandler
         }
 
         var type = command.Type!.Trim().ToLowerInvariant();
-        var openEntry = await _timeEntryRepository.GetOpenEntryByWorkerAsync(command.WorkerId, cancellationToken);
+        var (dayFrom, dayTo) = GetDayRange(command.Date!.Value);
+        var openEntry = await _timeEntryRepository.GetOpenEntryByWorkerBetweenAsync(
+            command.WorkerId, dayFrom, dayTo, cancellationToken);
 
         switch (type)
         {
             case "start":
                 if (openEntry is not null)
                 {
-                    return Error.Conflict("La jornada ya está iniciada.");
+                    return Error.Conflict("La jornada de ese día ya está iniciada.");
                 }
 
-                var startTimestamp = Combine(command.Date!.Value, command.StartTime!.Value);
+                var startTimestamp = TimeStamp.Compose(command.Date!.Value, command.StartTime!.Value);
 
                 if (await OverlapsExistingAsync(command.WorkerId, startTimestamp, cancellationToken))
                 {
@@ -66,7 +68,7 @@ public sealed class AddManualTimeEntryCommandHandler
                     return Error.Conflict("La jornada ya está en pausa.");
                 }
 
-                var pauseTimestamp = Combine(command.Date!.Value, command.StartTime!.Value);
+                var pauseTimestamp = TimeStamp.Compose(command.Date!.Value, command.StartTime!.Value);
 
                 if (pauseTimestamp <= openEntry.StartedAt)
                 {
@@ -77,7 +79,7 @@ public sealed class AddManualTimeEntryCommandHandler
 
                 if (command.EndTime is not null)
                 {
-                    openEntry.Resume(Combine(command.Date.Value, command.EndTime.Value));
+                    openEntry.Resume(TimeStamp.Compose(command.Date.Value, command.EndTime.Value));
                 }
 
                 await _timeEntryRepository.UpdateAsync(openEntry, cancellationToken);
@@ -90,7 +92,7 @@ public sealed class AddManualTimeEntryCommandHandler
                     return Error.Conflict("No hay una jornada abierta que finalizar.");
                 }
 
-                var endTimestamp = Combine(command.Date!.Value, command.EndTime!.Value);
+                var endTimestamp = TimeStamp.Compose(command.Date!.Value, command.EndTime!.Value);
 
                 if (endTimestamp <= openEntry.StartedAt)
                 {
@@ -119,11 +121,10 @@ public sealed class AddManualTimeEntryCommandHandler
         return overlapping.Count > 0;
     }
 
-    private static DateTimeOffset Combine(DateOnly date, TimeOnly time)
+    private static (DateTimeOffset From, DateTimeOffset To) GetDayRange(DateOnly date)
     {
-        var local = date.ToDateTime(time);
-        var offset = MadridTimeZone.Instance.GetUtcOffset(local);
-
-        return new DateTimeOffset(local, offset);
+        var from = TimeStamp.Compose(date, TimeOnly.MinValue);
+        return (from, from.AddDays(1));
     }
+
 }

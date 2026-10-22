@@ -4,7 +4,7 @@ namespace GestionPersonal.Application.TimeEntries;
 
 public sealed class QuickClockCommandValidator : AbstractValidator<QuickClockCommand>
 {
-    private static readonly string[] AllowedActions = ["start", "pause", "end"];
+    private static readonly string[] AllowedActions = ["start", "pause", "end", "end-at"];
 
     public QuickClockCommandValidator()
     {

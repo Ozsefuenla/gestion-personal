@@ -8,6 +8,13 @@
         <div class="mt-2">
             <MudChip T="string" Color="@StatusColor" Variant="Variant.Filled" Size="Size.Small">@StatusLabel</MudChip>
         </div>
+
+        @if (HasStale)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mt-3" Dense="true">
+                La jornada del día @Worker.StaleEntryDate!.Value.ToString("dd/MM/yyyy") no se finalizó.
+            </MudAlert>
+        }
     </MudCardContent>
 
     <MudCardActions>
@@ -91,7 +98,9 @@
     [Parameter]
     public int PendingAbsences { get; set; }
 
-    private bool CanIniciar => Worker.CurrentStatus is "idle" or "paused";
+    private bool HasStale => Worker.StaleEntryDate is not null;
+
+    private bool CanIniciar => HasStale || Worker.CurrentStatus is "idle" or "paused";
     private bool CanPause => Worker.CurrentStatus == "in-progress";
     private bool CanEnd => Worker.CurrentStatus is "in-progress" or "paused";
 
@@ -134,6 +143,12 @@
 
     private async Task ExecuteAsync(string action)
     {
+        if (action == "start" && HasStale)
+        {
+            await OpenCloseStaleAsync();
+            return;
+        }
+
         Result result;
 
         switch (action)
@@ -161,5 +176,25 @@
 
         await RefreshAsync.InvokeAsync();
         Snackbar.Add("Acción registrada correctamente", Severity.Success);
+    }
+
+    private async Task OpenCloseStaleAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            ["WorkerId"] = Worker.Id,
+            ["StaleDate"] = Worker.StaleEntryDate!.Value,
+            ["IsKiosk"] = false
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<CloseStaleDialog>("Finalizar jornada anterior", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await RefreshAsync.InvokeAsync();
+        }
     }
 }

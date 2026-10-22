@@ -20,6 +20,21 @@ public sealed class InMemoryTimeEntryRepository : ITimeEntryRepository
         }
     }
 
+    public Task<TimeEntry?> GetOpenEntryByWorkerBetweenAsync(
+        int workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            return Task.FromResult(_entries.FirstOrDefault(e =>
+                e.WorkerId == workerId &&
+                (e.Status == TimeEntryStatus.InProgress || e.Status == TimeEntryStatus.Paused) &&
+                e.StartedAt >= from && e.StartedAt < to));
+        }
+    }
+
     public Task<IReadOnlyList<TimeEntry>> GetByWorkerBetweenAsync(
         int workerId,
         DateTimeOffset from,

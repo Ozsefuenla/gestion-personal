@@ -43,4 +43,8 @@ public interface ITimeEntriesService
         CancellationToken cancellationToken = default);
 
     Task<Result> DeleteActiveAsync(int workerId, CancellationToken cancellationToken = default);
+
+    Task<Result<TimeEntryResponse>> CloseStaleAsync(
+        CloseStaleTimeEntryCommand command,
+        CancellationToken cancellationToken = default);
 }

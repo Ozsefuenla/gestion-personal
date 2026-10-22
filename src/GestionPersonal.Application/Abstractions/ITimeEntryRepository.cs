@@ -6,6 +6,12 @@ public interface ITimeEntryRepository
 {
     Task<TimeEntry?> GetOpenEntryByWorkerAsync(int workerId, CancellationToken cancellationToken = default);
 
+    Task<TimeEntry?> GetOpenEntryByWorkerBetweenAsync(
+        int workerId,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TimeEntry>> GetByWorkerBetweenAsync(
         int workerId,
         DateTimeOffset from,

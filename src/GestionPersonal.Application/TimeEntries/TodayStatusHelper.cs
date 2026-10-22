@@ -30,6 +30,19 @@ internal static class TodayStatusHelper
         return entries.Count > 0 ? "finished" : "idle";
     }
 
+    public static DateOnly? GetStaleEntryDate(TimeEntry? openEntry, DateTimeOffset now)
+    {
+        if (openEntry is null)
+        {
+            return null;
+        }
+
+        var openDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(openEntry.StartedAt, MadridTimeZone.Instance).Date);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, MadridTimeZone.Instance).Date);
+
+        return openDate < today ? openDate : null;
+    }
+
     public static IReadOnlyList<TimelineSegmentResponse> BuildTimeline(
         IReadOnlyList<TimeEntry> entries,
         DateTimeOffset now)

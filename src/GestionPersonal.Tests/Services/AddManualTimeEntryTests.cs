@@ -143,6 +143,66 @@ public sealed class AddManualTimeEntryTests : ApplicationTestBase, IClassFixture
         AssertFailure(result, "Validation");
     }
 
+    [Fact]
+    public async Task AddManual_Start_ForPastDay_WhileTodayOpen_Succeeds()
+    {
+        var workerId = await CreateWorkerAsync();
+
+        await TimeEntries.StartAsync(new StartTimeEntryCommand(workerId));
+
+        var result = await TimeEntries.AddManualAsync(Build(workerId, "start", Yesterday, new TimeOnly(9, 0)));
+
+        AssertSuccess(result);
+        Assert.Equal("in-progress", result.Value.Status);
+    }
+
+    [Fact]
+    public async Task AddManual_End_ForPastDay_DoesNotCloseTodayEntry()
+    {
+        var workerId = await CreateWorkerAsync();
+
+        await TimeEntries.StartAsync(new StartTimeEntryCommand(workerId));
+        await TimeEntries.AddManualAsync(Build(workerId, "start", Yesterday, new TimeOnly(9, 0)));
+
+        var endResult = await TimeEntries.AddManualAsync(Build(workerId, "end", Yesterday, endTime: new TimeOnly(18, 0)));
+
+        AssertSuccess(endResult);
+
+        var statusResult = await Workers.GetStatusAsync(workerId);
+
+        AssertSuccess(statusResult);
+        Assert.Equal("in-progress", statusResult.Value.CurrentStatus);
+    }
+
+    [Fact]
+    public async Task AddManual_Pause_ForPastDay_DoesNotPauseTodayEntry()
+    {
+        var workerId = await CreateWorkerAsync();
+
+        await TimeEntries.StartAsync(new StartTimeEntryCommand(workerId));
+        await TimeEntries.AddManualAsync(Build(workerId, "start", Yesterday, new TimeOnly(9, 0)));
+
+        var pauseResult = await TimeEntries.AddManualAsync(Build(workerId, "pause", Yesterday, new TimeOnly(13, 0)));
+
+        AssertSuccess(pauseResult);
+
+        var statusResult = await Workers.GetStatusAsync(workerId);
+
+        AssertSuccess(statusResult);
+        Assert.Equal("in-progress", statusResult.Value.CurrentStatus);
+    }
+
+    [Fact]
+    public async Task AddManual_Start_ForPastDay_WhilePastDayOpen_ReturnsConflict()
+    {
+        var workerId = await CreateWorkerAsync();
+
+        await TimeEntries.AddManualAsync(Build(workerId, "start", Yesterday, new TimeOnly(9, 0)));
+        var result = await TimeEntries.AddManualAsync(Build(workerId, "start", Yesterday, new TimeOnly(10, 0)));
+
+        AssertFailure(result, "Conflict");
+    }
+
     private static DateOnly Yesterday => MadridTestTime.Today().AddDays(-1);
 
     private static AddManualTimeEntryCommand Build(

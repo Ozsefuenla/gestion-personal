@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<AddManualTimeEntryCommandHandler>();
         services.AddScoped<EditActiveTimeEntryCommandHandler>();
         services.AddScoped<DeleteActiveTimeEntryCommandHandler>();
+        services.AddScoped<CloseStaleTimeEntryCommandHandler>();
         services.AddScoped<RequestVacationCommandHandler>();
         services.AddScoped<ListVacationsQueryHandler>();
         services.AddScoped<DeleteVacationCommandHandler>();

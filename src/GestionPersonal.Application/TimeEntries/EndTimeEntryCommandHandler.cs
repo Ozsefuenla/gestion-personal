@@ -51,4 +51,33 @@ public sealed class EndTimeEntryCommandHandler
 
         return TimeEntryResponse.From(existing);
     }
+
+    internal async Task<Result<TimeEntryResponse>> EndForWorkerAtAsync(
+        int workerId,
+        DateTimeOffset endAt,
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await _timeEntryRepository.GetOpenEntryByWorkerAsync(workerId, cancellationToken);
+
+        if (existing is null)
+        {
+            return Error.Conflict("No hay una jornada abierta que finalizar.");
+        }
+
+        if (endAt <= existing.StartedAt)
+        {
+            return Error.Validation("La hora de final debe ser posterior al inicio de la jornada.");
+        }
+
+        if (existing.CurrentPausedAt is { } pausedAt && endAt < pausedAt)
+        {
+            return Error.Validation("La hora de final no puede ser anterior a la pausa en curso.");
+        }
+
+        existing.End(endAt);
+
+        await _timeEntryRepository.UpdateAsync(existing, cancellationToken);
+
+        return TimeEntryResponse.From(existing);
+    }
 }

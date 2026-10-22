@@ -79,6 +79,37 @@ public sealed class QuickClockCommandHandler
 
         var currentStatus = TodayStatusHelper.GetCurrentStatus(openEntry, entries);
         var availableActions = GetAvailableActions(currentStatus);
+        var staleEntryDate = TodayStatusHelper.GetStaleEntryDate(openEntry, now);
+
+        if (command.Action == "end-at")
+        {
+            if (command.EndDate is null || command.EndTime is null)
+            {
+                return Error.Validation("Indica la hora de finalización.");
+            }
+
+            var endResult = await _endHandler.EndForWorkerAtAsync(
+                worker.Id,
+                TimeStamp.Compose(command.EndDate.Value, command.EndTime.Value),
+                cancellationToken);
+
+            if (endResult.IsFailure)
+            {
+                return endResult.Error;
+            }
+
+            return new QuickClockResponse(true, "La jornada anterior se ha finalizado.", null, []);
+        }
+
+        if (command.Action == "start" && staleEntryDate is not null)
+        {
+            return new QuickClockResponse(
+                false,
+                $"La jornada del día {staleEntryDate:dd/MM/yyyy} no se finalizó. Indica la hora de finalización.",
+                currentStatus,
+                [],
+                staleEntryDate);
+        }
 
         if (!availableActions.Contains(command.Action))
         {
