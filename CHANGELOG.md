@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Documento del TFM publicado como contenido estático en `/docs/GestionPersonal.pdf`.
+
 ### Fixed
 - Control horario: una jornada abierta y no cerrada (p. ej. del día 18) ya no se
   propaga a los días siguientes como jornadas "abiertas" de 24 h. El resumen
