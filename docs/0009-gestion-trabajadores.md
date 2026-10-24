@@ -67,9 +67,11 @@ de estado o un timestamp, por simplicidad y portabilidad directa a la futura BBD
 4. El frontend abre `ChangePinDialog` de forma bloqueante; al confirmar el nuevo PIN,
    `change-pin` apaga el flag.
 
-El fichaje rápido (`quick-clock`) no bloquea por `MustChangePin` (solo por inactivo);
-el cambio forzado se aplica en el acceso personal. Pendiente evaluar si el fichaje
-rápido también debería exigirlo.
+El fichaje rápido (`quick-clock`) también exige el cambio forzado: si
+`MustChangePin == true`, no se ejecuta la acción de fichaje; la respuesta devuelve
+`MustChangePin = true` y el kiosco abre `ChangePinDialog` de forma bloqueante
+(con el PIN temporal ya validado, ocultando el campo "PIN actual"). Al confirmar
+el nuevo PIN, el fichaje se ejecuta automáticamente con el nuevo PIN.
 
 ### Activos / Inactivos
 

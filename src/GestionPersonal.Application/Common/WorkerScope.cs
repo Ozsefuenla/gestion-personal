@@ -33,6 +33,23 @@ public static class WorkerScope
         return await GetInCenterAsync(workerRepository, currentUser.CenterId!.Value, workerId, cancellationToken);
     }
 
+    public static async Task<Result<Worker>> GetChangePinScopedWorkerAsync(
+        IWorkerRepository workerRepository,
+        ICurrentUser currentUser,
+        int workerId,
+        CancellationToken cancellationToken = default)
+    {
+        var selfOrAdmin = AccessControl.RequireSelfOrAdmin(currentUser, workerId) is null;
+        var kiosk = AccessControl.RequireKiosk(currentUser) is null;
+
+        if (!selfOrAdmin && !kiosk)
+        {
+            return Error.Forbidden("No autorizado.");
+        }
+
+        return await GetInCenterAsync(workerRepository, currentUser.CenterId!.Value, workerId, cancellationToken);
+    }
+
     private static async Task<Result<Worker>> GetInCenterAsync(
         IWorkerRepository workerRepository,
         int centerId,
