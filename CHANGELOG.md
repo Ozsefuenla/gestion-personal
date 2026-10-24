@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Control horario: una jornada abierta y no cerrada (p. ej. del día 18) ya no se
+  propaga a los días siguientes como jornadas "abiertas" de 24 h. El resumen
+  mensual cierra la jornada abierta al final del día en que se inició, de modo
+  que los días sin marcajes propios no heredan tiempo anterior.
+
 ## [1.4.0] - 2026-10-22
 
 ### Added

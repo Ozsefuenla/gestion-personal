@@ -18,12 +18,27 @@ internal static class MonthlySummaryHelper
 
     public static int DaysInMonth(int year, int month) => DateTime.DaysInMonth(year, month);
 
+    public static DateTimeOffset GetEndReference(TimeEntry entry, DateTimeOffset now)
+    {
+        if (entry.EndedAt is not null)
+        {
+            return entry.EndedAt.Value;
+        }
+
+        var startDate = DateOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(entry.StartedAt, MadridTimeZone.Instance).Date);
+
+        var (_, startDayEnd) = GetDayRange(startDate.Year, startDate.Month, startDate.Day);
+
+        return now < startDayEnd ? now : startDayEnd;
+    }
+
     public static IReadOnlyList<(DateTimeOffset From, DateTimeOffset To)> GetWorkingSegments(
         TimeEntry entry,
         DateTimeOffset now)
     {
         var segments = new List<(DateTimeOffset From, DateTimeOffset To)>();
-        var endReference = entry.EndedAt ?? now;
+        var endReference = GetEndReference(entry, now);
         var cursor = entry.StartedAt;
 
         foreach (var pause in entry.Pauses)
@@ -48,7 +63,7 @@ internal static class MonthlySummaryHelper
         TimeEntry entry,
         DateTimeOffset now)
     {
-        var endReference = entry.EndedAt ?? now;
+        var endReference = GetEndReference(entry, now);
         var segments = new List<(DateTimeOffset From, DateTimeOffset To)>();
 
         foreach (var pause in entry.Pauses)

@@ -61,7 +61,7 @@ public sealed class MonthlySummaryQueryHandler
 
             foreach (var entry in entries)
             {
-                var entryEnd = entry.EndedAt ?? now;
+                var entryEnd = MonthlySummaryHelper.GetEndReference(entry, now);
 
                 if (entry.StartedAt < dayTo && entryEnd > dayFrom)
                 {
