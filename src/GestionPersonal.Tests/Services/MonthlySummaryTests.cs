@@ -85,6 +85,36 @@ public sealed class MonthlySummaryTests : ApplicationTestBase, IClassFixture<App
     }
 
     [Fact]
+    public async Task GetMonthly_WithStaleOpenEntry_DoesNotSpillToFollowingDays()
+    {
+        var workerId = await CreateWorkerAsync();
+
+        var today = MadridTestTime.Today();
+        var prevMonth = new DateOnly(today.Year, today.Month, 1).AddMonths(-1);
+        var startDay = new DateOnly(prevMonth.Year, prevMonth.Month, 15);
+
+        await TimeEntries.AddManualAsync(new AddManualTimeEntryCommand(
+            workerId, "start", startDay, new TimeOnly(9, 0), null));
+
+        var result = await TimeEntries.GetMonthlyAsync(new MonthlySummaryQuery(workerId, prevMonth.Year, prevMonth.Month));
+
+        AssertSuccess(result);
+        var startEntry = result.Value.Days.Single(d => d.Day == startDay.Day);
+        Assert.True(startEntry.HasEntries);
+        Assert.True(startEntry.HasOpenEntry);
+        Assert.True(startEntry.WorkedTime > TimeSpan.Zero);
+
+        foreach (var day in result.Value.Days.Where(d => d.Day > startDay.Day))
+        {
+            Assert.False(day.HasEntries, $"El día {day.Day} no debería tener marcajes.");
+            Assert.Equal(TimeSpan.Zero, day.WorkedTime);
+            Assert.Equal(TimeSpan.Zero, day.PausedTime);
+            Assert.False(day.HasOpenEntry);
+            Assert.Empty(day.Timeline);
+        }
+    }
+
+    [Fact]
     public async Task GetMonthly_WithInvalidMonth_ReturnsValidationError()
     {
         var workerId = await CreateWorkerAsync();
