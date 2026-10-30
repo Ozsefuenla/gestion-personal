@@ -20,7 +20,7 @@ internal static class WorkerStatusBuilder
         return new WorkerStatusResponse(
             worker.Id,
             worker.FullName,
-            TodayStatusHelper.GetCurrentStatus(openEntry, entries),
+            TodayStatusHelper.GetCurrentStatus(openEntry, entries, now),
             openEntry?.StartedAt,
             openEntry?.CurrentPausedAt,
             entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetWorkedDuration(now)),

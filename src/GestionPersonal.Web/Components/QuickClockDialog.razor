@@ -163,7 +163,7 @@
 
         if (quickClock.StaleEntryDate is { } staleDate)
         {
-            if (await OpenCloseStaleAsync(staleDate))
+            if (await OpenCloseStaleAsync(staleDate, quickClock.StaleEntryStartedAt))
             {
                 DialogInstance.Close(DialogResult.Ok(true));
             }
@@ -199,14 +199,15 @@
         return dialogResult is { Canceled: false, Data: string newPin } ? newPin : null;
     }
 
-    private async Task<bool> OpenCloseStaleAsync(DateOnly staleDate)
+    private async Task<bool> OpenCloseStaleAsync(DateOnly staleDate, DateTimeOffset? staleStartedAt)
     {
         var parameters = new DialogParameters
         {
             ["WorkerId"] = WorkerId,
             ["StaleDate"] = staleDate,
             ["IsKiosk"] = true,
-            ["Pin"] = _pin
+            ["Pin"] = _pin,
+            ["StaleStartedAt"] = staleStartedAt
         };
 
         var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };

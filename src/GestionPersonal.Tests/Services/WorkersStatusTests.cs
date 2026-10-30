@@ -64,6 +64,9 @@ public sealed class WorkersStatusTests : ApplicationTestBase, IClassFixture<Appl
         var status = await GetStatusAsync(workerId);
 
         Assert.Equal(yesterday, status.StaleEntryDate);
+        Assert.Equal("idle", status.CurrentStatus);
+        Assert.NotNull(status.StartedAt);
+        Assert.Equal(TimeSpan.Zero, status.WorkedTime);
     }
 
     [Fact]

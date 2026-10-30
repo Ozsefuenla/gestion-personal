@@ -6,4 +6,5 @@ public sealed record QuickClockResponse(
     string? CurrentStatus,
     IReadOnlyList<string> AvailableActions,
     DateOnly? StaleEntryDate = null,
+    DateTimeOffset? StaleEntryStartedAt = null,
     bool MustChangePin = false);

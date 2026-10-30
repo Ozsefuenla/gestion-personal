@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Fichaje del trabajador: al entrar con una jornada del día anterior sin cerrar,
+  el contador "Trabajando" del donut ya no arranca solo. El estado se calcula como
+  "Sin iniciar" (no "En curso") cuando la jornada abierta es de un día anterior.
+- Finalizar jornada anterior: el diálogo ahora muestra la hora de inicio de la
+  jornada y bloquea la hora de final anterior a esa hora (además de la validación
+  en servidor).
+
 ## [1.5.0] - 2026-10-24
 
 ### Fixed
