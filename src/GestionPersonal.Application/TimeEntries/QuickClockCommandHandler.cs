@@ -82,7 +82,7 @@ public sealed class QuickClockCommandHandler
         var openEntry = await _timeEntryRepository.GetOpenEntryByWorkerAsync(worker.Id, cancellationToken);
         var entries = await _timeEntryRepository.GetByWorkerBetweenAsync(worker.Id, from, to, cancellationToken);
 
-        var currentStatus = TodayStatusHelper.GetCurrentStatus(openEntry, entries);
+        var currentStatus = TodayStatusHelper.GetCurrentStatus(openEntry, entries, now);
         var availableActions = GetAvailableActions(currentStatus);
         var staleEntryDate = TodayStatusHelper.GetStaleEntryDate(openEntry, now);
 
@@ -113,7 +113,8 @@ public sealed class QuickClockCommandHandler
                 $"La jornada del día {staleEntryDate:dd/MM/yyyy} no se finalizó. Indica la hora de finalización.",
                 currentStatus,
                 [],
-                staleEntryDate);
+                staleEntryDate,
+                openEntry!.StartedAt);
         }
 
         if (!availableActions.Contains(command.Action))

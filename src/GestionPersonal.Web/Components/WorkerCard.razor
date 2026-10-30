@@ -184,7 +184,8 @@
         {
             ["WorkerId"] = Worker.Id,
             ["StaleDate"] = Worker.StaleEntryDate!.Value,
-            ["IsKiosk"] = false
+            ["IsKiosk"] = false,
+            ["StaleStartedAt"] = Worker.StartedAt
         };
 
         var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false, MaxWidth = MaxWidth.Small, FullWidth = true };

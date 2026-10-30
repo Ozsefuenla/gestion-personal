@@ -39,7 +39,7 @@ public sealed class TodaySummaryQueryHandler
         var openEntry = await _timeEntryRepository.GetOpenEntryByWorkerAsync(query.WorkerId, cancellationToken);
 
         var response = new TodaySummaryResponse(
-            CurrentStatus: TodayStatusHelper.GetCurrentStatus(openEntry, entries),
+            CurrentStatus: TodayStatusHelper.GetCurrentStatus(openEntry, entries, now),
             StartedAt: openEntry?.StartedAt,
             CurrentPausedAt: openEntry?.CurrentPausedAt,
             WorkedTime: entries.Aggregate(TimeSpan.Zero, (total, e) => total + e.GetWorkedDuration(now)),

@@ -8,7 +8,12 @@
 
     <DialogContent>
         <MudText Typo="Typo.body1">
-            La jornada del día @StaleDate.ToString("dd/MM/yyyy") no se finalizó. Indica la hora de finalización.
+            La jornada del día @StaleDate.ToString("dd/MM/yyyy") no se finalizó.
+            @if (StaleStartedAt is { } startedAt)
+            {
+                <span> Iniciada a las <b>@MadridTime.Format(startedAt)</b>.</span>
+            }
+            Indica la hora de finalización.
         </MudText>
 
         @if (_error is not null)
@@ -21,11 +26,18 @@
                        TimeEditMode="TimeEditMode.Normal"
                        Variant="Variant.Outlined"
                        Class="mt-4" />
+
+        @if (IsEndTimeInvalid)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">
+                La hora de final debe ser posterior al inicio (@MadridTime.Format(StaleStartedAt!.Value)).
+            </MudText>
+        }
     </DialogContent>
 
     <DialogActions>
         <MudButton Color="Color.Default" OnClick="Cancel" Disabled="_busy">Cancelar</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="FinalizeAsync" Disabled="@(_endTime is null || _busy)">Finalizar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="FinalizeAsync" Disabled="@(_endTime is null || IsEndTimeInvalid || _busy)">Finalizar</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -45,9 +57,19 @@
     [Parameter]
     public string? Pin { get; set; }
 
+    [Parameter]
+    public DateTimeOffset? StaleStartedAt { get; set; }
+
     private TimeSpan? _endTime;
     private string? _error;
     private bool _busy;
+
+    private TimeSpan? _minEndTime => StaleStartedAt is { } startedAt
+        ? MadridTime.TimeOfDay(startedAt)
+        : null;
+
+    private bool IsEndTimeInvalid =>
+        _endTime is { } endTime && _minEndTime is { } minEndTime && endTime <= minEndTime;
 
     private async Task FinalizeAsync()
     {

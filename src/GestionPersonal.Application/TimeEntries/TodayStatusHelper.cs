@@ -16,10 +16,15 @@ internal static class TodayStatusHelper
         return (from, from.AddDays(1));
     }
 
-    public static string GetCurrentStatus(TimeEntry? openEntry, IReadOnlyList<TimeEntry> entries)
+    public static string GetCurrentStatus(TimeEntry? openEntry, IReadOnlyList<TimeEntry> entries, DateTimeOffset now)
     {
         if (openEntry is not null)
         {
+            if (GetStaleEntryDate(openEntry, now) is not null)
+            {
+                return "idle";
+            }
+
             return openEntry.Status switch
             {
                 TimeEntryStatus.Paused => "paused",

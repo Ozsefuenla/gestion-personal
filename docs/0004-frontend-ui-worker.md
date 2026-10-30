@@ -37,6 +37,17 @@ Todo visible por defecto (sin click-para-expandir):
 - Los valores SVG (`stroke-dasharray`/`stroke-dashoffset`) se formatean con `CultureInfo.InvariantCulture`
   (la coma decimal de es-ES rompe el SVG).
 - Se muestra en el hueco de la izquierda cuando el trabajador está logueado (reemplaza al panel de Fichaje rápido).
+- Si hay una **jornada anterior sin cerrar** (`StaleEntryDate`), el estado se calcula como
+  `idle` ("Sin iniciar"): el contador "Trabajando" no arranca y el donut queda sin progreso,
+  aunque exista una jornada abierta de un día anterior. La card muestra el aviso correspondiente.
+
+## Finalizar jornada anterior (`CloseStaleDialog.razor`)
+
+- Se abre al pulsar "Iniciar" cuando hay una jornada de un día anterior sin cerrar.
+- Muestra el día sin cerrar y la **hora de inicio** de esa jornada.
+- Pide la hora de finalización; la hora debe ser **posterior a la de inicio** (se bloquea
+  en el cliente y se valida en el servidor con el error "La hora de final debe ser posterior
+  al inicio de la jornada.").
 
 ## Cambiar PIN (`ChangePinDialog`)
 

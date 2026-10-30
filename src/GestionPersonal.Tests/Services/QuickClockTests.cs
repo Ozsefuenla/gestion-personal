@@ -87,6 +87,7 @@ public sealed class QuickClockTests : ApplicationTestBase, IClassFixture<Applica
         AssertSuccess(result);
         Assert.False(result.Value.Success);
         Assert.Equal(yesterday, result.Value.StaleEntryDate);
+        Assert.NotNull(result.Value.StaleEntryStartedAt);
         Assert.Contains("no se finalizó", result.Value.Message);
         Assert.Empty(result.Value.AvailableActions);
     }
