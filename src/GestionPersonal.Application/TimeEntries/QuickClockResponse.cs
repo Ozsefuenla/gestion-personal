@@ -5,4 +5,5 @@ public sealed record QuickClockResponse(
     string Message,
     string? CurrentStatus,
     IReadOnlyList<string> AvailableActions,
-    DateOnly? StaleEntryDate = null);
+    DateOnly? StaleEntryDate = null,
+    bool MustChangePin = false);

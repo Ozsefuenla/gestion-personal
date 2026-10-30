@@ -50,4 +50,31 @@ public sealed class ChangePinTests : ApplicationTestBase, IClassFixture<Applicat
 
         AssertFailure(result, "Validation");
     }
+
+    [Fact]
+    public async Task ChangePin_AsKiosk_Succeeds()
+    {
+        var workerId = await CreateWorkerAsync(pin: "8101");
+
+        User.ActAsCenter();
+
+        var result = await Workers.ChangePinAsync(workerId, new ChangePinCommand("8101", "8102"));
+
+        AssertSuccess(result);
+
+        var login = await Workers.LoginAsync(new LoginCommand(workerId, "8102"));
+        AssertSuccess(login);
+    }
+
+    [Fact]
+    public async Task ChangePin_AsWorker_ForAnotherWorker_ReturnsForbidden()
+    {
+        var workerId = await CreateWorkerAsync(pin: "8103");
+
+        User.ActAsWorker(1);
+
+        var result = await Workers.ChangePinAsync(workerId, new ChangePinCommand("8103", "8104"));
+
+        AssertFailure(result, "Forbidden");
+    }
 }

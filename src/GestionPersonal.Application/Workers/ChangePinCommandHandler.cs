@@ -24,7 +24,7 @@ public sealed class ChangePinCommandHandler
         ChangePinCommand command,
         CancellationToken cancellationToken = default)
     {
-        var scoped = await WorkerScope.GetSelfScopedWorkerAsync(
+        var scoped = await WorkerScope.GetChangePinScopedWorkerAsync(
             _workerRepository, _currentUser, workerId, cancellationToken);
 
         if (scoped.IsFailure)

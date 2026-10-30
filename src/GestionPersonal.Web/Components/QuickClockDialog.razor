@@ -141,6 +141,19 @@
 
         var quickClock = result.Value;
 
+        if (quickClock.MustChangePin)
+        {
+            var newPin = await ForceChangePinAsync();
+
+            if (newPin is not null)
+            {
+                _pin = newPin;
+                await SubmitAsync(action);
+            }
+
+            return;
+        }
+
         if (quickClock.Success)
         {
             Snackbar.Add("Fichaje realizado correctamente", Severity.Success);
@@ -167,6 +180,23 @@
             _pin = "";
             await _pinField.FocusAsync();
         }
+    }
+
+    private async Task<string?> ForceChangePinAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            ["WorkerId"] = WorkerId,
+            ["AllowCancel"] = false,
+            ["CurrentPin"] = _pin
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = false, BackdropClick = false };
+
+        var dialog = await DialogService.ShowAsync<ChangePinDialog>("Debes cambiar tu PIN", parameters, options);
+        var dialogResult = await dialog.Result;
+
+        return dialogResult is { Canceled: false, Data: string newPin } ? newPin : null;
     }
 
     private async Task<bool> OpenCloseStaleAsync(DateOnly staleDate)

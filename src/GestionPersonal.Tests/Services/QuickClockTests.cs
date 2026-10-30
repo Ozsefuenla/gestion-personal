@@ -1,4 +1,5 @@
 using GestionPersonal.Application.TimeEntries;
+using GestionPersonal.Application.Workers;
 using GestionPersonal.Tests.Infrastructure;
 
 namespace GestionPersonal.Tests.Services;
@@ -134,5 +135,29 @@ public sealed class QuickClockTests : ApplicationTestBase, IClassFixture<Applica
         var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7007", "end-at"));
 
         AssertFailure(result, "Validation");
+    }
+
+    [Fact]
+    public async Task QuickClock_WithMustChangePin_RequiresChangeBeforeClocking()
+    {
+        var workerId = await CreateWorkerAsync(pin: "7008", mustChangePin: true);
+
+        var result = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7008", "start"));
+
+        AssertSuccess(result);
+        Assert.False(result.Value.Success);
+        Assert.True(result.Value.MustChangePin);
+
+        var status = await Workers.GetStatusAsync(workerId);
+        AssertSuccess(status);
+        Assert.Equal("idle", status.Value.CurrentStatus);
+
+        var change = await Workers.ChangePinAsync(workerId, new ChangePinCommand("7008", "7009"));
+        AssertSuccess(change);
+
+        var clock = await TimeEntries.QuickClockAsync(new QuickClockCommand(workerId, "7009", "start"));
+
+        AssertSuccess(clock);
+        Assert.True(clock.Value.Success);
     }
 }

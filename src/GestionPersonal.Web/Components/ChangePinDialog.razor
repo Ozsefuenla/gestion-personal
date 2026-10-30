@@ -12,10 +12,13 @@
             <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
         }
 
-        <MudTextField @ref="_currentPinField" T="string" Value="_currentPin" ValueChanged="OnCurrentPinChanged"
-                      Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
-                      Label="PIN actual" Placeholder="••••" Variant="Variant.Outlined" Class="mb-4" />
-        <MudTextField T="string" Value="_newPin" ValueChanged="OnNewPinChanged"
+        @if (CurrentPin is null)
+        {
+            <MudTextField @ref="_currentPinField" T="string" Value="_currentPin" ValueChanged="OnCurrentPinChanged"
+                          Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
+                          Label="PIN actual" Placeholder="••••" Variant="Variant.Outlined" Class="mb-4" />
+        }
+        <MudTextField @ref="_newPinField" T="string" Value="_newPin" ValueChanged="OnNewPinChanged"
                       Immediate="true" InputType="InputType.Password" InputMode="InputMode.numeric" MaxLength="4"
                       Label="Nuevo PIN" Placeholder="••••" Variant="Variant.Outlined" Class="mb-4" />
         <MudTextField T="string" Value="_repeatPin" ValueChanged="OnRepeatPinChanged"
@@ -42,18 +45,35 @@
     [Parameter]
     public bool AllowCancel { get; set; } = true;
 
+    [Parameter]
+    public string? CurrentPin { get; set; }
+
     private MudTextField<string> _currentPinField = default!;
+    private MudTextField<string> _newPinField = default!;
     private string _currentPin = "";
     private string _newPin = "";
     private string _repeatPin = "";
     private string? _error;
+
+    protected override void OnInitialized()
+    {
+        _currentPin = CurrentPin ?? "";
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await Task.Delay(200);
-            await _currentPinField.FocusAsync();
+
+            if (CurrentPin is null)
+            {
+                await _currentPinField.FocusAsync();
+            }
+            else
+            {
+                await _newPinField.FocusAsync();
+            }
         }
     }
 
@@ -100,7 +120,7 @@
         }
 
         Snackbar.Add("PIN actualizado correctamente", Severity.Success);
-        DialogInstance.Close(DialogResult.Ok(true));
+        DialogInstance.Close(DialogResult.Ok(_newPin));
     }
 
     private void Cancel() => DialogInstance.Cancel();

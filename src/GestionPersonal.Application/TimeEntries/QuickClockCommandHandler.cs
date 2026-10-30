@@ -71,6 +71,11 @@ public sealed class QuickClockCommandHandler
 
         _loginAttemptTracker.Reset(command.WorkerId);
 
+        if (worker.MustChangePin)
+        {
+            return new QuickClockResponse(false, "Debes cambiar tu PIN antes de fichar.", null, [], MustChangePin: true);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var (from, to) = TodayStatusHelper.GetTodayRange(now);
 

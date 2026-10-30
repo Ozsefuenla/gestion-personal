@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2026-10-24
 
+### Fixed
+- Fichaje rápido: un trabajador con `MustChangePin` ya no puede fichar con el PIN
+  temporal. `quick-clock` ahora exige el cambio de PIN (respuesta `mustChangePin`)
+  y el kiosco abre `ChangePinDialog` de forma bloqueante antes de permitir fichar.
+
+## [1.5.0] - 2026-10-24
+
 ### Added
 - Documento del TFM publicado como contenido estático en `/docs/GestionPersonal.pdf`.
 
